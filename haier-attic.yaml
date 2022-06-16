@@ -1,0 +1,37 @@
+esphome:
+  name: haier-attic
+  includes:
+    - Haier.h
+esp32:
+  board: esp32doit-devkit-v1
+  framework:
+    type: esp-idf
+    sdkconfig_options:
+      CONFIG_FREERTOS_UNICORE: y
+
+uart:
+  baud_rate: 9600
+  tx_pin: 17
+  rx_pin: 16
+  id: ac_port  
+    
+logger:
+  level: DEBUG
+#  baud_rate: 0 #Important. You can't use serial port
+  
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+    
+api:
+
+ota:
+
+climate:
+  - platform: custom
+    lambda: |-
+      auto haier = new HaierClimate(id(ac_port));
+      App.register_component(haier);
+      return {haier};
+    climates:
+      - name: "Attic AC"

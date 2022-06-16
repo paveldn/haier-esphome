@@ -6,54 +6,7 @@
 #include <sstream>
 #include <mutex>
 
-// Dead bits immediatly revert, 
-// unknown bits stay on until the remote is used which turns them off
-struct HaierPacket
-{
-	// We skip header 0xFF 0xFF
-    /*  0 */    uint8_t             msg_length;                 // message length
-    /*  1 */    uint8_t             reserved_1[6];              // 0x40 (0x00 for init) 0x00 0x00 0x00 0x00
-    /*  7 */    uint8_t             msg_type;                   // type of message
-    /*  8 */    uint8_t             unknown_1[2];   
-    // Control bytes starts here    
-    /* 10 */    uint8_t             set_point;                  // 0x00 is 16 degrees C, offset of 16c for the set point
-    /* 11 */    uint8_t             vertical_swing_mode:4;      // See enum VerticalSwingMode
-                uint8_t             unused_1:4; 
-    /* 12 */    uint8_t             fan_mode:4;                 // See enum FanMode
-                uint8_t             ac_mode:4;                  // See enum ConditioningMode
-    /* 13 */    uint8_t             unknown_2;  
-    /* 14 */    uint8_t             away_mode:1;                //away mode for 10c
-                uint8_t             display_enabled:1;          // if the display is on or off
-                uint8_t             dead_1:3;   
-                uint8_t             use_fahrenheit:1;           // use fahrenheit instead of celsius
-                uint8_t             dead_2:1;   
-                uint8_t             self_clean_56:1;            // Self cleaning (56°C Steri-Clean)
-    /* 15 */    uint8_t             ac_power:1;                 // Is ac on or off
-                uint8_t             purify_1:1;                 // Purify mode (can be related to bits of byte 21)
-                uint8_t             unknown_3:1;    
-                uint8_t             fast_mode:1;                // Fast mode
-                uint8_t             quiet_mode:1;               // Quiet mode
-                uint8_t             sleep_mode:1;               // Sleep mode
-                uint8_t             lock_remote:1;              // Disable remote
-                uint8_t             dead_3:1;
-    /* 16 */    uint8_t             unknown_4:6;
-                uint8_t             dead_4:2;
-    /* 17 */    uint8_t             horizontal_swing_mode:4;    // See enum HorizontalSwingMode
-                uint8_t             unused_2:4;
-    /* 18 */    uint8_t             unknown_5;
-    /* 19 */    uint8_t             purify_2:1;                 // Purify mode
-                uint8_t             dead_5:1;
-                uint8_t             purify_3:2;                 // Purify mode
-                uint8_t             self_clean:1;               // Self cleaning (not 56°C)
-                uint8_t             dead_6:3;
-    /* 20 */    uint8_t             room_temperature;           // 0.5 °C step
-    /* 21 */    uint8_t             unknown_6;                  // always 0
-    /* 22 */    uint8_t             outdoor_temperature;        // 0.5 °C step
-    /* 23 */    uint8_t             unknown_7[2];
-    /* 25 */    uint8_t             compressor;                 //seeems to be 1 in off, 3 in heat? changeover valve?
-				HaierPacket() : msg_length(0), msg_type(0)
-				{}
-};
+#define MAX_MESSAGE_SIZE            64      //64 should be enough to cover largest messages we send and receive, for now. 
 
 class HaierClimate :    public esphome::climate::Climate, 
                         public esphome::PollingComponent, 
@@ -72,11 +25,11 @@ public:
 protected:
     ClimateTraits traits() override;
     void sendData(const uint8_t * message, size_t size);
-	void processStatus(const HaierPacket& packet);
+	void processStatus(const uint8_t* packet, uint8_t size);
 private:
     bool        		mIsFirstStatusReceived;
 	SemaphoreHandle_t	mReadMutex;
-	HaierPacket			mLastPacket;
+	uint8_t				mLastPacket[MAX_MESSAGE_SIZE];
 	uint8_t				mFanModeFanSpeed;
 	uint8_t				mOtherModesFanSpeed;
 };
@@ -88,7 +41,6 @@ using namespace esphome::uart;
 
 #include <string>
 
-#define MAX_MESSAGE_SIZE            64      //64 should be enough to cover largest messages we send and receive, for now. 
 #define HEADER                      0xFF
 //message types seen and used
 #define SEND_TYPE_POLL              0x73    // Next message is poll, enables command and poll messages to be replied to
@@ -102,11 +54,11 @@ using namespace esphome::uart;
 #define RESPONSE_TYPE_WIFI          0xFD    // Confirmed
 #define SEND_WIFI                   0xF7    // Current signal strength, no reply to this
 
+
 #define SEND_COMMAND                0x60    // Send a control command, no reply to this
 #define INIT_COMMAND                0x61    // This enables coms? magic message
+#define CONTROL_PACKET_SIZE			0x14
 
-#define HEADER_LENGTH               3
-#define CONTROL_COMMAND_OFFSET      11      //where our changable data starts in the control message
 #define POLY                        0xa001  //used for crc
 #define NO_MSK                      0xFF
 #define PACKET_TIMOUT_MS			1000
@@ -151,6 +103,56 @@ enum FanMode
     FanMid                      = 0x02,
     FanLow                      = 0x03,
     FanAuto                     = 0x05
+};
+
+// Dead bits immediatly revert, 
+// unknown bits stay on until the remote is used which turns them off
+struct HaierPacket
+{
+	// We skip header 0xFF 0xFF
+    /*  0 */    uint8_t             msg_length;                 // message length
+    /*  1 */    uint8_t             reserved_1[6];              // 0x40 (0x00 for init) 0x00 0x00 0x00 0x00
+    /*  7 */    uint8_t             msg_type;                   // type of message
+    /*  8 */    uint8_t             msg_command;   
+    /*  9 */    uint8_t             unknown_1;   
+    // Control bytes starts here    
+    /* 10 */    uint8_t             set_point;                  // 0x00 is 16 degrees C, offset of 16c for the set point
+    /* 11 */    uint8_t             vertical_swing_mode:4;      // See enum VerticalSwingMode
+                uint8_t             unused_1:4; 
+    /* 12 */    uint8_t             fan_mode:4;                 // See enum FanMode
+                uint8_t             ac_mode:4;                  // See enum ConditioningMode
+    /* 13 */    uint8_t             unknown_2;  
+    /* 14 */    uint8_t             away_mode:1;                //away mode for 10c
+                uint8_t             display_enabled:1;          // if the display is on or off
+                uint8_t             dead_1:3;   
+                uint8_t             use_fahrenheit:1;           // use fahrenheit instead of celsius
+                uint8_t             dead_2:1;   
+                uint8_t             self_clean_56:1;            // Self cleaning (56°C Steri-Clean)
+    /* 15 */    uint8_t             ac_power:1;                 // Is ac on or off
+                uint8_t             purify_1:1;                 // Purify mode (can be related to bits of byte 21)
+                uint8_t             unknown_3:1;    
+                uint8_t             fast_mode:1;                // Fast mode
+                uint8_t             quiet_mode:1;               // Quiet mode
+                uint8_t             sleep_mode:1;               // Sleep mode
+                uint8_t             lock_remote:1;              // Disable remote
+                uint8_t             dead_3:1;
+    /* 16 */    uint8_t             unknown_4:6;
+                uint8_t             dead_4:2;
+    /* 17 */    uint8_t             horizontal_swing_mode:4;    // See enum HorizontalSwingMode
+                uint8_t             unused_2:4;
+    /* 18 */    uint8_t             unknown_5;
+    /* 19 */    uint8_t             purify_2:1;                 // Purify mode
+                uint8_t             dead_5:1;
+                uint8_t             purify_3:2;                 // Purify mode
+                uint8_t             self_clean:1;               // Self cleaning (not 56°C)
+                uint8_t             dead_6:3;
+    /* 20 */    uint8_t             room_temperature;           // 0.5 °C step
+    /* 21 */    uint8_t             unknown_6;                  // always 0
+    /* 22 */    uint8_t             outdoor_temperature;        // 0.5 °C step
+    /* 23 */    uint8_t             unknown_7[2];
+    /* 25 */    uint8_t             compressor;                 //seeems to be 1 in off, 3 in heat? changeover valve?
+				HaierPacket() : msg_length(0), msg_type(0)
+				{}
 };
 
 std::string HaierPacketToString(const HaierPacket packet)
@@ -297,9 +299,9 @@ void HaierClimate::loop()
 						case RESPONSE_POLL:
 							packet_type = "Status";
 							xSemaphoreTake(mReadMutex, portMAX_DELAY);
-							mLastPacket = *pckt;
+							memcpy(mLastPacket, currentPacketBuffer, currentPacketSize);
 							xSemaphoreGive(mReadMutex);
-							processStatus(*pckt);
+							processStatus(currentPacketBuffer, currentPacketSize);
 							break;
 						case RESPONSE_TYPE_WIFI:
 							// Not supported yet
@@ -311,7 +313,7 @@ void HaierClimate::loop()
 							break;
 						case ERROR_POLL:
 							// Not supported yet
-							packet_type = "Command";							
+							packet_type = "Error";							
 							break;
 						default:
 							// Unknown message
@@ -319,7 +321,7 @@ void HaierClimate::loop()
 							break;
 					}
 					std::string raw = getHex(currentPacketBuffer, currentPacketSize);
-					ESP_LOGD("Haier", "Received %s message, size: %d, content: 0xFF 0xFF %s", packet_type.c_str(), currentPacketSize, raw.c_str());
+					ESP_LOGD("Haier", "Received %s message, size: %d, content: %02X %02X%s", packet_type.c_str(), currentPacketSize, HEADER, HEADER, raw.c_str());
 				}
 				ResetPacketRead();
 			}
@@ -373,7 +375,7 @@ void HaierClimate::sendData(const uint8_t * message, size_t size)
 	write_byte(crc_16 >> 8);
 	write_byte(crc_16 & 0xFF);
 	auto raw = getHex(message, size);
-	ESP_LOGD("Haier", "Message sent: 0xFF 0xFF%s 0x%02X 0x%02X 0x%02X", raw.c_str(), crc, (crc_16 >> 8), crc_16 & 0xFF);
+	ESP_LOGD("Haier", "Message sent: %02X %02X%s %02X %02X %02X", HEADER, HEADER, raw.c_str(), crc, (crc_16 >> 8), crc_16 & 0xFF);
 }
 
 ClimateTraits HaierClimate::traits() 
@@ -421,19 +423,23 @@ ClimateTraits HaierClimate::traits()
 
 void HaierClimate::control(const ClimateCall &call) 
 {
-        
+	static uint8_t controlOutBuffer[CONTROL_PACKET_SIZE];
     ESP_LOGD("Control", "Control call");
     if(mIsFirstStatusReceived == false){
         ESP_LOGE("Control", "No action, first poll answer not received");
         return; //cancel the control, we cant do it without a poll answer.
     }
-	 
 	xSemaphoreTake(mReadMutex, portMAX_DELAY);
-	HaierPacket outData = mLastPacket;
+	memcpy(controlOutBuffer, mLastPacket, CONTROL_PACKET_SIZE);
 	xSemaphoreGive(mReadMutex);
-	
-    if (call.get_mode().has_value()) {  
-        switch (*call.get_mode()) {
+	HaierPacket& outData = (HaierPacket&) controlOutBuffer;
+	outData.msg_type = 1;
+	outData.msg_command = SEND_COMMAND;
+	outData.msg_length = CONTROL_PACKET_SIZE;
+    if (call.get_mode().has_value())
+	{  
+        switch (*call.get_mode()) 
+		{
             case CLIMATE_MODE_OFF:
 				outData.ac_power = 0;
                 break;
@@ -472,10 +478,11 @@ void HaierClimate::control(const ClimateCall &call)
                 return;
         }
     }
-    
     //Set fan speed, if we are in fan mode, reject auto in fan mode
-    if (call.get_fan_mode().has_value()) {
-        switch(call.get_fan_mode().value()) {
+    if (call.get_fan_mode().has_value())
+	{
+        switch(call.get_fan_mode().value())
+		{
             case CLIMATE_FAN_LOW:
 				outData.fan_mode = FanLow;
                 break;
@@ -494,10 +501,11 @@ void HaierClimate::control(const ClimateCall &call)
                 return;
         }
     }
-
     //Set swing mode
-    if (call.get_swing_mode().has_value()){
-        switch(call.get_swing_mode().value()) {
+    if (call.get_swing_mode().has_value())
+	{
+        switch(call.get_swing_mode().value()) 
+		{
             case CLIMATE_SWING_OFF:
 				outData.horizontal_swing_mode = HorizontalSwingCenter;
 				outData.vertical_swing_mode = VerticalSwingCenter;
@@ -516,13 +524,12 @@ void HaierClimate::control(const ClimateCall &call)
                 break;
         }
     }
-            
-    if (call.get_target_temperature().has_value()) {
+    if (call.get_target_temperature().has_value())
 		outData.set_point = *call.get_target_temperature() - 16; //set the tempature at our offset, subtract 16.
-    }
-    
-    if (call.get_preset().has_value()) {
-        switch(call.get_preset().value()) {
+    if (call.get_preset().has_value())
+	{
+        switch(call.get_preset().value()) 
+		{
             case CLIMATE_PRESET_NONE:
 				outData.away_mode 	= 0;
 				outData.quiet_mode 	= 0;
@@ -559,25 +566,25 @@ void HaierClimate::control(const ClimateCall &call)
         }
     }
 	//ESP_LOGD("Control", HaierPacketToString(outData).c_str());
-	outData.msg_length = sizeof(outData);
-    sendData((uint8_t*)&outData, outData.msg_length);
+    sendData(controlOutBuffer, controlOutBuffer[0]);
 }
 
-void HaierClimate::processStatus(const HaierPacket& packet) 
+void HaierClimate::processStatus(const uint8_t* packetBuffer, uint8_t size) 
 {
-	ESP_LOGD("Debug", "HVAC Mode = 0x%X", packet.ac_mode);
-	ESP_LOGD("Debug", "Fan speed Status = 0x%X", packet.fan_mode);
-	ESP_LOGD("Debug", "Horizontal Swing Status = 0x%X", packet.horizontal_swing_mode);
-	ESP_LOGD("Debug", "Vertical Swing Status = 0x%X", packet.vertical_swing_mode);
-	ESP_LOGD("Debug", "Set Point Status = 0x%X", packet.set_point);
+	HaierPacket* packet = (HaierPacket*) packetBuffer;
+	ESP_LOGD("Debug", "HVAC Mode = 0x%X", packet->ac_mode);
+	ESP_LOGD("Debug", "Fan speed Status = 0x%X", packet->fan_mode);
+	ESP_LOGD("Debug", "Horizontal Swing Status = 0x%X", packet->horizontal_swing_mode);
+	ESP_LOGD("Debug", "Vertical Swing Status = 0x%X", packet->vertical_swing_mode);
+	ESP_LOGD("Debug", "Set Point Status = 0x%X", packet->set_point);
 	//extra modes/presets
-	if (packet.quiet_mode != 0)
+	if (packet->quiet_mode != 0)
 		   preset = CLIMATE_PRESET_ECO;
-	else if (packet.fast_mode != 0)
+	else if (packet->fast_mode != 0)
 		preset = CLIMATE_PRESET_BOOST;
-	else if (packet.sleep_mode != 0)
+	else if (packet->sleep_mode != 0)
 		preset = CLIMATE_PRESET_SLEEP;
-	else if(packet.away_mode != 0)
+	else if(packet->away_mode != 0)
 		preset = CLIMATE_PRESET_AWAY;
 	else
 		preset = CLIMATE_PRESET_NONE;   
@@ -585,14 +592,14 @@ void HaierClimate::processStatus(const HaierPacket& packet)
 	if (preset == CLIMATE_PRESET_AWAY) 
 		target_temperature = 10;	//away mode sets to 10c
 	else 
-		target_temperature = packet.set_point + 16;
-	current_temperature = packet.room_temperature / 2;	
+		target_temperature = packet->set_point + 16;
+	current_temperature = packet->room_temperature / 2;	
 	//remember the fan speed we last had for climate vs fan
-	if (packet.ac_mode ==  ConditioningFan)
-		mFanModeFanSpeed = packet.fan_mode;
+	if (packet->ac_mode ==  ConditioningFan)
+		mFanModeFanSpeed = packet->fan_mode;
 	else
-		mOtherModesFanSpeed = packet.fan_mode;
-	switch (packet.fan_mode) 
+		mOtherModesFanSpeed = packet->fan_mode;
+	switch (packet->fan_mode) 
 	{
 				case FanAuto:
 					fan_mode = CLIMATE_FAN_AUTO;
@@ -608,12 +615,12 @@ void HaierClimate::processStatus(const HaierPacket& packet)
 					break;
 	}
 	//climate mode
-	if (packet.ac_power == 0)
+	if (packet->ac_power == 0)
 		mode = CLIMATE_MODE_OFF;
 	else 
 	{
 		// Check current hvac mode
-		switch (packet.ac_mode) 
+		switch (packet->ac_mode) 
 		{
 			case ConditioningCool:
 				mode = CLIMATE_MODE_COOL;
@@ -633,16 +640,16 @@ void HaierClimate::processStatus(const HaierPacket& packet)
 		}
 	}       
 	// Swing mode
-	if (packet.horizontal_swing_mode == HorizontalSwingAuto)
+	if (packet->horizontal_swing_mode == HorizontalSwingAuto)
 	{
-		if (packet.vertical_swing_mode == VerticalSwingAuto)
+		if (packet->vertical_swing_mode == VerticalSwingAuto)
 			swing_mode = CLIMATE_SWING_BOTH;
 		else
 			swing_mode = CLIMATE_SWING_HORIZONTAL;
 	}
 	else
 	{
-		if (packet.vertical_swing_mode == VerticalSwingAuto)
+		if (packet->vertical_swing_mode == VerticalSwingAuto)
 			swing_mode = CLIMATE_SWING_VERTICAL;
 		else
 			swing_mode = CLIMATE_SWING_OFF;
