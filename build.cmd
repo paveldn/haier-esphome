@@ -1,0 +1,1 @@
+powershell -command "esphome haier.yaml compile 2>&1 | tee -filepath buildlog.txt"

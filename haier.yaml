@@ -1,7 +1,10 @@
 esphome:
   name: haier
+  name_add_mac_suffix: true
   includes:
-    - Haier.h
+    - HaierPacket.h
+    - HaierClimate.h
+    - HaierClimate.cpp
 esp32:
   board: esp32doit-devkit-v1
   framework:
@@ -33,4 +36,4 @@ climate:
       App.register_component(haier);
       return {haier};
     climates:
-      - name: "Haier_AC"
+      - name: "Haier AC"
