@@ -4,6 +4,7 @@
 #include <mutex>
 #include "HaierClimate.h"
 #include "HaierPacket.h"
+#include <esp_wifi.h>
 
 using namespace esphome;
 using namespace esphome::climate;
@@ -11,7 +12,12 @@ using namespace esphome::uart;
 
 #include <string>
 
-std::string HaierPacketToString(const HaierPacketFull& packet)
+#define PACKET_TIMOUT_MS            500
+#define ANSWER_TIMOUT_MS            1000
+#define COMMUNICATION_TIMOUT_MS            60000
+
+
+std::string HaierPacketToString(const HaierPacketStatus& packet)
 {
     std::stringstream sstream;
     sstream << "Message type: " << (uint)packet.header.msg_type << "\n"
@@ -21,10 +27,8 @@ std::string HaierPacketToString(const HaierPacketFull& packet)
             << "\tVertical swing mode: " << (uint)packet.control.vertical_swing_mode << "\n"
             << "\tHorizontal swing mode: " << (uint)packet.control.horizontal_swing_mode << "\n"
             << "\tRoom temperature: " << (uint)packet.sensors.room_temperature / 2 << "\n"
-            << "\t???: " << (uint)packet.sensors.unknown_6 << "\n"
             << "\tOutdoor temperature: " << (uint)packet.sensors.outdoor_temperature / 2 << "\n"
-            << "\t???: " << (uint)packet.sensors.compressor / 2 << "\n"
-            << "\tIs on?: " << ((packet.control.ac_power != 0) ? "Yes" : "No") << std::endl;
+            << "\tIs on?: " << ((packet.control.ac_power != 0) ? "Yes" : "No");
     return sstream.str();
 }
 
@@ -36,20 +40,26 @@ uint8_t getChecksum(const uint8_t * message, size_t size) {
         return result;
     }
 
-uint16_t crc16(uint16_t crc, const uint8_t *buf, size_t len)
+unsigned short crc16(const uint8_t* message, int len, uint16_t initial_val = 0)
 {
-    while (len--) {
-        crc ^= *buf++;
-        crc = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
-        crc = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
-        crc = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
-        crc = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
-        crc = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
-        crc = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
-        crc = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
-        crc = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
+    constexpr uint16_t poly = 0xA001;
+    uint16_t crc = initial_val;
+    for(int i = 0; i < len; ++i)
+    {
+        crc ^= (unsigned short)message[i];
+        for(int b = 0; b < 8; ++b)
+        {
+            if((crc & 1) != 0)
+            {
+                crc >>= 1;
+                crc ^= poly;
+            }
+            else
+                crc >>= 1;
+
+        }
     }
-      return crc;
+    return crc;
 }
 
 std::string getHex(const uint8_t * message, size_t size)
@@ -79,45 +89,45 @@ HaierClimate::HaierClimate(UARTComponent* parent) :
                                         mFanModeFanSpeed(FanMid),
                                         mOtherModesFanSpeed(FanAuto)
 {
-	mLastPacket = new uint8_t[MAX_MESSAGE_SIZE];
+    mLastPacket = new uint8_t[MAX_MESSAGE_SIZE];
     mReadMutex = xSemaphoreCreateMutex();
 }
 
 HaierClimate::~HaierClimate()
 {
     vSemaphoreDelete(mReadMutex);
-	delete[] mLastPacket;
+    delete[] mLastPacket;
 }
 
 void HaierClimate::setup()
 {
-    ESP_LOGW("Haier", "Running setup");
+    ESP_LOGI("Haier", "Haier initialization...");
     delay(2000);                                        //wait for the ac to boot, esp boots faster then the AC
     sendData(initialization_1, initialization_1[0]);    //start the comms?
     sendData(type_poll, type_poll[0]);                  //enable polling and commands?
-    delay(2000);                                        //wait for the ac, if we dont wait it wont be ready, and it wont init.
+    delay(2000);                                        //wait for the ac, if we don't wait it wont be ready, and it wont init.
 }
 
 struct CurrentPacketStatus
 {
-	uint8_t buffer[MAX_MESSAGE_SIZE];
-	uint8_t preHeaderCharsCounter;
-	uint8_t size;
-	uint8_t position;
-	std::chrono::steady_clock::time_point readTimeout;
-	uint8_t checksum;
-	CurrentPacketStatus() : preHeaderCharsCounter(0),
-							size(0),
-							position(0),
-							checksum(0)
-	{};
-	void Reset()
-	{
-		size = 0;
-		position = 0;
-		checksum = 0;
-		preHeaderCharsCounter = 0;
-	};
+    uint8_t buffer[MAX_MESSAGE_SIZE];
+    uint8_t preHeaderCharsCounter;
+    uint8_t size;
+    uint8_t position;
+    std::chrono::steady_clock::time_point readTimeout;
+    uint8_t checksum;
+    CurrentPacketStatus() : preHeaderCharsCounter(0),
+                            size(0),
+                            position(0),
+                            checksum(0)
+    {};
+    void Reset()
+    {
+        size = 0;
+        position = 0;
+        checksum = 0;
+        preHeaderCharsCounter = 0;
+    };
 };
 
 CurrentPacketStatus currentPacket;
@@ -134,7 +144,7 @@ void HaierClimate::loop()
         uint8_t val;
         if (!read_byte(&val))
             break;
-        if (currentPacket.size > 0)	// Already found packet start
+        if (currentPacket.size > 0) // Already found packet start
         {
             if (currentPacket.position < currentPacket.size)
             {
@@ -152,33 +162,37 @@ void HaierClimate::loop()
                 }
                 else
                 {
-                    uint16_t crc = crc16(0, currentPacket.buffer, currentPacket.size - 3);
+                    uint16_t crc = crc16(currentPacket.buffer, currentPacket.size - 3);
                     if (((crc >> 8) != currentPacket.buffer[currentPacket.size - 2]) || ((crc & 0xFF) != currentPacket.buffer[currentPacket.size - 1]))
                     {
-                        ESP_LOGD("Haier", "Wrong packet checksum: 0x%04X (expected 0x%02X%02X)", crc, currentPacket.buffer[currentPacket.size - 2], currentPacket.buffer[currentPacket.size - 1]);
+                        ESP_LOGW("Haier", "Wrong packet checksum: 0x%04X (expected 0x%02X%02X)", crc, currentPacket.buffer[currentPacket.size - 2], currentPacket.buffer[currentPacket.size - 1]);
                         isValid = false;
                     }
                 }
                 if (isValid)
                 {
-                    HaierPacketHeader* header = reinterpret_cast<HaierPacketHeader*>(currentPacket.buffer);
+                    HaierPacketHeader& header = reinterpret_cast<HaierPacketHeader&>(currentPacket.buffer);
                     std::string packet_type;
-                    switch (header->msg_type)
+                    switch (header.msg_type)
                     {
                         case RESPONSE_POLL:
                             packet_type = "Status";
                             xSemaphoreTake(mReadMutex, portMAX_DELAY);
                             memcpy(mLastPacket, currentPacket.buffer, currentPacket.size);
                             xSemaphoreGive(mReadMutex);
+//                          {
+//                              HaierPacketStatus& _packet = reinterpret_cast<HaierPacketStatus&>(currentPacket.buffer);
+//                              ESP_LOGD("Control", HaierPacketToString(_packet).c_str());
+//                          }
                             processStatus(currentPacket.buffer, currentPacket.size);
                             break;
                         case RESPONSE_TYPE_WIFI:
                             // Not supported yet
-                            packet_type = "Reponse to WiFi Type";
+                            packet_type = "Response to WiFi Type";
                             break;
                         case RESPONSE_TYPE_POLL:
                             // Not supported yet
-                            packet_type = "Reponse to Poll Type";
+                            packet_type = "Response to Poll Type";
                             break;
                         case ERROR_POLL:
                             // Not supported yet
@@ -208,9 +222,9 @@ void HaierClimate::loop()
                         // Valid packet size
                         currentPacket.size = val + 3;    // Space for checksum
                         currentPacket.buffer[0] = val;
-                        currentPacket.checksum += val;	// will calculate checksum on the fly
+                        currentPacket.checksum += val;  // will calculate checksum on the fly
                         currentPacket.position = 1;
-                        currentPacket.readTimeout = std::chrono::steady_clock::now();	// Using timeout to make sure we not stuck
+                        currentPacket.readTimeout = std::chrono::steady_clock::now();   // Using timeout to make sure we not stuck
                     }
                     else
                         ESP_LOGW("Haier", "Wrong packet size %d", val);
@@ -225,16 +239,24 @@ void HaierClimate::update()
 {
     ESP_LOGD("Haier", "POLLING");
     if (!mIsFirstStatusReceived) {
-        //if we havent gotten our first status
-        ESP_LOGD("Haier", "First Status Not Received");
+        //if we haven't gotten our first status
+        ESP_LOGD("Haier", "First status not received");
     }
     sendData(poll_command, poll_command[0]);
+	if (mIsFirstStatusReceived)
+	{
+		wifi_ap_record_t ap_info;
+		if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK)
+		{
+			ESP_LOGD("Haier", "WiFi signal is: %d", ap_info.rssi);
+		}
+	}
 }
 
 void HaierClimate::sendData(const uint8_t * message, size_t size)
 {
     uint8_t crc = getChecksum(message, size);
-    uint16_t crc_16 = crc16(0, message, size);
+    uint16_t crc_16 = crc16(message, size);
     write_byte(HEADER);
     write_byte(HEADER);
     write_array(message, size);
@@ -299,7 +321,7 @@ void HaierClimate::control(const ClimateCall &call)
     xSemaphoreTake(mReadMutex, portMAX_DELAY);
     memcpy(controlOutBuffer, mLastPacket, CONTROL_PACKET_SIZE);
     xSemaphoreGive(mReadMutex);
-    HaierPacketFull& outData = (HaierPacketFull&) controlOutBuffer;
+    HaierPacketStatus& outData = (HaierPacketStatus&) controlOutBuffer;
     outData.header.msg_type = 1;
     outData.header.msg_command = SEND_COMMAND;
     outData.header.msg_length = CONTROL_PACKET_SIZE;
@@ -332,7 +354,7 @@ void HaierClimate::control(const ClimateCall &call)
             case CLIMATE_MODE_FAN_ONLY:
                 outData.control.ac_power = 1;
                 outData.control.ac_mode = ConditioningFan;
-                outData.control.fan_mode = mFanModeFanSpeed;    // Auto doesnt work in fan only mode
+                outData.control.fan_mode = mFanModeFanSpeed;    // Auto doesn't work in fan only mode
                 break;
 
             case CLIMATE_MODE_COOL:
@@ -392,7 +414,7 @@ void HaierClimate::control(const ClimateCall &call)
         }
     }
     if (call.get_target_temperature().has_value())
-        outData.control.set_point = *call.get_target_temperature() - 16; //set the tempature at our offset, subtract 16.
+        outData.control.set_point = *call.get_target_temperature() - 16; //set the temperature at our offset, subtract 16.
     if (call.get_preset().has_value())
     {
         switch(call.get_preset().value())
@@ -438,7 +460,7 @@ void HaierClimate::control(const ClimateCall &call)
 
 void HaierClimate::processStatus(const uint8_t* packetBuffer, uint8_t size)
 {
-    HaierPacketFull* packet = (HaierPacketFull*) packetBuffer;
+    HaierPacketStatus* packet = (HaierPacketStatus*) packetBuffer;
     ESP_LOGD("Debug", "HVAC Mode = 0x%X", packet->control.ac_mode);
     ESP_LOGD("Debug", "Fan speed Status = 0x%X", packet->control.fan_mode);
     ESP_LOGD("Debug", "Horizontal Swing Status = 0x%X", packet->control.horizontal_swing_mode);
@@ -522,5 +544,7 @@ void HaierClimate::processStatus(const uint8_t* packetBuffer, uint8_t size)
             swing_mode = CLIMATE_SWING_OFF;
     }
     this->publish_state();
+	if (!mIsFirstStatusReceived)
+		ESP_LOGI("Haier", "First status received");
     mIsFirstStatusReceived = true;
 }

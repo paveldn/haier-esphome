@@ -2,11 +2,11 @@ esphome:
   name: haier
   name_add_mac_suffix: true
   includes:
-    - HaierPacket.h
-    - HaierClimate.h
-    - HaierClimate.cpp
+    - src/HaierPacket.h
+    - src/HaierClimate.h
+    - src/HaierClimate.cpp
 esp32:
-  board: esp32doit-devkit-v1
+  board: esp32dev
   framework:
     type: esp-idf
     sdkconfig_options:

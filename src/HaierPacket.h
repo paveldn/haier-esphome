@@ -8,7 +8,7 @@
 #define SEND_TYPE_POLL              0x73    // Next message is poll, enables command and poll messages to be replied to
 #define RESPONSE_TYPE_POLL          0x74    // Message was received
 
-// Incomming packet types (from AC point of view)
+// Incoming packet types (from AC point of view)
 #define SEND_POLL                   0x01    // Send a poll
 #define SEND_COMMAND                0x60    // Send a control command, no reply to this
 #define INIT_COMMAND                0x61    // This enables coms? magic message
@@ -16,19 +16,14 @@
 
 // Responses (from AC point of view)
 #define RESPONSE_POLL               0x02    // Response of poll
-#define ERROR_POLL                  0x03    // The ac sends this when it didnt like our last command message
+#define ERROR_POLL                  0x03    // The ac sends this when it didn't like our last command message
 
 #define RESPONSE_TYPE_WIFI          0xFD    // Confirmed
 
-#define SEND_TYPE_WIFI              0xFC 	//next message is wifi, enables wifi messages to be replied to, for the signal strength indicator, disables poll messages
+#define SEND_TYPE_WIFI              0xFC 	//next message is WiFi, enables WiFi messages to be replied to, for the signal strength indicator, disables poll messages
 #define SEND_POLL                   0x01	//send a poll
 
-
-#define CONTROL_PACKET_SIZE         0x14
-
-#define POLY                        0xa001  //used for crc
 #define NO_MSK                      0xFF
-#define PACKET_TIMOUT_MS            1000
 
 // temperatures supported by AC system
 #define MIN_SET_TEMPERATURE         16
@@ -72,7 +67,7 @@ enum FanMode
     FanAuto                     = 0x05
 };
 
-// Dead bits immediatly revert,
+// Dead bits immediately revert,
 // unknown bits stay on until the remote is used which turns them off
 struct HaierPacketHeader
 {
@@ -128,11 +123,13 @@ struct HaierPacketSensors
     /* 25 */    uint8_t             compressor;                 //seems to be 1 in off, 3 in heat? changeover valve?
 };
 
-struct HaierPacketFull
+struct HaierPacketStatus
 {
 	HaierPacketHeader	header;
 	HaierPacketControl	control;
 	HaierPacketSensors	sensors;
 };
+
+#define CONTROL_PACKET_SIZE         (sizeof(HaierPacketHeader) + sizeof(HaierPacketControl))
 
 #endif // HAIER_PACKET_H

@@ -23,6 +23,20 @@ protected:
     void sendData(const uint8_t * message, size_t size);
     void processStatus(const uint8_t* packet, uint8_t size);
 private:
+	enum ProtocolPhases
+	{
+		psSendingInit1 = 0,
+		psWaitingAnswerInit1,
+		psSendingInit2,
+		psWaitingAnswerInit2,
+		psSendingFirstStatus,
+		psWaitingFirstStatusAnswer,
+		psSendingStatus,
+		psSendingSignalStatusRequest,
+		psWaitingSignalStatusRequestAnswer,
+		psSendingSignalLevel,	// No answer to this command
+	};
+	ProtocolPhases		mPhase;
     bool                mIsFirstStatusReceived;
     SemaphoreHandle_t   mReadMutex;
     uint8_t*            mLastPacket;
