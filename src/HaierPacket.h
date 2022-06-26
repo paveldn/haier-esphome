@@ -1,34 +1,6 @@
 ﻿#ifndef HAIER_PACKET_H
 #define HAIER_PACKET_H
 
-#define MAX_MESSAGE_SIZE            64      //64 should be enough to cover largest messages we send and receive, for now.
-
-#define HEADER                      0xFF
-//message types seen and used
-#define SEND_TYPE_POLL              0x73    // Next message is poll, enables command and poll messages to be replied to
-#define RESPONSE_TYPE_POLL          0x74    // Message was received
-
-// Incoming packet types (from AC point of view)
-#define SEND_POLL                   0x01    // Send a poll
-#define SEND_COMMAND                0x60    // Send a control command, no reply to this
-#define INIT_COMMAND                0x61    // This enables coms? magic message
-#define SEND_WIFI                   0xF7    // Current signal strength, no reply to this
-
-// Responses (from AC point of view)
-#define RESPONSE_POLL               0x02    // Response of poll
-#define ERROR_POLL                  0x03    // The ac sends this when it didn't like our last command message
-
-#define RESPONSE_TYPE_WIFI          0xFD    // Confirmed
-
-#define SEND_TYPE_WIFI              0xFC 	//next message is WiFi, enables WiFi messages to be replied to, for the signal strength indicator, disables poll messages
-#define SEND_POLL                   0x01	//send a poll
-
-#define NO_MSK                      0xFF
-
-// temperatures supported by AC system
-#define MIN_SET_TEMPERATURE         16
-#define MAX_SET_TEMPERATURE         30
-
 enum VerticalSwingMode
 {
     VerticalSwingHealthUp       = 0x01,
@@ -73,10 +45,9 @@ struct HaierPacketHeader
 {
     // We skip start packet indication (0xFF 0xFF)
     /*  0 */    uint8_t             msg_length;                 // message length
-    /*  1 */    uint8_t             reserved[6];				// 0x40 (0x00 for init) 0x00 0x00 0x00 0x00
+    /*  1 */    uint8_t             reserved[6];				// 0x40 or 0x00 for first byte, 0x00 for rest 0x00
     /*  7 */    uint8_t             msg_type;                   // type of message
-    /*  8 */    uint8_t             msg_command;
-    /*  9 */    uint8_t             unknown;
+    /*  8 */    uint8_t             arguments[2];
 };
 
 struct HaierPacketControl
@@ -87,47 +58,52 @@ struct HaierPacketControl
                 uint8_t             unused_1:4;
     /* 12 */    uint8_t             fan_mode:4;                 // See enum FanMode
                 uint8_t             ac_mode:4;                  // See enum ConditioningMode
-    /* 13 */    uint8_t             unknown;
+    /* 13 */    uint8_t             unknown_1;
     /* 14 */    uint8_t             away_mode:1;                //away mode for 10c
                 uint8_t             display_enabled:1;          // if the display is on or off
-                uint8_t             dead_1:3;
+                uint8_t             unknown_2:3;
                 uint8_t             use_fahrenheit:1;           // use Fahrenheit instead of Celsius
-                uint8_t             dead_2:1;
+                uint8_t             unknown_3:1;
                 uint8_t             self_clean_56:1;            // Self cleaning (56°C Steri-Clean)
     /* 15 */    uint8_t             ac_power:1;                 // Is ac on or off
                 uint8_t             purify_1:1;                 // Purify mode (can be related to bits of byte 21)
-                uint8_t             unknown_3:1;
+                uint8_t             unknown_4:1;
                 uint8_t             fast_mode:1;                // Fast mode
                 uint8_t             quiet_mode:1;               // Quiet mode
                 uint8_t             sleep_mode:1;               // Sleep mode
                 uint8_t             lock_remote:1;              // Disable remote
-                uint8_t             dead_3:1;
-    /* 16 */    uint8_t             unknown_4:6;
-                uint8_t             dead_4:2;
+                uint8_t             unknown_5:1;
+    /* 16 */    uint8_t             unknown_6;
     /* 17 */    uint8_t             horizontal_swing_mode:4;    // See enum HorizontalSwingMode
                 uint8_t             unused_2:4;
-    /* 18 */    uint8_t             unknown_5;
+    /* 18 */    uint8_t             unknown_7;
     /* 19 */    uint8_t             purify_2:1;                 // Purify mode
-                uint8_t             dead_5:1;
+                uint8_t             unknown_8:1;
                 uint8_t             purify_3:2;                 // Purify mode
                 uint8_t             self_clean:1;               // Self cleaning (not 56°C)
-                uint8_t             dead_6:3;
+                uint8_t             unknown_9:3;
 };
 
 struct HaierPacketSensors
 {
     /* 20 */    uint8_t             room_temperature;           // 0.5 °C step
-    /* 21 */    uint8_t             unknown_6;                  // always 0
+    /* 21 */    uint8_t             unknown_1;                  // always 0 (Room humidity for devices that support it ?)
     /* 22 */    uint8_t             outdoor_temperature;        // 0.5 °C step
-    /* 23 */    uint8_t             unknown_7[2];
-    /* 25 */    uint8_t             compressor;                 //seems to be 1 in off, 3 in heat? changeover valve?
+    /* 23 */    uint8_t             unknown_2[2];				// unknown (Outdoor humidity for devices that support it + something else ?)
+    /* 25 */    uint8_t             compressor;                 // seems to be 1 in off, 3 in heat? changeover valve?
 };
 
-struct HaierPacketStatus
+struct HaierStatus
 {
 	HaierPacketHeader	header;
 	HaierPacketControl	control;
 	HaierPacketSensors	sensors;
+};
+
+struct HaierControl
+{
+	HaierPacketHeader	header;
+	HaierPacketControl	control;
 };
 
 #define CONTROL_PACKET_SIZE         (sizeof(HaierPacketHeader) + sizeof(HaierPacketControl))
