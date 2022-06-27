@@ -4,9 +4,13 @@
 #include <mutex>
 #include "HaierClimate.h"
 #include "HaierPacket.h"
-#include <esp_wifi.h>
 
 #define SEND_WIFI_SIGNAL
+
+#ifdef SEND_WIFI_SIGNAL
+#include <esp_wifi.h>
+#endif
+
 
 using namespace esphome;
 using namespace esphome::climate;
@@ -303,6 +307,7 @@ void HaierClimate::loop()
 			mLastRequestTimestamp = now;
 			return;
 		case psSendingSignalLevel:
+#ifdef SEND_WIFI_SIGNAL
 			{
 				wifi_ap_record_t ap_info;
 				if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK)
@@ -319,6 +324,7 @@ void HaierClimate::loop()
 				}
 				sendData(wifi_status, wifi_status[0]);
 			}
+#endif
 			mPhase = psIdle;	// We don't expect answer here
 			return;
 		case psWaitingAnswerInit1:
@@ -675,7 +681,6 @@ void HaierClimate::control(const ClimateCall &call)
                 return;
         }
     }
-	//ESP_LOGD(TAG, "Ready to send control: %s", getHex(controlOutBuffer, CONTROL_PACKET_SIZE).c_str());
     sendData(controlOutBuffer, controlOutBuffer[0]);
 }
 
