@@ -43,7 +43,7 @@ struct HaierPacketHeader
 {
     // We skip start packet indication (0xFF 0xFF)
     /*  0 */    uint8_t             msg_length;                 // message length
-    /*  1 */    uint8_t             reserved[6];				// 0x40 or 0x00 for first byte, 0x00 for rest 0x00
+    /*  1 */    uint8_t             reserved[6];                // 0x40 or 0x00 for first byte, 0x00 for rest 0x00
     /*  7 */    uint8_t             msg_type;                   // type of message
     /*  8 */    uint8_t             arguments[2];
 };
@@ -87,24 +87,24 @@ struct HaierPacketSensors
     /* 20 */    uint8_t             room_temperature;           // 0.5 °C step
     /* 21 */    uint8_t             unknown_1;                  // always 0 (Room humidity for devices that support it ?)
     /* 22 */    uint8_t             outdoor_temperature;        // 0.5 °C step
-    /* 23 */    uint8_t             unknown_2[2];				// unknown (Outdoor humidity for devices that support it + something else ?)
+    /* 23 */    uint8_t             unknown_2[2];               // unknown (Outdoor humidity for devices that support it + something else ?)
     /* 25 */    uint8_t             compressor;                 // seems to be 1 in off, 3 in heat? changeover valve?
 };
 
 struct HaierStatus
 {
-	HaierPacketHeader	header;
-	HaierPacketControl	control;
-	HaierPacketSensors	sensors;
+    HaierPacketHeader   header;
+    HaierPacketControl  control;
+    HaierPacketSensors  sensors;
 };
 
 struct HaierControl
 {
-	HaierPacketHeader	header;
-	HaierPacketControl	control;
+    HaierPacketHeader   header;
+    HaierPacketControl  control;
 };
 
 #define CONTROL_PACKET_SIZE         (sizeof(HaierPacketHeader) + sizeof(HaierPacketControl))
-#define HEADER_SIZE 				(sizeof(HaierPacketHeader))
+#define HEADER_SIZE                 (sizeof(HaierPacketHeader))
 
 #endif // HAIER_PACKET_H

@@ -20,18 +20,18 @@ using namespace esphome::uart;
 
 #define TAG "Haier"
 
-#define PACKET_TIMOUT_MS            	500
-#define ANSWER_TIMOUT_MS            	1000
-#define COMMUNICATION_TIMOUT_MS     	60000
-#define STATUS_REQUEST_INTERVAL_MS		5000
-#define SIGNAL_LEVEL_UPDATE_INTERVAL_MS	10000 
+#define PACKET_TIMOUT_MS                500
+#define ANSWER_TIMOUT_MS                1000
+#define COMMUNICATION_TIMOUT_MS         60000
+#define STATUS_REQUEST_INTERVAL_MS      5000
+#define SIGNAL_LEVEL_UPDATE_INTERVAL_MS 10000
 
 // temperatures supported by AC system
-#define MIN_SET_TEMPERATURE         	16
-#define MAX_SET_TEMPERATURE         	30
+#define MIN_SET_TEMPERATURE             16
+#define MAX_SET_TEMPERATURE             30
 
-#define MAX_MESSAGE_SIZE            	64
-#define HEADER                      	0xFF
+#define MAX_MESSAGE_SIZE                64
+#define HEADER                          0xFF
 
 
 // ESP_LOG_LEVEL don't work as I want it so I implemented this macro
@@ -116,69 +116,69 @@ std::string getHex(const uint8_t * message, size_t size)
 
 namespace
 {
-	enum HaierProtocolCommands
-	{
-		hpCommandInit1				= 0x61,
-		hpCommandInit2				= 0x70,
-		hpCommandStatus		= 0x01,
-		hpCommandReadyToSendSignal	= 0xFC,
-		hpCommandSignalLevel		= 0xF7,
-		hpCommandControl			= 0x60,
-	};
+    enum HaierProtocolCommands
+    {
+        hpCommandInit1              = 0x61,
+        hpCommandInit2              = 0x70,
+        hpCommandStatus             = 0x01,
+        hpCommandReadyToSendSignal  = 0xFC,
+        hpCommandSignalLevel        = 0xF7,
+        hpCommandControl            = 0x60,
+    };
 
-	enum HaierProtocolAnswers
-	{
-		hpAnswerInit1				= 0x62,
-		hpAnswerInit2				= 0x71,
-		hpAnswerRequestStatus		= 0x02,
-		hpAnswerError				= 0x03,
-		hpAnswerReadyToSendSignal	= 0xFD,
-		hpAnswerControl				= 0x61,
-	};
+    enum HaierProtocolAnswers
+    {
+        hpAnswerInit1               = 0x62,
+        hpAnswerInit2               = 0x71,
+        hpAnswerRequestStatus       = 0x02,
+        hpAnswerError               = 0x03,
+        hpAnswerReadyToSendSignal   = 0xFD,
+        hpAnswerControl             = 0x61,
+    };
 }
 
 const HaierPacketHeader initialization_1 = {
-		.msg_length = 0x0A,
-		.reserved = { 0x00,   0x00,   0x00,   0x00,   0x00,   0x00 },
-		.msg_type = (uint8_t)(hpCommandInit1),
-		.arguments = { 0x00, 0x07 }
-	};
-	
+        .msg_length = 0x0A,
+        .reserved = { 0x00,   0x00,   0x00,   0x00,   0x00,   0x00 },
+        .msg_type = (uint8_t)(hpCommandInit1),
+        .arguments = { 0x00, 0x07 }
+    };
+
 const HaierPacketHeader initialization_2 = {
-		.msg_length = 0x08,
-		.reserved = { 0x40,   0x00,   0x00,   0x00,   0x00,   0x00 },
-		.msg_type = (uint8_t)(hpCommandInit2),
-		.arguments = { 0x00, 0x00 }
-	};
-	
+        .msg_length = 0x08,
+        .reserved = { 0x40,   0x00,   0x00,   0x00,   0x00,   0x00 },
+        .msg_type = (uint8_t)(hpCommandInit2),
+        .arguments = { 0x00, 0x00 }
+    };
+
 const HaierPacketHeader poll_command = {
-		.msg_length = 0x0A,
-		.reserved = { 0x40,   0x00,   0x00,   0x00,   0x00,   0x00 },
-		.msg_type = (uint8_t)(hpCommandStatus),
-		// There is also longer version of this command when second
-		// argument is 0xFE instead of 0x01. It gives more data but
-		// my AC return all 0 there, probably it just not support 
-		// additional features
-		.arguments = { 0x4D, 0x01 }
-	};
-	
+        .msg_length = 0x0A,
+        .reserved = { 0x40,   0x00,   0x00,   0x00,   0x00,   0x00 },
+        .msg_type = (uint8_t)(hpCommandStatus),
+        // There is also longer version of this command when second
+        // argument is 0xFE instead of 0x01. It gives more data but
+        // my AC return all 0 there, probably it just not support
+        // additional features
+        .arguments = { 0x4D, 0x01 }
+    };
+
 const HaierPacketHeader wifi_request = {
-		.msg_length = 0x08,
-		.reserved = { 0x40,   0x00,   0x00,   0x00,   0x00,   0x00 },
-		.msg_type = (uint8_t)(hpCommandReadyToSendSignal),
-		.arguments = { 0x00, 0x00 }
-	};
-	
+        .msg_length = 0x08,
+        .reserved = { 0x40,   0x00,   0x00,   0x00,   0x00,   0x00 },
+        .msg_type = (uint8_t)(hpCommandReadyToSendSignal),
+        .arguments = { 0x00, 0x00 }
+    };
+
 const HaierPacketHeader control_command = {
-		.msg_length = CONTROL_PACKET_SIZE,
-		.reserved = { 0x40,   0x00,   0x00,   0x00,   0x00,   0x00 },
-		.msg_type = (uint8_t)(hpCommandStatus),
-		.arguments = { 0x60, 0x01 }
-	};
+        .msg_length = CONTROL_PACKET_SIZE,
+        .reserved = { 0x40,   0x00,   0x00,   0x00,   0x00,   0x00 },
+        .msg_type = (uint8_t)(hpCommandStatus),
+        .arguments = { 0x60, 0x01 }
+    };
 
 
 // This command is longer so we can't use HaierPacketHeader
- uint8_t wifi_status[]	= {0x0C,    0x40,   0x00,   0x00,   0x00,   0x00,   0x00,   (uint8_t)(hpCommandSignalLevel),	0x00,	0x00, 	0x00, 	0x00};
+ uint8_t wifi_status[]  = {0x0C,    0x40,   0x00,   0x00,   0x00,   0x00,   0x00,   (uint8_t)(hpCommandSignalLevel),    0x00,   0x00,   0x00,   0x00};
 
 HaierClimate::HaierClimate(UARTComponent* parent) :
                                         Component(),
@@ -224,7 +224,7 @@ HaierClimate::HaierClimate(UARTComponent* parent) :
     mTraits.set_visual_min_temperature(MIN_SET_TEMPERATURE);
     mTraits.set_visual_max_temperature(MAX_SET_TEMPERATURE);
     mTraits.set_visual_temperature_step(0.5f); //displays current temp in 0.5 degree steps, we cannot change it in 0.5 degree steps however
-    mTraits.set_supports_current_temperature(true);	
+    mTraits.set_supports_current_temperature(true);
 }
 
 HaierClimate::~HaierClimate()
@@ -237,148 +237,148 @@ void HaierClimate::setup()
 {
     ESP_LOGI(TAG, "Haier initialization...");
     delay(2000); // Give time for AC to boot
-	mPhase = psSendingInit1;
+    mPhase = psSendingInit1;
 }
 
-namespace	// anonymous namespace for local things
+namespace   // anonymous namespace for local things
 {
-	struct CurrentPacketStatus
-	{
-		uint8_t buffer[MAX_MESSAGE_SIZE];
-		uint8_t preHeaderCharsCounter;
-		uint8_t size;
-		uint8_t position;
-		uint8_t checksum;
-		CurrentPacketStatus() : preHeaderCharsCounter(0),
-								size(0),
-								position(0),
-								checksum(0)
-		{};
-		void Reset()
-		{
-			size = 0;
-			position = 0;
-			checksum = 0;
-			preHeaderCharsCounter = 0;
-		};
-	};
+    struct CurrentPacketStatus
+    {
+        uint8_t buffer[MAX_MESSAGE_SIZE];
+        uint8_t preHeaderCharsCounter;
+        uint8_t size;
+        uint8_t position;
+        uint8_t checksum;
+        CurrentPacketStatus() : preHeaderCharsCounter(0),
+                                size(0),
+                                position(0),
+                                checksum(0)
+        {};
+        void Reset()
+        {
+            size = 0;
+            position = 0;
+            checksum = 0;
+            preHeaderCharsCounter = 0;
+        };
+    };
 
-	CurrentPacketStatus currentPacket;
+    CurrentPacketStatus currentPacket;
 
 }
 
 void HaierClimate::loop()
 {
-	std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
-	if ((mPhase >= psIdle) && (std::chrono::duration_cast<std::chrono::milliseconds>(now - mLastValidStatusTimestamp).count() > COMMUNICATION_TIMOUT_MS))
-	{
-		ESP_LOGE(TAG, "No valid status answer for to long. Resetting protocol");
-		currentPacket.Reset();
-		mPhase = psSendingInit1;
-		return;
-	}
-	switch (mPhase)
-	{
-		case psSendingInit1:
-			// No CRC here. Old Haier protocol use just 1 byte checksum at the end.
-			// Answer to this request should return version of protocol, so controller
-			// can decide will we use CRC at the end or not based on version.
-			// We are not supporting old protocol
-			sendData((uint8_t*)&initialization_1, initialization_1.msg_length, false);
-			mPhase = psWaitingAnswerInit1;
-			mLastRequestTimestamp = now;
-			return;
-		case psSendingInit2:
-			sendData((uint8_t*)&initialization_2, initialization_2.msg_length);
-			mPhase = psWaitingAnswerInit2;
-			mLastRequestTimestamp = now;
-			return;
-		case psSendingFirstStatusRequest:
-		case psSendingStatusRequest:
-			sendData((uint8_t*)&poll_command, poll_command.msg_length);
-			mLastStatusRequest = now;
-			mPhase = (ProtocolPhases)((uint8_t)mPhase + 1);
-			mLastRequestTimestamp = now;
-			return;
-		case psSendingUpdateSignalRequest:
-			sendData((uint8_t*)&wifi_request, wifi_request.msg_length);
-			mLastSignalRequest = now;
-			mPhase = psWaitingUpateSignalAnswer;
-			mLastRequestTimestamp = now;
-			return;
-		case psSendingSignalLevel:
+    std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+    if ((mPhase >= psIdle) && (std::chrono::duration_cast<std::chrono::milliseconds>(now - mLastValidStatusTimestamp).count() > COMMUNICATION_TIMOUT_MS))
+    {
+        ESP_LOGE(TAG, "No valid status answer for to long. Resetting protocol");
+        currentPacket.Reset();
+        mPhase = psSendingInit1;
+        return;
+    }
+    switch (mPhase)
+    {
+        case psSendingInit1:
+            // No CRC here. Old Haier protocol use just 1 byte checksum at the end.
+            // Answer to this request should return version of protocol, so controller
+            // can decide will we use CRC at the end or not based on version.
+            // We are not supporting old protocol
+            sendData((uint8_t*)&initialization_1, initialization_1.msg_length, false);
+            mPhase = psWaitingAnswerInit1;
+            mLastRequestTimestamp = now;
+            return;
+        case psSendingInit2:
+            sendData((uint8_t*)&initialization_2, initialization_2.msg_length);
+            mPhase = psWaitingAnswerInit2;
+            mLastRequestTimestamp = now;
+            return;
+        case psSendingFirstStatusRequest:
+        case psSendingStatusRequest:
+            sendData((uint8_t*)&poll_command, poll_command.msg_length);
+            mLastStatusRequest = now;
+            mPhase = (ProtocolPhases)((uint8_t)mPhase + 1);
+            mLastRequestTimestamp = now;
+            return;
+        case psSendingUpdateSignalRequest:
+            sendData((uint8_t*)&wifi_request, wifi_request.msg_length);
+            mLastSignalRequest = now;
+            mPhase = psWaitingUpateSignalAnswer;
+            mLastRequestTimestamp = now;
+            return;
+        case psSendingSignalLevel:
 #ifdef SEND_WIFI_SIGNAL
-			{
-				wifi_ap_record_t ap_info;
-				if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK)
-				{
-					wifi_status[9] = 0;
-					wifi_status[11] = uint8_t((128 + ap_info.rssi) / 1.28f);
-					ESP_LOGD(TAG, "WiFi signal is: %ddBm => %d%%", ap_info.rssi, wifi_status[11]);
-				}
-				else
-				{
-					ESP_LOGD(TAG, "WiFi is not connected");
-					wifi_status[9] = 1;
-					wifi_status[11] = 0;
-				}
-				sendData(wifi_status, wifi_status[0]);
-			}
+            {
+                wifi_ap_record_t ap_info;
+                if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK)
+                {
+                    wifi_status[9] = 0;
+                    wifi_status[11] = uint8_t((128 + ap_info.rssi) / 1.28f);
+                    ESP_LOGD(TAG, "WiFi signal is: %ddBm => %d%%", ap_info.rssi, wifi_status[11]);
+                }
+                else
+                {
+                    ESP_LOGD(TAG, "WiFi is not connected");
+                    wifi_status[9] = 1;
+                    wifi_status[11] = 0;
+                }
+                sendData(wifi_status, wifi_status[0]);
+            }
 #endif
-			mPhase = psIdle;	// We don't expect answer here
-			return;
-		case psWaitingAnswerInit1:
-		case psWaitingAnswerInit2:
-		case psWaitingFirstStatusAnswer:
-			// Using status request interval here to avoid pushing to many messages if AC is not ready 
-			if (std::chrono::duration_cast<std::chrono::milliseconds>(now - mLastRequestTimestamp).count() > STATUS_REQUEST_INTERVAL_MS)
-			{
-				// No valid communication yet, resetting protocol,
-				// No logs to avoid to many messages
-				currentPacket.Reset();
-				mPhase = psSendingInit1;
-				return;
-			}
-			break;
-		case psWaitingStatusAnswer:
-		case psWaitingUpateSignalAnswer:
-			if (std::chrono::duration_cast<std::chrono::milliseconds>(now - mLastRequestTimestamp).count() > ANSWER_TIMOUT_MS)
-			{
-				// We have valid communication here, no problem if we missed packet or two
-				// Just request packet again in next loop call. We also protected by protocol timeout
-				ESP_LOGW(TAG, "Request answer timeout, phase %d", mPhase);
-				mPhase = psIdle;
-				return;
-			}
-			break;
-		case psIdle:
-			// Just do nothing, fall through
-			break;
-		default:
-			// Shouldn't get here
-			ESP_LOGE(TAG, "Wrong protocol handler state: %d, resetting communication", mPhase);
-			currentPacket.Reset();
-			mPhase = psSendingInit1;
-			return;
-	}
-	// Here we expect some input from AC or just waiting for the proper time to send the request
-	// Anyway we read the port to make sure that the buffer does not overflow
+            mPhase = psIdle;    // We don't expect answer here
+            return;
+        case psWaitingAnswerInit1:
+        case psWaitingAnswerInit2:
+        case psWaitingFirstStatusAnswer:
+            // Using status request interval here to avoid pushing to many messages if AC is not ready
+            if (std::chrono::duration_cast<std::chrono::milliseconds>(now - mLastRequestTimestamp).count() > STATUS_REQUEST_INTERVAL_MS)
+            {
+                // No valid communication yet, resetting protocol,
+                // No logs to avoid to many messages
+                currentPacket.Reset();
+                mPhase = psSendingInit1;
+                return;
+            }
+            break;
+        case psWaitingStatusAnswer:
+        case psWaitingUpateSignalAnswer:
+            if (std::chrono::duration_cast<std::chrono::milliseconds>(now - mLastRequestTimestamp).count() > ANSWER_TIMOUT_MS)
+            {
+                // We have valid communication here, no problem if we missed packet or two
+                // Just request packet again in next loop call. We also protected by protocol timeout
+                ESP_LOGW(TAG, "Request answer timeout, phase %d", mPhase);
+                mPhase = psIdle;
+                return;
+            }
+            break;
+        case psIdle:
+            // Just do nothing, fall through
+            break;
+        default:
+            // Shouldn't get here
+            ESP_LOGE(TAG, "Wrong protocol handler state: %d, resetting communication", mPhase);
+            currentPacket.Reset();
+            mPhase = psSendingInit1;
+            return;
+    }
+    // Here we expect some input from AC or just waiting for the proper time to send the request
+    // Anyway we read the port to make sure that the buffer does not overflow
     if ((currentPacket.size > 0) && (std::chrono::duration_cast<std::chrono::milliseconds>(now - mLastByteTimestamp).count() > PACKET_TIMOUT_MS))
     {
         ESP_LOGW(TAG, "Incoming packet timeout, packet size %d, expected size %d", currentPacket.position, currentPacket.size);
         currentPacket.Reset();
     }
-	getSerialData();
-	if (mPhase == psIdle)
-	{
-		// If we not waiting for answers check if there is a proper time to request data
-		if (std::chrono::duration_cast<std::chrono::milliseconds>(now - mLastStatusRequest).count() > STATUS_REQUEST_INTERVAL_MS)
-			mPhase = psSendingStatusRequest;
+    getSerialData();
+    if (mPhase == psIdle)
+    {
+        // If we not waiting for answers check if there is a proper time to request data
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - mLastStatusRequest).count() > STATUS_REQUEST_INTERVAL_MS)
+            mPhase = psSendingStatusRequest;
 #ifdef SEND_WIFI_SIGNAL
-		else if (std::chrono::duration_cast<std::chrono::milliseconds>(now - mLastSignalRequest).count() > SIGNAL_LEVEL_UPDATE_INTERVAL_MS)
-			mPhase = psSendingUpdateSignalRequest;
+        else if (std::chrono::duration_cast<std::chrono::milliseconds>(now - mLastSignalRequest).count() > SIGNAL_LEVEL_UPDATE_INTERVAL_MS)
+            mPhase = psSendingUpdateSignalRequest;
 #endif
-	}
+    }
 }
 
 void HaierClimate::getSerialData()
@@ -415,8 +415,8 @@ void HaierClimate::getSerialData()
                 }
                 if (isValid)
                 {
-					// We got valid packet here, need to handle it
-					handleIncomingPacket();
+                    // We got valid packet here, need to handle it
+                    handleIncomingPacket();
                }
                 currentPacket.Reset();
             }
@@ -449,85 +449,83 @@ void HaierClimate::getSerialData()
 
 void HaierClimate::handleIncomingPacket()
 {
-	HaierPacketHeader& header = reinterpret_cast<HaierPacketHeader&>(currentPacket.buffer);
-	std::string packet_type;
-	ProtocolPhases oldPhase = mPhase;
-	esp_log_level_t level = ESP_LOG_DEBUG;
-	bool wrongPhase = false;
-	switch (header.msg_type)
-	{
-		case hpAnswerInit1:
-			packet_type = "Init1 command answer";
-			if (mPhase == psWaitingAnswerInit1)
-				mPhase = psSendingInit2;
-			else
-				level = ESP_LOG_WARN;
-			break;
-		case hpAnswerInit2:
-			packet_type = "Init2 command answer";
-			if (mPhase == psWaitingAnswerInit2)
-				mPhase = psSendingFirstStatusRequest;
-			else
-				level = ESP_LOG_WARN;
-			break;
-		case hpAnswerRequestStatus:
-			packet_type = "Poll command answer";
-			if ((mPhase == psWaitingStatusAnswer) || (mPhase == psWaitingFirstStatusAnswer))
-			{
-				if (mPhase == psWaitingFirstStatusAnswer)
-					ESP_LOGI(TAG, "First status received");
-				xSemaphoreTake(mReadMutex, portMAX_DELAY);
-				memcpy(mLastPacket, currentPacket.buffer, currentPacket.size);
-				xSemaphoreGive(mReadMutex);
-//                {
-//                    HaierStatus& _packet = reinterpret_cast<HaierPacketStatus&>(currentPacket.buffer);
-//                    ESP_LOGD("Control", HaierPacketToString(_packet).c_str());
-//                }
-				processStatus(currentPacket.buffer, currentPacket.size);
-				mPhase = psIdle;
-			}
-			else
-				level = ESP_LOG_WARN;
-			break;
-		case hpAnswerError:
-			packet_type = "Command error";
-			level = ESP_LOG_WARN;
-			if (mPhase == psWaitingStatusAnswer)
-				mPhase = psIdle;
-			// No else to avoid to many requests, we will retry on timeout
-			break;
-		case hpAnswerReadyToSendSignal:
-			packet_type = "Signal request answer";
-			if (mPhase == psWaitingUpateSignalAnswer)
-				mPhase = psSendingSignalLevel;
-			else
-				level = ESP_LOG_WARN;
-			break;
-		default:
-			packet_type = "Unknown";
-			break;
-	}
-	std::string raw = getHex(currentPacket.buffer, currentPacket.size);
-	ESP_LOG_L(level, TAG, "Received %s message during phase %d, size: %d, content: %02X %02X%s", packet_type.c_str(), oldPhase, currentPacket.size, HEADER, HEADER, raw.c_str());
+    HaierPacketHeader& header = reinterpret_cast<HaierPacketHeader&>(currentPacket.buffer);
+    std::string packet_type;
+    ProtocolPhases oldPhase = mPhase;
+    esp_log_level_t level = ESP_LOG_DEBUG;
+    bool wrongPhase = false;
+    switch (header.msg_type)
+    {
+        case hpAnswerInit1:
+            packet_type = "Init1 command answer";
+            if (mPhase == psWaitingAnswerInit1)
+                mPhase = psSendingInit2;
+            else
+                level = ESP_LOG_WARN;
+            break;
+        case hpAnswerInit2:
+            packet_type = "Init2 command answer";
+            if (mPhase == psWaitingAnswerInit2)
+                mPhase = psSendingFirstStatusRequest;
+            else
+                level = ESP_LOG_WARN;
+            break;
+        case hpAnswerRequestStatus:
+            packet_type = "Poll command answer";
+            if (mPhase >= psWaitingFirstStatusAnswer) // Accept status on any stage after initialization
+            {
+                if (mPhase == psWaitingFirstStatusAnswer)
+                    ESP_LOGI(TAG, "First status received");
+                xSemaphoreTake(mReadMutex, portMAX_DELAY);
+                memcpy(mLastPacket, currentPacket.buffer, currentPacket.size);
+                xSemaphoreGive(mReadMutex);
+                processStatus(currentPacket.buffer, currentPacket.size);
+				if ((mPhase == psWaitingStatusAnswer) || (mPhase == psWaitingFirstStatusAnswer))
+					// Change phase only if we were waiting for status
+					mPhase = psIdle;
+            }
+            else
+                level = ESP_LOG_WARN;
+            break;
+        case hpAnswerError:
+            packet_type = "Command error";
+            level = ESP_LOG_WARN;
+            if (mPhase == psWaitingStatusAnswer)
+                mPhase = psIdle;
+            // No else to avoid to many requests, we will retry on timeout
+            break;
+        case hpAnswerReadyToSendSignal:
+            packet_type = "Signal request answer";
+            if (mPhase == psWaitingUpateSignalAnswer)
+                mPhase = psSendingSignalLevel;
+            else
+                level = ESP_LOG_WARN;
+            break;
+        default:
+            packet_type = "Unknown";
+            break;
+    }
+    std::string raw = getHex(currentPacket.buffer, currentPacket.size);
+    ESP_LOG_L(level, TAG, "Received %s message during phase %d, size: %d, content: %02X %02X%s", packet_type.c_str(), oldPhase, currentPacket.size, HEADER, HEADER, raw.c_str());
 }
 
 void HaierClimate::sendData(const uint8_t * message, size_t size, bool withCrc)
 {
-	uint8_t checksum = getChecksum(message, size);
+    uint8_t checksum = getChecksum(message, size);
     std::string raw = getHex(message, size);
     write_byte(HEADER);
     write_byte(HEADER);
     write_array(message, size);
     write_byte(checksum);
-	if (withCrc)
-	{
-		uint16_t crc_16 = crc16(message, size);
-		write_byte(crc_16 >> 8);
-		write_byte(crc_16 & 0xFF);
-		ESP_LOGD(TAG, "Message sent: %02X %02X%s %02X %02X %02X", HEADER, HEADER, raw.c_str(), checksum, (crc_16 >> 8), crc_16 & 0xFF);
-	}
-	else
-		ESP_LOGD(TAG, "Message sent: %02X %02X%s %02X", HEADER, HEADER, raw.c_str(), checksum);
+    if (withCrc)
+    {
+        uint16_t crc_16 = crc16(message, size);
+        write_byte(crc_16 >> 8);
+        write_byte(crc_16 & 0xFF);
+        ESP_LOGD(TAG, "Message sent: %02X %02X%s %02X %02X %02X", HEADER, HEADER, raw.c_str(), checksum, (crc_16 >> 8), crc_16 & 0xFF);
+    }
+    else
+        ESP_LOGD(TAG, "Message sent: %02X %02X%s %02X", HEADER, HEADER, raw.c_str(), checksum);
 
 }
 
@@ -544,7 +542,7 @@ void HaierClimate::control(const ClimateCall &call)
         ESP_LOGE("Control", "No action, first poll answer not received");
         return; //cancel the control, we cant do it without a poll answer.
     }
-	memcpy(controlOutBuffer, &control_command, HEADER_SIZE);
+    memcpy(controlOutBuffer, &control_command, HEADER_SIZE);
     xSemaphoreTake(mReadMutex, portMAX_DELAY);
     memcpy(&controlOutBuffer[HEADER_SIZE], &mLastPacket[HEADER_SIZE], CONTROL_PACKET_SIZE - HEADER_SIZE);
     xSemaphoreGive(mReadMutex);
@@ -681,6 +679,7 @@ void HaierClimate::control(const ClimateCall &call)
                 return;
         }
     }
+	// TODO: Move sending packet to loop
     sendData(controlOutBuffer, controlOutBuffer[0]);
 }
 
@@ -769,6 +768,6 @@ void HaierClimate::processStatus(const uint8_t* packetBuffer, uint8_t size)
         else
             swing_mode = CLIMATE_SWING_OFF;
     }
-	mLastValidStatusTimestamp = std::chrono::steady_clock::now();
+    mLastValidStatusTimestamp = std::chrono::steady_clock::now();
     this->publish_state();
 }
