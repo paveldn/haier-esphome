@@ -39,8 +39,6 @@ enum FanMode
     FanAuto                     = 0x05
 };
 
-// Dead bits immediately revert,
-// unknown bits stay on until the remote is used which turns them off
 struct HaierPacketHeader
 {
     // We skip start packet indication (0xFF 0xFF)
@@ -107,5 +105,6 @@ struct HaierControl
 };
 
 #define CONTROL_PACKET_SIZE         (sizeof(HaierPacketHeader) + sizeof(HaierPacketControl))
+#define HEADER_SIZE 				(sizeof(HaierPacketHeader))
 
 #endif // HAIER_PACKET_H

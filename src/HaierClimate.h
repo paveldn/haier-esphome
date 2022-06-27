@@ -20,7 +20,7 @@ public:
     void control(const esphome::climate::ClimateCall &call) override;
 protected:
     esphome::climate::ClimateTraits traits() override;
-    void sendData(const uint8_t * message, size_t size);
+    void sendData(const uint8_t * message, size_t size, bool withCrc = true);
     void processStatus(const uint8_t* packet, uint8_t size);
 	void handleIncomingPacket();
 	void getSerialData();
@@ -47,6 +47,7 @@ private:
     uint8_t*            mLastPacket;
     uint8_t             mFanModeFanSpeed;
     uint8_t             mOtherModesFanSpeed;
+	esphome::climate::ClimateTraits			mTraits;
 	std::chrono::steady_clock::time_point 	mLastByteTimestamp;			// For packet timeout
 	std::chrono::steady_clock::time_point	mLastRequestTimestamp;		// For answer timeout
 	std::chrono::steady_clock::time_point	mLastValidStatusTimestamp;	// For protocol timeout
