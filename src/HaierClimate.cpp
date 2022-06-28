@@ -1,7 +1,7 @@
 #include "esphome.h"
 #include <chrono>
-#include <sstream>
 #include <mutex>
+#include <string>
 #include "HaierClimate.h"
 #include "HaierPacket.h"
 
@@ -11,12 +11,9 @@
 #include <esp_wifi.h>
 #endif
 
-
 using namespace esphome;
 using namespace esphome::climate;
 using namespace esphome::uart;
-
-#include <string>
 
 #define TAG "Haier"
 
@@ -33,7 +30,6 @@ using namespace esphome::uart;
 #define MAX_MESSAGE_SIZE                64
 #define HEADER                          0xFF
 
-
 // ESP_LOG_LEVEL don't work as I want it so I implemented this macro
 #define ESP_LOG_L(level, tag, format, ...) do {                     \
         if (level==ESP_LOG_ERROR )          { ESP_LOGE(tag, format __VA_OPT__(,) __VA_ARGS__); } \
@@ -42,34 +38,6 @@ using namespace esphome::uart;
         else if (level==ESP_LOG_VERBOSE )   { ESP_LOGV(tag, format __VA_OPT__(,) __VA_ARGS__); } \
         else                                { ESP_LOGI(tag, format __VA_OPT__(,) __VA_ARGS__); } \
     } while(0)
-
-std::string HaierPacketToString(const HaierControl& packet)
-{
-    std::stringstream sstream;
-    sstream << "Message type: " << (uint)packet.header.msg_type << "\n"
-            << "\tSetpoint: " << (uint)packet.control.set_point + 16 << "\n"
-            << "\tAC mode: " << (uint)packet.control.ac_mode << "\n"
-            << "\tFan mode: " << (uint)packet.control.fan_mode << "\n"
-            << "\tVertical swing mode: " << (uint)packet.control.vertical_swing_mode << "\n"
-            << "\tHorizontal swing mode: " << (uint)packet.control.horizontal_swing_mode << "\n"
-            << "\tIs on?: " << ((packet.control.ac_power != 0) ? "Yes" : "No");
-    return sstream.str();
-}
-
-std::string HaierPacketToString(const HaierStatus& packet)
-{
-    std::stringstream sstream;
-    sstream << "Message type: " << (uint)packet.header.msg_type << "\n"
-            << "\tSetpoint: " << (uint)packet.control.set_point + 16 << "\n"
-            << "\tAC mode: " << (uint)packet.control.ac_mode << "\n"
-            << "\tFan mode: " << (uint)packet.control.fan_mode << "\n"
-            << "\tVertical swing mode: " << (uint)packet.control.vertical_swing_mode << "\n"
-            << "\tHorizontal swing mode: " << (uint)packet.control.horizontal_swing_mode << "\n"
-            << "\tRoom temperature: " << (uint)packet.sensors.room_temperature / 2 << "\n"
-            << "\tOutdoor temperature: " << (uint)packet.sensors.outdoor_temperature / 2 << "\n"
-            << "\tIs on?: " << ((packet.control.ac_power != 0) ? "Yes" : "No");
-    return sstream.str();
-}
 
 uint8_t getChecksum(const uint8_t * message, size_t size) {
         uint8_t result = 0;
@@ -176,7 +144,6 @@ const HaierPacketHeader control_command = {
         .arguments = { 0x60, 0x01 }
     };
 
-
 // This command is longer so we can't use HaierPacketHeader
  uint8_t wifi_status[]  = {0x0C,    0x40,   0x00,   0x00,   0x00,   0x00,   0x00,   (uint8_t)(hpCommandSignalLevel),    0x00,   0x00,   0x00,   0x00};
 
@@ -223,7 +190,7 @@ HaierClimate::HaierClimate(UARTComponent* parent) :
     });
     mTraits.set_visual_min_temperature(MIN_SET_TEMPERATURE);
     mTraits.set_visual_max_temperature(MAX_SET_TEMPERATURE);
-    mTraits.set_visual_temperature_step(0.5f); //displays current temp in 0.5 degree steps, we cannot change it in 0.5 degree steps however
+    mTraits.set_visual_temperature_step(1.0f);
     mTraits.set_supports_current_temperature(true);
 }
 
@@ -480,9 +447,9 @@ void HaierClimate::handleIncomingPacket()
                 memcpy(mLastPacket, currentPacket.buffer, currentPacket.size);
                 xSemaphoreGive(mReadMutex);
                 processStatus(currentPacket.buffer, currentPacket.size);
-				if ((mPhase == psWaitingStatusAnswer) || (mPhase == psWaitingFirstStatusAnswer))
-					// Change phase only if we were waiting for status
-					mPhase = psIdle;
+                if ((mPhase == psWaitingStatusAnswer) || (mPhase == psWaitingFirstStatusAnswer))
+                    // Change phase only if we were waiting for status
+                    mPhase = psIdle;
             }
             else
                 level = ESP_LOG_WARN;
@@ -511,22 +478,23 @@ void HaierClimate::handleIncomingPacket()
 
 void HaierClimate::sendData(const uint8_t * message, size_t size, bool withCrc)
 {
-    uint8_t checksum = getChecksum(message, size);
-    std::string raw = getHex(message, size);
-    write_byte(HEADER);
-    write_byte(HEADER);
-    write_array(message, size);
-    write_byte(checksum);
+    uint8_t packetSize = size + (withCrc ? 5 : 3);
+    if (packetSize > MAX_MESSAGE_SIZE)
+    {
+        ESP_LOGE(TAG, "Message is to big: %d", size);
+        return;
+    }
+    uint8_t buffer[MAX_MESSAGE_SIZE] = {0xFF, 0xFF};
+    memcpy(buffer + 2, message, size);
+    buffer[size + 2] = getChecksum(buffer + 2, size);
     if (withCrc)
     {
-        uint16_t crc_16 = crc16(message, size);
-        write_byte(crc_16 >> 8);
-        write_byte(crc_16 & 0xFF);
-        ESP_LOGD(TAG, "Message sent: %02X %02X%s %02X %02X %02X", HEADER, HEADER, raw.c_str(), checksum, (crc_16 >> 8), crc_16 & 0xFF);
+        uint16_t crc_16 = crc16(buffer + 2, size);
+        buffer[size + 3] = crc_16 >> 8;
+        buffer[size + 4] = crc_16 & 0xFF;
     }
-    else
-        ESP_LOGD(TAG, "Message sent: %02X %02X%s %02X", HEADER, HEADER, raw.c_str(), checksum);
-
+    write_array(buffer, packetSize);
+    ESP_LOGD(TAG, "Message sent:%s", getHex(buffer, packetSize).c_str());
 }
 
 ClimateTraits HaierClimate::traits()
@@ -679,7 +647,6 @@ void HaierClimate::control(const ClimateCall &call)
                 return;
         }
     }
-	// TODO: Move sending packet to loop
     sendData(controlOutBuffer, controlOutBuffer[0]);
 }
 
