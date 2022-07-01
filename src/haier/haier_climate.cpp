@@ -2,13 +2,15 @@
 #include <chrono>
 #include <mutex>
 #include <string>
+#include "esphome/components/climate/climate.h"
+#include "esphome/components/uart/uart.h"
 #include "haier_climate.h"
 #include "haier_packet.h"
 
 #define SEND_WIFI_SIGNAL
 
 #ifdef SEND_WIFI_SIGNAL
-#include <esp_wifi.h>
+#include "esphome/components/wifi/wifi_component.h"
 #endif
 
 using namespace esphome::climate;
@@ -34,11 +36,12 @@ namespace haier {
 
 // ESP_LOG_LEVEL don't work as I want it so I implemented this macro
 #define ESP_LOG_L(level, tag, format, ...) do {                     \
-        if (level==ESP_LOG_ERROR )          { ESP_LOGE(tag, format __VA_OPT__(,) __VA_ARGS__); } \
-        else if (level==ESP_LOG_WARN )      { ESP_LOGW(tag, format __VA_OPT__(,) __VA_ARGS__); } \
-        else if (level==ESP_LOG_DEBUG )     { ESP_LOGD(tag, format __VA_OPT__(,) __VA_ARGS__); } \
-        else if (level==ESP_LOG_VERBOSE )   { ESP_LOGV(tag, format __VA_OPT__(,) __VA_ARGS__); } \
-        else                                { ESP_LOGI(tag, format __VA_OPT__(,) __VA_ARGS__); } \
+        if (level==ESPHOME_LOG_LEVEL_ERROR )        { ESP_LOGE(tag, format, __VA_ARGS__); } \
+        else if (level==ESPHOME_LOG_LEVEL_WARN )    { ESP_LOGW(tag, format, __VA_ARGS__); } \
+        else if (level==ESPHOME_LOG_LEVEL_INFO)     { ESP_LOGI(tag, format, __VA_ARGS__); } \
+        else if (level==ESPHOME_LOG_LEVEL_DEBUG )   { ESP_LOGD(tag, format, __VA_ARGS__); } \
+        else if (level==ESPHOME_LOG_LEVEL_VERBOSE ) { ESP_LOGV(tag, format, __VA_ARGS__); } \
+        else                                        { ESP_LOGVV(tag, format, __VA_ARGS__); } \
     } while(0)
 
 uint8_t getChecksum(const uint8_t * message, size_t size) {
@@ -278,12 +281,12 @@ void HaierClimate::loop()
         case psSendingSignalLevel:
 #ifdef SEND_WIFI_SIGNAL
             {
-                wifi_ap_record_t ap_info;
-                if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK)
+                if (wifi::global_wifi_component->is_connected())
                 {
                     wifi_status[9] = 0;
-                    wifi_status[11] = uint8_t((128 + ap_info.rssi) / 1.28f);
-                    ESP_LOGD(TAG, "WiFi signal is: %ddBm => %d%%", ap_info.rssi, wifi_status[11]);
+                    int8_t _rssi = wifi::global_wifi_component->wifi_rssi();
+                    wifi_status[11] = uint8_t((128 + _rssi) / 1.28f);
+                    ESP_LOGD(TAG, "WiFi signal is: %ddBm => %d%%", _rssi, wifi_status[11]);
                 }
                 else
                 {
@@ -418,10 +421,10 @@ void HaierClimate::getSerialData()
 
 void HaierClimate::handleIncomingPacket()
 {
-    HaierPacketHeader& header = reinterpret_cast<HaierPacketHeader&>(currentPacket.buffer);
+    HaierPacketHeader& header = (HaierPacketHeader&)currentPacket.buffer;
     std::string packet_type;
     ProtocolPhases oldPhase = mPhase;
-    esp_log_level_t level = ESP_LOG_DEBUG;
+    int level = ESPHOME_LOG_LEVEL_DEBUG;
     bool wrongPhase = false;
     switch (header.msg_type)
     {
@@ -430,14 +433,14 @@ void HaierClimate::handleIncomingPacket()
             if (mPhase == psWaitingAnswerInit1)
                 mPhase = psSendingInit2;
             else
-                level = ESP_LOG_WARN;
+                level = ESPHOME_LOG_LEVEL_WARN;
             break;
         case hpAnswerInit2:
             packet_type = "Init2 command answer";
             if (mPhase == psWaitingAnswerInit2)
                 mPhase = psSendingFirstStatusRequest;
             else
-                level = ESP_LOG_WARN;
+                level = ESPHOME_LOG_LEVEL_WARN;
             break;
         case hpAnswerRequestStatus:
             packet_type = "Poll command answer";
@@ -454,11 +457,11 @@ void HaierClimate::handleIncomingPacket()
                     mPhase = psIdle;
             }
             else
-                level = ESP_LOG_WARN;
+                level = ESPHOME_LOG_LEVEL_WARN;
             break;
         case hpAnswerError:
             packet_type = "Command error";
-            level = ESP_LOG_WARN;
+            level = ESPHOME_LOG_LEVEL_WARN;
             if (mPhase == psWaitingStatusAnswer)
                 mPhase = psIdle;
             // No else to avoid to many requests, we will retry on timeout
@@ -468,7 +471,7 @@ void HaierClimate::handleIncomingPacket()
             if (mPhase == psWaitingUpateSignalAnswer)
                 mPhase = psSendingSignalLevel;
             else
-                level = ESP_LOG_WARN;
+                level = ESPHOME_LOG_LEVEL_WARN;
             break;
         default:
             packet_type = "Unknown";
