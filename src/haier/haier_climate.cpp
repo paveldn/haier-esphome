@@ -2,8 +2,8 @@
 #include <chrono>
 #include <mutex>
 #include <string>
-#include "HaierClimate.h"
-#include "HaierPacket.h"
+#include "haier_climate.h"
+#include "haier_packet.h"
 
 #define SEND_WIFI_SIGNAL
 
@@ -11,9 +11,11 @@
 #include <esp_wifi.h>
 #endif
 
-using namespace esphome;
 using namespace esphome::climate;
 using namespace esphome::uart;
+
+namespace esphome {
+namespace haier {
 
 #define TAG "Haier"
 
@@ -738,3 +740,6 @@ void HaierClimate::processStatus(const uint8_t* packetBuffer, uint8_t size)
     mLastValidStatusTimestamp = std::chrono::steady_clock::now();
     this->publish_state();
 }
+
+} // namespace haier
+} // namespace esphome

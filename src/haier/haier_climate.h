@@ -1,9 +1,14 @@
 #ifndef HAIER_ESP_HAIER_CLIMATE_H
 #define HAIER_ESP_HAIER_CLIMATE_H
 
-#include "esphome.h"
 #include <chrono>
+#include "esphome/components/climate/climate.h"
+#include "esphome/components/uart/uart.h"
 
+//#include "esphome/core/component.h"
+//#include "esphome/components/uart/uart.h"
+namespace esphome {
+namespace haier {
 
 class HaierClimate :    public esphome::Component,
                         public esphome::climate::Climate,
@@ -18,6 +23,8 @@ public:
     void setup() override;
     void loop() override;
     void control(const esphome::climate::ClimateCall &call) override;
+    float get_setup_priority() const override { return esphome::setup_priority::HARDWARE ; }
+    int getOutsideTemp() { return 0; }
 protected:
     esphome::climate::ClimateTraits traits() override;
     void sendData(const uint8_t * message, size_t size, bool withCrc = true);
@@ -55,5 +62,9 @@ private:
     std::chrono::steady_clock::time_point   mLastSignalRequest; // To send WiFI signal level
 
 };
+
+} // namespace haier
+} // namespace esphome
+
 
 #endif //HAIER_ESP_HAIER_CLIMATE_H

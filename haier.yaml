@@ -1,16 +1,21 @@
+substitutions:
+  device_name: "Haier AC"
+
 esphome:
   name: haier
   name_add_mac_suffix: true
-  includes:
-    - src/HaierPacket.h
-    - src/HaierClimate.h
-    - src/HaierClimate.cpp
+
 esp32:
   board: esp32dev
   framework:
     type: esp-idf
     sdkconfig_options:
       CONFIG_FREERTOS_UNICORE: y
+
+external_components:
+  source:
+    type: local
+    path: ./src
 
 uart:
   baud_rate: 9600
@@ -28,12 +33,8 @@ wifi:
 api:
 
 ota:
-  
+
 climate:
-  - platform: custom
-    lambda: |-
-      auto haier = new HaierClimate(id(ac_port));
-      App.register_component(haier);
-      return {haier};
-    climates:
-      - name: "Haier AC"
+  - platform: haier
+    name: ${device_name} 
+    uart_id: ac_port
