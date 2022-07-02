@@ -6,12 +6,7 @@
 #include "esphome/components/uart/uart.h"
 #include "haier_climate.h"
 #include "haier_packet.h"
-
-#define SEND_WIFI_SIGNAL
-
-#ifdef SEND_WIFI_SIGNAL
 #include "esphome/components/wifi/wifi_component.h"
-#endif
 
 using namespace esphome::climate;
 using namespace esphome::uart;
@@ -156,7 +151,9 @@ HaierClimate::HaierClimate(UARTComponent* parent) :
                                         Component(),
                                         UARTDevice(parent) ,
                                         mFanModeFanSpeed(FanMid),
-                                        mOtherModesFanSpeed(FanAuto)
+                                        mOtherModesFanSpeed(FanAuto),
+                                        mSendWifiSignal(false),
+                                        mOutdoorSensor(nullptr)
 {
     mLastPacket = new uint8_t[MAX_MESSAGE_SIZE];
     mReadMutex = xSemaphoreCreateMutex();
@@ -279,7 +276,7 @@ void HaierClimate::loop()
             mLastRequestTimestamp = now;
             return;
         case psSendingSignalLevel:
-#ifdef SEND_WIFI_SIGNAL
+            if (mSendWifiSignal)
             {
                 if (wifi::global_wifi_component->is_connected())
                 {
@@ -296,7 +293,6 @@ void HaierClimate::loop()
                 }
                 sendData(wifi_status, wifi_status[0]);
             }
-#endif
             mPhase = psIdle;    // We don't expect answer here
             return;
         case psWaitingAnswerInit1:
@@ -346,10 +342,8 @@ void HaierClimate::loop()
         // If we not waiting for answers check if there is a proper time to request data
         if (std::chrono::duration_cast<std::chrono::milliseconds>(now - mLastStatusRequest).count() > STATUS_REQUEST_INTERVAL_MS)
             mPhase = psSendingStatusRequest;
-#ifdef SEND_WIFI_SIGNAL
-        else if (std::chrono::duration_cast<std::chrono::milliseconds>(now - mLastSignalRequest).count() > SIGNAL_LEVEL_UPDATE_INTERVAL_MS)
+        else if (mSendWifiSignal && (std::chrono::duration_cast<std::chrono::milliseconds>(now - mLastSignalRequest).count() > SIGNAL_LEVEL_UPDATE_INTERVAL_MS))
             mPhase = psSendingUpdateSignalRequest;
-#endif
     }
 }
 
@@ -663,6 +657,12 @@ void HaierClimate::processStatus(const uint8_t* packetBuffer, uint8_t size)
     ESP_LOGD(TAG, "Horizontal Swing Status = 0x%X", packet->control.horizontal_swing_mode);
     ESP_LOGD(TAG, "Vertical Swing Status = 0x%X", packet->control.vertical_swing_mode);
     ESP_LOGD(TAG, "Set Point Status = 0x%X", packet->control.set_point);
+    if (mOutdoorSensor != nullptr)
+    {
+        float otemp = packet->sensors.outdoor_temperature / 2.0f;
+        if ((!mOutdoorSensor->has_state()) ||  (mOutdoorSensor->get_raw_state() != otemp))
+          mOutdoorSensor->publish_state(otemp);
+    }
     //extra modes/presets
     if (packet->control.quiet_mode != 0)
            preset = CLIMATE_PRESET_ECO;
@@ -679,7 +679,7 @@ void HaierClimate::processStatus(const uint8_t* packetBuffer, uint8_t size)
         target_temperature = 10;    //away mode sets to 10c
     else
         target_temperature = packet->control.set_point + 16;
-    current_temperature = packet->sensors.room_temperature / 2;
+    current_temperature = packet->sensors.room_temperature / 2.0f;
     //remember the fan speed we last had for climate vs fan
     if (packet->control.ac_mode ==  ConditioningFan)
         mFanModeFanSpeed = packet->control.fan_mode;

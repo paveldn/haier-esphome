@@ -22,6 +22,9 @@ public:
     void loop() override;
     void control(const esphome::climate::ClimateCall &call) override;
     float get_setup_priority() const override { return esphome::setup_priority::HARDWARE ; }
+    void set_send_wifi_signal(bool sendWifi) { mSendWifiSignal = sendWifi; };
+    void set_outdoor_temperature_sensor(esphome::sensor::Sensor *sensor) { mOutdoorSensor = sensor; }
+
 protected:
     esphome::climate::ClimateTraits traits() override;
     void sendData(const uint8_t * message, size_t size, bool withCrc = true);
@@ -51,6 +54,8 @@ private:
     uint8_t*            mLastPacket;
     uint8_t             mFanModeFanSpeed;
     uint8_t             mOtherModesFanSpeed;
+    bool                mSendWifiSignal;
+    esphome::sensor::Sensor*                mOutdoorSensor;
     esphome::climate::ClimateTraits         mTraits;
     std::chrono::steady_clock::time_point   mLastByteTimestamp;         // For packet timeout
     std::chrono::steady_clock::time_point   mLastRequestTimestamp;      // For answer timeout
