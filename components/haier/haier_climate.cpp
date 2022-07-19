@@ -1,6 +1,5 @@
 #include "esphome.h"
 #include <chrono>
-#include <mutex>
 #include <string>
 #include "esphome/components/climate/climate.h"
 #include "esphome/components/uart/uart.h"
@@ -149,14 +148,13 @@ const HaierPacketHeader control_command = {
 
 HaierClimate::HaierClimate(UARTComponent* parent) :
                                         Component(),
-                                        UARTDevice(parent) ,
+                                        UARTDevice(parent),
                                         mFanModeFanSpeed(FanMid),
                                         mOtherModesFanSpeed(FanAuto),
                                         mSendWifiSignal(false),
                                         mOutdoorSensor(nullptr)
 {
     mLastPacket = new uint8_t[MAX_MESSAGE_SIZE];
-    mReadMutex = xSemaphoreCreateMutex();
     mTraits = climate::ClimateTraits();
     mTraits.set_supported_modes(
     {
@@ -198,7 +196,6 @@ HaierClimate::HaierClimate(UARTComponent* parent) :
 
 HaierClimate::~HaierClimate()
 {
-    vSemaphoreDelete(mReadMutex);
     delete[] mLastPacket;
 }
 
@@ -442,9 +439,10 @@ void HaierClimate::handleIncomingPacket()
             {
                 if (mPhase == psWaitingFirstStatusAnswer)
                     ESP_LOGI(TAG, "First status received");
-                xSemaphoreTake(mReadMutex, portMAX_DELAY);
-                memcpy(mLastPacket, currentPacket.buffer, currentPacket.size);
-                xSemaphoreGive(mReadMutex);
+                {
+                    Lock _lock(mReadMutex);
+                    memcpy(mLastPacket, currentPacket.buffer, currentPacket.size);
+                }
                 processStatus(currentPacket.buffer, currentPacket.size);
                 if ((mPhase == psWaitingStatusAnswer) || (mPhase == psWaitingFirstStatusAnswer))
                     // Change phase only if we were waiting for status
@@ -510,9 +508,10 @@ void HaierClimate::control(const ClimateCall &call)
         return; //cancel the control, we cant do it without a poll answer.
     }
     memcpy(controlOutBuffer, &control_command, HEADER_SIZE);
-    xSemaphoreTake(mReadMutex, portMAX_DELAY);
-    memcpy(&controlOutBuffer[HEADER_SIZE], &mLastPacket[HEADER_SIZE], CONTROL_PACKET_SIZE - HEADER_SIZE);
-    xSemaphoreGive(mReadMutex);
+    {
+        Lock _lock(mReadMutex);
+        memcpy(&controlOutBuffer[HEADER_SIZE], &mLastPacket[HEADER_SIZE], CONTROL_PACKET_SIZE - HEADER_SIZE);
+    }
     HaierControl& outData = (HaierControl&) controlOutBuffer;
     outData.header.msg_type = 1;
     outData.header.arguments[0] = (uint8_t)hpCommandControl;

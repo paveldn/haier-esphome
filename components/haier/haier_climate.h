@@ -5,6 +5,24 @@
 #include "esphome/components/climate/climate.h"
 #include "esphome/components/uart/uart.h"
 
+#if ESP8266
+// No mutexes for ESP8266 just make dummy classes and pray...
+struct Mutex
+{
+    void lock() {};
+    void unlock() {};
+};
+
+struct Lock
+{
+    Lock(const Mutex&) {};
+}; 
+#else
+#include <mutex>
+typedef std::mutex Mutex;
+typedef std::lock_guard<Mutex> Lock;
+#endif
+
 namespace esphome {
 namespace haier {
 
@@ -50,7 +68,7 @@ private:
         psSendingSignalLevel,   // No answer to this command
     };
     ProtocolPhases      mPhase;
-    SemaphoreHandle_t   mReadMutex;
+    Mutex               mReadMutex;
     uint8_t*            mLastPacket;
     uint8_t             mFanModeFanSpeed;
     uint8_t             mOtherModesFanSpeed;
