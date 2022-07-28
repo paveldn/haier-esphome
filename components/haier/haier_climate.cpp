@@ -101,6 +101,7 @@ namespace
         hpAnswerError               = 0x03,
         hpAnswerReadyToSendSignal   = 0xFD,
         hpAnswerControl             = 0x61,
+        hpAnswerSignalLevel         = 0x05,
     };
 }
 
@@ -289,8 +290,10 @@ void HaierClimate::loop()
                     wifi_status[11] = 0;
                 }
                 sendData(wifi_status, wifi_status[0]);
+                mPhase = psWaitingSignalLevelAnswer;
             }
-            mPhase = psIdle;    // We don't expect answer here
+            else
+                mPhase = psIdle;    // We don't expect answer here
             return;
         case psWaitingAnswerInit1:
         case psWaitingAnswerInit2:
@@ -307,6 +310,7 @@ void HaierClimate::loop()
             break;
         case psWaitingStatusAnswer:
         case psWaitingUpateSignalAnswer:
+        case psWaitingSignalLevelAnswer:
             if (std::chrono::duration_cast<std::chrono::milliseconds>(now - mLastRequestTimestamp).count() > ANSWER_TIMOUT_MS)
             {
                 // We have valid communication here, no problem if we missed packet or two
@@ -448,6 +452,13 @@ void HaierClimate::handleIncomingPacket()
                     // Change phase only if we were waiting for status
                     mPhase = psIdle;
             }
+            else
+                level = ESPHOME_LOG_LEVEL_WARN;
+            break;
+        case hpAnswerSignalLevel:
+            packet_type = "Signal level answer";
+            if (mPhase == psWaitingSignalLevelAnswer)
+                mPhase = psIdle;
             else
                 level = ESPHOME_LOG_LEVEL_WARN;
             break;

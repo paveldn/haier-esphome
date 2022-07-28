@@ -65,7 +65,8 @@ private:
         psWaitingStatusAnswer,
         psSendingUpdateSignalRequest,
         psWaitingUpateSignalAnswer,
-        psSendingSignalLevel,   // No answer to this command
+        psSendingSignalLevel,
+        psWaitingSignalLevelAnswer,
     };
     ProtocolPhases      mPhase;
     Mutex               mReadMutex;
