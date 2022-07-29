@@ -153,6 +153,7 @@ HaierClimate::HaierClimate(UARTComponent* parent) :
                                         mFanModeFanSpeed(FanMid),
                                         mOtherModesFanSpeed(FanAuto),
                                         mSendWifiSignal(false),
+                                        mBeeperEcho(true),
                                         mOutdoorSensor(nullptr)
 {
     mLastPacket = new uint8_t[MAX_MESSAGE_SIZE];
@@ -656,6 +657,8 @@ void HaierClimate::control(const ClimateCall &call)
                 return;
         }
     }
+    if (!mBeeperEcho)
+        outData.control.disable_beeper = 1;
     sendData(controlOutBuffer, controlOutBuffer[0]);
 }
 
@@ -669,7 +672,7 @@ void HaierClimate::processStatus(const uint8_t* packetBuffer, uint8_t size)
     ESP_LOGD(TAG, "Set Point Status = 0x%X", packet->control.set_point);
     if (mOutdoorSensor != nullptr)
     {
-        float otemp = packet->sensors.outdoor_temperature / 2.0f;
+        float otemp = packet->sensors.outdoor_temperature / 2.0f - 20;
         if ((!mOutdoorSensor->has_state()) ||  (mOutdoorSensor->get_raw_state() != otemp))
           mOutdoorSensor->publish_state(otemp);
     }

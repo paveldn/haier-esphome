@@ -39,5 +39,6 @@ climate:
     name: ${device_name} 
     uart_id: ac_port
     wifi_signal: true
+    beeper: true
     outdoor_temperature:        # Optional outdoor temperature sensor. Shows incorrect values when AC is not active for a long time
       name: ${device_name} outdoor temperature

@@ -2,6 +2,7 @@
 import esphome.config_validation as cv
 from esphome.components import uart, sensor, climate
 from esphome.const import (
+    CONF_BEEPER,
     CONF_ID,
     CONF_UART_ID,
     DEVICE_CLASS_TEMPERATURE,
@@ -23,6 +24,7 @@ CONFIG_SCHEMA = cv.All(
         {
             cv.GenerateID(): cv.declare_id(HaierClimate),
             cv.Optional(CONF_WIFI_SIGNAL, default=True): cv.boolean,
+            cv.Optional(CONF_BEEPER, default=True): cv.boolean,
             cv.Optional(CONF_OUTDOOR_TEMPERATURE): sensor.sensor_schema(
                 unit_of_measurement=UNIT_CELSIUS,
                 icon=ICON_THERMOMETER,
@@ -44,6 +46,7 @@ async def to_code(config):
     await uart.register_uart_device(var, config)
     await climate.register_climate(var, config)
     cg.add(var.set_send_wifi_signal(config[CONF_WIFI_SIGNAL]))
+    cg.add(var.set_beeper_echo(config[CONF_BEEPER]))
     if CONF_OUTDOOR_TEMPERATURE in config:
         sens = await sensor.new_sensor(config[CONF_OUTDOOR_TEMPERATURE])
         cg.add(var.set_outdoor_temperature_sensor(sens))

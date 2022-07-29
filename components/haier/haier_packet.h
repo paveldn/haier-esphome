@@ -72,7 +72,7 @@ struct HaierPacketControl
                 uint8_t             quiet_mode:1;               // Quiet mode
                 uint8_t             sleep_mode:1;               // Sleep mode
                 uint8_t             lock_remote:1;              // Disable remote
-                uint8_t             echo_status:1;              // ??? Echo status
+                uint8_t             disable_beeper:1;           // If 1 disables AC's command feedback beeper (need to be set on every control command)
     /* 16 */    uint8_t             target_humidity;            // ??? Probably target humidity with with 30% offset
     /* 17 */    uint8_t             horizontal_swing_mode:4;    // See enum HorizontalSwingMode
                 uint8_t             unused_2:4;                 // ??? Human sensing status
