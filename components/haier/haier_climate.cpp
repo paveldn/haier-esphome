@@ -152,8 +152,12 @@ HaierClimate::HaierClimate(UARTComponent* parent) :
                                         UARTDevice(parent),
                                         mFanModeFanSpeed(FanMid),
                                         mOtherModesFanSpeed(FanAuto),
+                                        mOutdoorTemperatureOffset(0),
                                         mSendWifiSignal(false),
                                         mBeeperEcho(true),
+                                        mUseFahrenheit(false),
+                                        mDisplayStatus(false),
+                                        mForceSendControl(false),
                                         mOutdoorSensor(nullptr)
 {
     mLastPacket = new uint8_t[MAX_MESSAGE_SIZE];
@@ -201,6 +205,44 @@ HaierClimate::~HaierClimate()
     delete[] mLastPacket;
 }
 
+void HaierClimate::set_send_wifi_signal(bool sendWifi) 
+{
+    mSendWifiSignal = sendWifi; 
+}
+
+void HaierClimate::set_beeper_echo(bool beeper)
+{
+    mBeeperEcho = beeper;
+}
+
+void HaierClimate::set_fahrenheit(bool fahrenheit) 
+{
+    if (mUseFahrenheit != fahrenheit)
+    {
+        mUseFahrenheit = fahrenheit;
+        mForceSendControl = true;
+    }
+}
+
+void HaierClimate::set_outdoor_temperature_sensor(esphome::sensor::Sensor *sensor) 
+{
+    mOutdoorSensor = sensor; 
+}
+
+void HaierClimate::set_outdoor_temperature_offset(int8_t offset)
+{
+    mOutdoorTemperatureOffset = offset;
+}
+
+void HaierClimate::switch_display(bool state)
+{
+    if (mDisplayStatus != state)
+    {
+        mDisplayStatus = state;
+        mForceSendControl = true;
+    }
+}
+    
 void HaierClimate::setup()
 {
     ESP_LOGI(TAG, "Haier initialization...");
@@ -322,7 +364,11 @@ void HaierClimate::loop()
             }
             break;
         case psIdle:
-            // Just do nothing, fall through
+            if (mForceSendControl)
+            {
+                sendControlPacket();
+                mForceSendControl = false;
+            }
             break;
         default:
             // Shouldn't get here
@@ -511,14 +557,15 @@ ClimateTraits HaierClimate::traits()
     return mTraits;
 }
 
-void HaierClimate::control(const ClimateCall &call)
+void HaierClimate::sendControlPacket(const ClimateCall* climateControl)
 {
-    static uint8_t controlOutBuffer[CONTROL_PACKET_SIZE];
-    ESP_LOGD("Control", "Control call");
-    if(mPhase <= psWaitingFirstStatusAnswer){
-        ESP_LOGE("Control", "No action, first poll answer not received");
+    if(mPhase <= psWaitingFirstStatusAnswer)
+    {
+        ESP_LOGE(TAG, "sendControlPacket: Can't send control packet, first poll answer not received");
         return; //cancel the control, we cant do it without a poll answer.
     }
+    // Allocate new buffer for each call to avoid race condition
+    uint8_t *controlOutBuffer = new uint8_t[CONTROL_PACKET_SIZE];
     memcpy(controlOutBuffer, &control_command, HEADER_SIZE);
     {
         Lock _lock(mReadMutex);
@@ -528,138 +575,157 @@ void HaierClimate::control(const ClimateCall &call)
     outData.header.msg_type = 1;
     outData.header.arguments[0] = (uint8_t)hpCommandControl;
     outData.header.msg_length = CONTROL_PACKET_SIZE;
-    if (call.get_mode().has_value())
+    if (climateControl != NULL)
     {
-        switch (*call.get_mode())
+        if (climateControl->get_mode().has_value())
         {
-            case CLIMATE_MODE_OFF:
-                outData.control.ac_power = 0;
-                break;
+            switch (*climateControl->get_mode())
+            {
+                case CLIMATE_MODE_OFF:
+                    outData.control.ac_power = 0;
+                    break;
 
-            case CLIMATE_MODE_AUTO:
-                outData.control.ac_power = 1;
-                outData.control.ac_mode = ConditioningAuto;
-                outData.control.fan_mode = mOtherModesFanSpeed;
-                break;
+                case CLIMATE_MODE_AUTO:
+                    outData.control.ac_power = 1;
+                    outData.control.ac_mode = ConditioningAuto;
+                    outData.control.fan_mode = mOtherModesFanSpeed;
+                    break;
 
-            case CLIMATE_MODE_HEAT:
-                outData.control.ac_power = 1;
-                outData.control.ac_mode = ConditioningHeat;
-                outData.control.fan_mode = mOtherModesFanSpeed;
-                break;
+                case CLIMATE_MODE_HEAT:
+                    outData.control.ac_power = 1;
+                    outData.control.ac_mode = ConditioningHeat;
+                    outData.control.fan_mode = mOtherModesFanSpeed;
+                    break;
 
-            case CLIMATE_MODE_DRY:
-                outData.control.ac_power = 1;
-                outData.control.ac_mode = ConditioningDry;
-                outData.control.fan_mode = mOtherModesFanSpeed;
-                break;
+                case CLIMATE_MODE_DRY:
+                    outData.control.ac_power = 1;
+                    outData.control.ac_mode = ConditioningDry;
+                    outData.control.fan_mode = mOtherModesFanSpeed;
+                    break;
 
-            case CLIMATE_MODE_FAN_ONLY:
-                outData.control.ac_power = 1;
-                outData.control.ac_mode = ConditioningFan;
-                outData.control.fan_mode = mFanModeFanSpeed;    // Auto doesn't work in fan only mode
-                break;
+                case CLIMATE_MODE_FAN_ONLY:
+                    outData.control.ac_power = 1;
+                    outData.control.ac_mode = ConditioningFan;
+                    outData.control.fan_mode = mFanModeFanSpeed;    // Auto doesn't work in fan only mode
+                    break;
 
-            case CLIMATE_MODE_COOL:
-                outData.control.ac_power = 1;
-                outData.control.ac_mode = ConditioningCool;
-                outData.control.fan_mode = mOtherModesFanSpeed;
-                break;
-            default:
-                ESP_LOGE("Control", "Unsupported climate mode");
-                return;
+                case CLIMATE_MODE_COOL:
+                    outData.control.ac_power = 1;
+                    outData.control.ac_mode = ConditioningCool;
+                    outData.control.fan_mode = mOtherModesFanSpeed;
+                    break;
+                default:
+                    ESP_LOGE("Control", "Unsupported climate mode");
+                    return;
+            }
         }
-    }
-    //Set fan speed, if we are in fan mode, reject auto in fan mode
-    if (call.get_fan_mode().has_value())
-    {
-        switch(call.get_fan_mode().value())
+        //Set fan speed, if we are in fan mode, reject auto in fan mode
+        if (climateControl->get_fan_mode().has_value())
         {
-            case CLIMATE_FAN_LOW:
-                outData.control.fan_mode = FanLow;
-                break;
-            case CLIMATE_FAN_MEDIUM:
-                outData.control.fan_mode = FanMid;
-                break;
-            case CLIMATE_FAN_HIGH:
-                outData.control.fan_mode = FanHigh;
-                break;
-            case CLIMATE_FAN_AUTO:
-                if (mode != CLIMATE_MODE_FAN_ONLY) //if we are not in fan only mode
-                    outData.control.fan_mode = FanAuto;
-                break;
-            default:
-                ESP_LOGE("Control", "Unsupported fan mode");
-                return;
+            switch(climateControl->get_fan_mode().value())
+            {
+                case CLIMATE_FAN_LOW:
+                    outData.control.fan_mode = FanLow;
+                    break;
+                case CLIMATE_FAN_MEDIUM:
+                    outData.control.fan_mode = FanMid;
+                    break;
+                case CLIMATE_FAN_HIGH:
+                    outData.control.fan_mode = FanHigh;
+                    break;
+                case CLIMATE_FAN_AUTO:
+                    if (mode != CLIMATE_MODE_FAN_ONLY) //if we are not in fan only mode
+                        outData.control.fan_mode = FanAuto;
+                    break;
+                default:
+                    ESP_LOGE("Control", "Unsupported fan mode");
+                    return;
+            }
         }
-    }
-    //Set swing mode
-    if (call.get_swing_mode().has_value())
-    {
-        switch(call.get_swing_mode().value())
+        //Set swing mode
+        if (climateControl->get_swing_mode().has_value())
         {
-            case CLIMATE_SWING_OFF:
-                outData.control.horizontal_swing_mode = HorizontalSwingCenter;
-                outData.control.vertical_swing_mode = VerticalSwingCenter;
-                break;
-            case CLIMATE_SWING_VERTICAL:
-                outData.control.horizontal_swing_mode = HorizontalSwingCenter;
-                outData.control.vertical_swing_mode = VerticalSwingAuto;
-                break;
-            case CLIMATE_SWING_HORIZONTAL:
-                outData.control.horizontal_swing_mode = HorizontalSwingAuto;
-                outData.control.vertical_swing_mode = VerticalSwingCenter;
-                break;
-            case CLIMATE_SWING_BOTH:
-                outData.control.horizontal_swing_mode = HorizontalSwingAuto;
-                outData.control.vertical_swing_mode = VerticalSwingAuto;
-                break;
+            switch(climateControl->get_swing_mode().value())
+            {
+                case CLIMATE_SWING_OFF:
+                    outData.control.horizontal_swing_mode = HorizontalSwingCenter;
+                    outData.control.vertical_swing_mode = VerticalSwingCenter;
+                    break;
+                case CLIMATE_SWING_VERTICAL:
+                    outData.control.horizontal_swing_mode = HorizontalSwingCenter;
+                    outData.control.vertical_swing_mode = VerticalSwingAuto;
+                    break;
+                case CLIMATE_SWING_HORIZONTAL:
+                    outData.control.horizontal_swing_mode = HorizontalSwingAuto;
+                    outData.control.vertical_swing_mode = VerticalSwingCenter;
+                    break;
+                case CLIMATE_SWING_BOTH:
+                    outData.control.horizontal_swing_mode = HorizontalSwingAuto;
+                    outData.control.vertical_swing_mode = VerticalSwingAuto;
+                    break;
+            }
         }
-    }
-    if (call.get_target_temperature().has_value())
-        outData.control.set_point = *call.get_target_temperature() - 16; //set the temperature at our offset, subtract 16.
-    if (call.get_preset().has_value())
-    {
-        switch(call.get_preset().value())
+        if (climateControl->get_target_temperature().has_value())
+            outData.control.set_point = *climateControl->get_target_temperature() - 16; //set the temperature at our offset, subtract 16.
+        if (climateControl->get_preset().has_value())
         {
-            case CLIMATE_PRESET_NONE:
-                outData.control.away_mode   = 0;
-                outData.control.quiet_mode  = 0;
-                outData.control.fast_mode   = 0;
-                outData.control.sleep_mode  = 0;
-                break;
-            case CLIMATE_PRESET_ECO:
-                outData.control.away_mode   = 0;
-                outData.control.quiet_mode  = 1;
-                outData.control.fast_mode   = 0;
-                outData.control.sleep_mode  = 0;
-                break;
-            case CLIMATE_PRESET_BOOST:
-                outData.control.away_mode   = 0;
-                outData.control.quiet_mode  = 0;
-                outData.control.fast_mode   = 1;
-                outData.control.sleep_mode  = 0;
-                break;
-            case CLIMATE_PRESET_AWAY:
-                outData.control.away_mode   = 1;
-                outData.control.quiet_mode  = 0;
-                outData.control.fast_mode   = 0;
-                outData.control.sleep_mode  = 0;
-                break;
-            case CLIMATE_PRESET_SLEEP:
-                outData.control.away_mode   = 0;
-                outData.control.quiet_mode  = 0;
-                outData.control.fast_mode   = 0;
-                outData.control.sleep_mode  = 1;
-                break;
-            default:
-                ESP_LOGE("Control", "Unsupported preset");
-                return;
+            switch(climateControl->get_preset().value())
+            {
+                case CLIMATE_PRESET_NONE:
+                    outData.control.away_mode   = 0;
+                    outData.control.quiet_mode  = 0;
+                    outData.control.fast_mode   = 0;
+                    outData.control.sleep_mode  = 0;
+                    break;
+                case CLIMATE_PRESET_ECO:
+                    outData.control.away_mode   = 0;
+                    outData.control.quiet_mode  = 1;
+                    outData.control.fast_mode   = 0;
+                    outData.control.sleep_mode  = 0;
+                    break;
+                case CLIMATE_PRESET_BOOST:
+                    outData.control.away_mode   = 0;
+                    outData.control.quiet_mode  = 0;
+                    outData.control.fast_mode   = 1;
+                    outData.control.sleep_mode  = 0;
+                    break;
+                case CLIMATE_PRESET_AWAY:
+                    outData.control.away_mode   = 1;
+                    outData.control.quiet_mode  = 0;
+                    outData.control.fast_mode   = 0;
+                    outData.control.sleep_mode  = 0;
+                    break;
+                case CLIMATE_PRESET_SLEEP:
+                    outData.control.away_mode   = 0;
+                    outData.control.quiet_mode  = 0;
+                    outData.control.fast_mode   = 0;
+                    outData.control.sleep_mode  = 1;
+                    break;
+                default:
+                    ESP_LOGE("Control", "Unsupported preset");
+                    return;
+            }
         }
     }
     if (!mBeeperEcho)
+    {
         outData.control.disable_beeper = 1;
+    }
+    if (mUseFahrenheit)
+    {
+        outData.control.use_fahrenheit = 1;
+    }
     sendData(controlOutBuffer, controlOutBuffer[0]);
+    delete[] controlOutBuffer;
+}
+
+
+
+void HaierClimate::control(const ClimateCall &call)
+{
+    static uint8_t controlOutBuffer[CONTROL_PACKET_SIZE];
+    ESP_LOGD("Control", "Control call");
+    sendControlPacket(&call);
 }
 
 void HaierClimate::processStatus(const uint8_t* packetBuffer, uint8_t size)
@@ -672,7 +738,7 @@ void HaierClimate::processStatus(const uint8_t* packetBuffer, uint8_t size)
     ESP_LOGD(TAG, "Set Point Status = 0x%X", packet->control.set_point);
     if (mOutdoorSensor != nullptr)
     {
-        float otemp = packet->sensors.outdoor_temperature / 2.0f - 20;
+        float otemp = packet->sensors.outdoor_temperature / 2.0f + mOutdoorTemperatureOffset;
         if ((!mOutdoorSensor->has_state()) ||  (mOutdoorSensor->get_raw_state() != otemp))
           mOutdoorSensor->publish_state(otemp);
     }

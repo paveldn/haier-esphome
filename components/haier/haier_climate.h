@@ -40,15 +40,19 @@ public:
     void loop() override;
     void control(const esphome::climate::ClimateCall &call) override;
     float get_setup_priority() const override { return esphome::setup_priority::HARDWARE ; }
-    void set_send_wifi_signal(bool sendWifi) { mSendWifiSignal = sendWifi; };
-    void set_beeper_echo(bool beeper) { mBeeperEcho = beeper; };
-    void set_outdoor_temperature_sensor(esphome::sensor::Sensor *sensor) { mOutdoorSensor = sensor; }
+    void set_send_wifi_signal(bool sendWifi);
+    void set_beeper_echo(bool beeper);
+    void set_fahrenheit(bool fahrenheit);
+    void set_outdoor_temperature_sensor(esphome::sensor::Sensor *sensor);
+    void set_outdoor_temperature_offset(int8_t offset);
+    void switch_display(bool state);
 protected:
     esphome::climate::ClimateTraits traits() override;
     void sendData(const uint8_t * message, size_t size, bool withCrc = true);
     void processStatus(const uint8_t* packet, uint8_t size);
     void handleIncomingPacket();
     void getSerialData();
+    void sendControlPacket(const esphome::climate::ClimateCall* control = NULL);
 private:
     enum ProtocolPhases
     {
@@ -73,8 +77,12 @@ private:
     uint8_t*            mLastPacket;
     uint8_t             mFanModeFanSpeed;
     uint8_t             mOtherModesFanSpeed;
+    int8_t              mOutdoorTemperatureOffset;
     bool                mSendWifiSignal;
     bool                mBeeperEcho;
+    bool                mUseFahrenheit;
+    bool                mDisplayStatus;
+    bool                mForceSendControl;
     esphome::sensor::Sensor*                mOutdoorSensor;
     esphome::climate::ClimateTraits         mTraits;
     std::chrono::steady_clock::time_point   mLastByteTimestamp;         // For packet timeout

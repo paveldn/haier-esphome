@@ -51,19 +51,19 @@ struct HaierPacketHeader
 struct HaierPacketControl
 {
     // Control bytes starts here
-    /* 10 */    uint8_t             set_point;                  // 0x00 is 16 degrees C, offset of 16c for the set point
+    /* 10 */    uint8_t             set_point;                  // Target temperature with 16°C offset (0x00 = 16°C)
     /* 11 */    uint8_t             vertical_swing_mode:4;      // See enum VerticalSwingMode
-                uint8_t             unused_1:4;
+                uint8_t             :0;                         // Probably unused
     /* 12 */    uint8_t             fan_mode:4;                 // See enum FanMode
                 uint8_t             ac_mode:4;                  // See enum ConditioningMode
-    /* 13 */    uint8_t             unknown_1;                  // ??? windSpeed
-    /* 14 */    uint8_t             away_mode:1;                // Away mode for 10c
+    /* 13 */    uint8_t             :8;                         // ??? windSpeed
+    /* 14 */    uint8_t             away_mode:1;                // Away mode for 10°C
                 uint8_t             display_enabled:1;          // If the display is on or off
                 uint8_t             use_half_degree:1;          // Use half degree value
                 uint8_t             intelligence_status:1;      // ??? Intelligence status
                 uint8_t             pmv_status:1;               // ??? Pulse Motor Valve status
                 uint8_t             use_fahrenheit:1;           // Use Fahrenheit instead of Celsius
-                uint8_t             unknown_3:1;                // ??? energySavePeriod
+                uint8_t             :1;                         // ??? energySavePeriod
                 uint8_t             self_clean_56:1;            // Self cleaning (56°C Steri-Clean)
     /* 15 */    uint8_t             ac_power:1;                 // Is ac on or off
                 uint8_t             health_mode:1;              // Health mode on or off
@@ -75,8 +75,8 @@ struct HaierPacketControl
                 uint8_t             disable_beeper:1;           // If 1 disables AC's command feedback beeper (need to be set on every control command)
     /* 16 */    uint8_t             target_humidity;            // ??? Probably target humidity with with 30% offset
     /* 17 */    uint8_t             horizontal_swing_mode:4;    // See enum HorizontalSwingMode
-                uint8_t             unused_2:4;                 // ??? Human sensing status
-    /* 18 */    uint8_t             unknown_7;                  // ??? Probably unused
+                uint8_t             :0;                         // ??? Human sensing status
+    /* 18 */    uint8_t             :8;                         // ??? Probably unused
     /* 19 */    uint8_t             fresh_air_status:1;         // ??? Fresh air status
                 uint8_t             humidification_status:1;    // ??? Humidification status
                 uint8_t             pm2p5_cleaning_status:1;    // ??? PM2.5 cleaning status
@@ -92,8 +92,8 @@ struct HaierPacketSensors
     /* 20 */    uint8_t             room_temperature;           // 0.5 °C step
     /* 21 */    uint8_t             room_humidity;              // ???
     /* 22 */    uint8_t             outdoor_temperature;        // 0.5 °C step
-    /* 23 */    uint8_t             unknown_1[2];               // unknown (acType (probably 1 byte),
-                                                                // probably capabilities mask (each field 1 bit): sensingResult, airQuality, pm2p5Level, errCode, ErrAckFlag, operationModeHK)
+    /* 23 */    uint8_t             :8;                         // unknown (acType, probably 1 byte)
+    /* 24 */    uint8_t             :8;                         // probably capabilities mask (each field 1 bit): sensingResult, airQuality, pm2p5Level, errCode, ErrAckFlag, operationModeHK)
     /* 25 */    uint8_t             operation_source;           // who is controlling AC (1 - remote, 3 - ESP)
     // Following bytes should have next fields (16 bytes):
     //      totalCleaningTime       (probably in seconds 4 bytes or minutes 2 bytes)
