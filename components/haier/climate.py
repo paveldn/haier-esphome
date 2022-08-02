@@ -17,7 +17,6 @@ AUTO_LOAD = ["sensor"]
 DEPENDENCIES = ["climate", "uart", "wifi"]
 CONF_WIFI_SIGNAL = "wifi_signal"
 CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
-CONF_USE_FAHRENHEIT = "use_fahrenheit"
 
 haier_ns = cg.esphome_ns.namespace("haier")
 HaierClimate = haier_ns.class_("HaierClimate", climate.Climate, cg.Component)
@@ -28,7 +27,6 @@ CONFIG_SCHEMA = cv.All(
             cv.GenerateID(): cv.declare_id(HaierClimate),
             cv.Optional(CONF_WIFI_SIGNAL, default=True): cv.boolean,
             cv.Optional(CONF_BEEPER, default=True): cv.boolean,
-            cv.Optional(CONF_USE_FAHRENHEIT, default=False): cv.boolean,
             cv.Optional(CONF_OUTDOOR_TEMPERATURE): sensor.sensor_schema(
                 unit_of_measurement=UNIT_CELSIUS,
                 icon=ICON_THERMOMETER,
@@ -123,7 +121,6 @@ async def to_code(config):
     await climate.register_climate(var, config)
     cg.add(var.set_send_wifi_signal(config[CONF_WIFI_SIGNAL]))
     cg.add(var.set_beeper_echo(config[CONF_BEEPER]))
-    cg.add(var.set_fahrenheit(config[CONF_USE_FAHRENHEIT]))
     if CONF_OUTDOOR_TEMPERATURE in config:
         sens = await sensor.new_sensor(config[CONF_OUTDOOR_TEMPERATURE])
         cg.add(var.set_outdoor_temperature_sensor(sens))

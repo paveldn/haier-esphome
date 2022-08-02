@@ -57,14 +57,11 @@ struct HaierPacketControl
     /* 12 */    uint8_t             fan_mode:4;                 // See enum FanMode
                 uint8_t             ac_mode:4;                  // See enum ConditioningMode
     /* 13 */    uint8_t             :8;                         // ??? windSpeed
-    /* 14 */    uint8_t             away_mode:1;                // Away mode for 10°C
-                uint8_t             display_enabled:1;          // If the display is on or off
-                uint8_t             use_half_degree:1;          // Use half degree value
-                uint8_t             intelligence_status:1;      // ??? Intelligence status
-                uint8_t             pmv_status:1;               // ??? Pulse Motor Valve status
+    /* 14 */    uint8_t             :2;                			// ???
+                uint8_t             display_off:1;              // If the display is on or off
+                uint8_t             :2;          				// ???
                 uint8_t             use_fahrenheit:1;           // Use Fahrenheit instead of Celsius
-                uint8_t             :1;                         // ??? energySavePeriod
-                uint8_t             self_clean_56:1;            // Self cleaning (56°C Steri-Clean)
+                uint8_t             :0;               			// ???
     /* 15 */    uint8_t             ac_power:1;                 // Is ac on or off
                 uint8_t             health_mode:1;              // Health mode on or off
                 uint8_t             electric_heating_status:1;  // Electric heating status

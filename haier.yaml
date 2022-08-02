@@ -1,5 +1,7 @@
 substitutions:
   device_name: Haier AC
+  device_id: haier_climate
+  uart_id: ac_port 
 
 esphome:
   name: haier
@@ -21,7 +23,7 @@ uart:
   baud_rate: 9600
   tx_pin: 17
   rx_pin: 16
-  id: ac_port  
+  id: ${uart_id}  
     
 logger:
   level: DEBUG
@@ -36,35 +38,33 @@ ota:
 
 climate:
   - platform: haier
-    id: haier_climate
+    id: ${device_id}
     name: ${device_name} 
-    uart_id: ac_port
+    uart_id: ${uart_id}
     wifi_signal: true           # Optional, default true, enables WiFI signal transmission from ESP to AC
     beeper: true                # Optional, default true, disables beep on commands from ESP
-    use_fahrenheit: false       # Optional, default false, only for AC screen
     outdoor_temperature:        # Optional, outdoor temperature sensor
       name: ${device_name} outdoor temperature
+      offset: -20               # Optional, sensor temperature offset, default -20
 
 switch:
   - platform: template
-    id: haier_climate_display_switch
+    id: ${device_id}_display_switch
     name: ${device_name} display
     icon: mdi:led-on
-    restore_state: true
-    optimistic: true
-    assumed_state: true
+    lambda: |-
+      return id(${device_id}).get_display_state();
     turn_on_action:
-      climate.haier.display_on: haier_climate
+      climate.haier.display_on: ${device_id}
     turn_off_action:
-      climate.haier.display_off: haier_climate
+      climate.haier.display_off: ${device_id}
   - platform: template
-    id: haier_climate_beeper_switch
+    id: ${device_id}_beeper_switch
     name: ${device_name} beeper
     icon: mdi:volume-high
-    restore_state: true
-    optimistic: true
-    assumed_state: true
+    lambda: |-
+      return id(${device_id}).get_beeper_echo();
     turn_on_action:
-      climate.haier.beeper_on: haier_climate
+      climate.haier.beeper_on: ${device_id}
     turn_off_action:
-      climate.haier.beeper_off: haier_climate
+      climate.haier.beeper_off: ${device_id}

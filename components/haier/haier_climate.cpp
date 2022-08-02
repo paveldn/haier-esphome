@@ -155,8 +155,7 @@ HaierClimate::HaierClimate(UARTComponent* parent) :
                                         mOutdoorTemperatureOffset(0),
                                         mSendWifiSignal(false),
                                         mBeeperEcho(true),
-                                        mUseFahrenheit(false),
-                                        mDisplayStatus(false),
+                                        mDisplayStatus(true),
                                         mForceSendControl(false),
                                         mOutdoorSensor(nullptr)
 {
@@ -191,8 +190,6 @@ HaierClimate::HaierClimate(UARTComponent* parent) :
         climate::CLIMATE_PRESET_ECO,
         climate::CLIMATE_PRESET_BOOST,
         climate::CLIMATE_PRESET_SLEEP,
-        climate::CLIMATE_PRESET_AWAY
-
     });
     mTraits.set_visual_min_temperature(MIN_SET_TEMPERATURE);
     mTraits.set_visual_max_temperature(MAX_SET_TEMPERATURE);
@@ -215,13 +212,14 @@ void HaierClimate::set_beeper_echo(bool beeper)
     mBeeperEcho = beeper;
 }
 
-void HaierClimate::set_fahrenheit(bool fahrenheit) 
+bool HaierClimate::get_beeper_echo() const
 {
-    if (mUseFahrenheit != fahrenheit)
-    {
-        mUseFahrenheit = fahrenheit;
-        mForceSendControl = true;
-    }
+    return mBeeperEcho;
+}
+
+bool HaierClimate::get_display_state() const
+{
+    return mDisplayStatus;
 }
 
 void HaierClimate::set_outdoor_temperature_sensor(esphome::sensor::Sensor *sensor) 
@@ -234,7 +232,7 @@ void HaierClimate::set_outdoor_temperature_offset(int8_t offset)
     mOutdoorTemperatureOffset = offset;
 }
 
-void HaierClimate::switch_display(bool state)
+void HaierClimate::set_display_state(bool state)
 {
     if (mDisplayStatus != state)
     {
@@ -564,9 +562,8 @@ void HaierClimate::sendControlPacket(const ClimateCall* climateControl)
         ESP_LOGE(TAG, "sendControlPacket: Can't send control packet, first poll answer not received");
         return; //cancel the control, we cant do it without a poll answer.
     }
-    // Allocate new buffer for each call to avoid race condition
-    uint8_t *controlOutBuffer = new uint8_t[CONTROL_PACKET_SIZE];
-    memcpy(controlOutBuffer, &control_command, HEADER_SIZE);
+    uint8_t controlOutBuffer[CONTROL_PACKET_SIZE];
+	memcpy(controlOutBuffer, &control_command, HEADER_SIZE);
     {
         Lock _lock(mReadMutex);
         memcpy(&controlOutBuffer[HEADER_SIZE], &mLastPacket[HEADER_SIZE], CONTROL_PACKET_SIZE - HEADER_SIZE);
@@ -672,31 +669,26 @@ void HaierClimate::sendControlPacket(const ClimateCall* climateControl)
             switch(climateControl->get_preset().value())
             {
                 case CLIMATE_PRESET_NONE:
-                    outData.control.away_mode   = 0;
                     outData.control.quiet_mode  = 0;
                     outData.control.fast_mode   = 0;
                     outData.control.sleep_mode  = 0;
                     break;
                 case CLIMATE_PRESET_ECO:
-                    outData.control.away_mode   = 0;
                     outData.control.quiet_mode  = 1;
                     outData.control.fast_mode   = 0;
                     outData.control.sleep_mode  = 0;
                     break;
                 case CLIMATE_PRESET_BOOST:
-                    outData.control.away_mode   = 0;
                     outData.control.quiet_mode  = 0;
                     outData.control.fast_mode   = 1;
                     outData.control.sleep_mode  = 0;
                     break;
                 case CLIMATE_PRESET_AWAY:
-                    outData.control.away_mode   = 1;
                     outData.control.quiet_mode  = 0;
                     outData.control.fast_mode   = 0;
                     outData.control.sleep_mode  = 0;
                     break;
                 case CLIMATE_PRESET_SLEEP:
-                    outData.control.away_mode   = 0;
                     outData.control.quiet_mode  = 0;
                     outData.control.fast_mode   = 0;
                     outData.control.sleep_mode  = 1;
@@ -707,16 +699,10 @@ void HaierClimate::sendControlPacket(const ClimateCall* climateControl)
             }
         }
     }
-    if (!mBeeperEcho)
-    {
-        outData.control.disable_beeper = 1;
-    }
-    if (mUseFahrenheit)
-    {
-        outData.control.use_fahrenheit = 1;
-    }
+    outData.control.disable_beeper = (!mBeeperEcho || (climateControl == NULL)) ? 1 : 0;
+	controlOutBuffer[14] = 0;	// This byte should be cleared before setting values
+	outData.control.display_off = mDisplayStatus ? 0 : 1;
     sendData(controlOutBuffer, controlOutBuffer[0]);
-    delete[] controlOutBuffer;
 }
 
 
@@ -744,20 +730,22 @@ void HaierClimate::processStatus(const uint8_t* packetBuffer, uint8_t size)
     }
     //extra modes/presets
     if (packet->control.quiet_mode != 0)
-           preset = CLIMATE_PRESET_ECO;
-    else if (packet->control.fast_mode != 0)
-        preset = CLIMATE_PRESET_BOOST;
+	{
+		preset = CLIMATE_PRESET_ECO;
+    }
+	else if (packet->control.fast_mode != 0)
+    {    
+		preset = CLIMATE_PRESET_BOOST;
+	}
     else if (packet->control.sleep_mode != 0)
-        preset = CLIMATE_PRESET_SLEEP;
-    else if(packet->control.away_mode != 0)
-        preset = CLIMATE_PRESET_AWAY;
+    {    
+		preset = CLIMATE_PRESET_SLEEP;
+	}
     else
+	{
         preset = CLIMATE_PRESET_NONE;
-
-    if (preset == CLIMATE_PRESET_AWAY)
-        target_temperature = 10;    //away mode sets to 10c
-    else
-        target_temperature = packet->control.set_point + 16;
+	}
+	target_temperature = packet->control.set_point + 16;
     current_temperature = packet->sensors.room_temperature / 2.0f;
     //remember the fan speed we last had for climate vs fan
     if (packet->control.ac_mode ==  ConditioningFan)

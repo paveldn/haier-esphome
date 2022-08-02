@@ -14,7 +14,7 @@ public:
     DisplayOnAction(HaierClimate* parent) : parent_(parent) {}
     void play(Ts... x) 
     {
-        this->parent_->switch_display(true);
+        this->parent_->set_display_state(true);
     }
 
 protected:
@@ -28,7 +28,7 @@ public:
     DisplayOffAction(HaierClimate* parent) : parent_(parent) {}
     void play(Ts... x) 
     {
-        this->parent_->switch_display(false);
+        this->parent_->set_display_state(false);
     }
 
 protected:

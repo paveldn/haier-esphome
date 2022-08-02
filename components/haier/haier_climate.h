@@ -42,10 +42,12 @@ public:
     float get_setup_priority() const override { return esphome::setup_priority::HARDWARE ; }
     void set_send_wifi_signal(bool sendWifi);
     void set_beeper_echo(bool beeper);
+    bool get_beeper_echo() const;
     void set_fahrenheit(bool fahrenheit);
     void set_outdoor_temperature_sensor(esphome::sensor::Sensor *sensor);
     void set_outdoor_temperature_offset(int8_t offset);
-    void switch_display(bool state);
+    void set_display_state(bool state);
+    bool get_display_state() const;
 protected:
     esphome::climate::ClimateTraits traits() override;
     void sendData(const uint8_t * message, size_t size, bool withCrc = true);
