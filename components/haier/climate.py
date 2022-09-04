@@ -17,9 +17,25 @@ AUTO_LOAD = ["sensor"]
 DEPENDENCIES = ["climate", "uart", "wifi"]
 CONF_WIFI_SIGNAL = "wifi_signal"
 CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
+CONF_VERTICAL_AIRFLOW = "vertical_airflow"
+CONF_HORIZONTAL_AIRFLOW = "horizontal_airflow"
 
 haier_ns = cg.esphome_ns.namespace("haier")
 HaierClimate = haier_ns.class_("HaierClimate", climate.Climate, cg.Component)
+
+AirflowVerticalDirection = haier_ns.enum("AirflowVerticalDirection")
+AIRFLOW_VERTICAL_DIRECTION_OPTIONS = {
+    "UP":       AirflowVerticalDirection.vdUp,
+    "CENTER":   AirflowVerticalDirection.vdCenter,
+    "DOWN":	AirflowVerticalDirection.vdDown,
+}
+
+AirflowHorizontalDirection = haier_ns.enum("AirflowHorizontalDirection")
+AIRFLOW_HORIZONTAL_DIRECTION_OPTIONS = {
+    "LEFT":	AirflowHorizontalDirection.hdLeft,
+    "CENTER":   AirflowHorizontalDirection.hdCenter,
+    "RIGHT":    AirflowHorizontalDirection.hdRight,
+}
 
 CONFIG_SCHEMA = cv.All(
     climate.CLIMATE_SCHEMA.extend(
@@ -52,6 +68,8 @@ DisplayOnAction = haier_ns.class_("DisplayOnAction", automation.Action)
 DisplayOffAction = haier_ns.class_("DisplayOffAction", automation.Action)
 BeeperOnAction = haier_ns.class_("BeeperOnAction", automation.Action)
 BeeperOffAction = haier_ns.class_("BeeperOffAction", automation.Action)
+VerticalAirflowAction = haier_ns.class_("VerticalAirflowAction", automation.Action)
+HorizontalAirflowAction = haier_ns.class_("HorizontalAirflowAction", automation.Action)
 
 # Display on action
 @automation.register_action(
@@ -112,6 +130,47 @@ async def haier_set_beeper_off_to_code(config, action_id, template_arg, args):
     paren = await cg.get_variable(config[CONF_ID])
     var = cg.new_Pvariable(action_id, template_arg, paren)
     return var
+
+# Set vertiocal airflow direction action
+@automation.register_action(
+    "climate.haier.set_vertical_airflow",
+    VerticalAirflowAction,
+    cv.Schema(
+        {
+            cv.Required(CONF_ID): cv.use_id(HaierClimate),
+            cv.Required(CONF_VERTICAL_AIRFLOW): cv.templatable(
+                cv.enum(AIRFLOW_VERTICAL_DIRECTION_OPTIONS, upper=True)
+            ), 
+        }
+    ),
+)
+async def haier_set_vertical_airflow_to_code(config, action_id, template_arg, args):
+    paren = await cg.get_variable(config[CONF_ID])
+    var = cg.new_Pvariable(action_id, template_arg, paren)
+    template_ = await cg.templatable(config[CONF_VERTICAL_AIRFLOW], args, AirflowVerticalDirection)
+    cg.add(var.set_direction(template_))
+    return var
+
+# Set vertiocal airflow direction action
+@automation.register_action(
+    "climate.haier.set_horizontal_airflow",
+    HorizontalAirflowAction,
+    cv.Schema(
+        {
+            cv.Required(CONF_ID): cv.use_id(HaierClimate),
+            cv.Required(CONF_HORIZONTAL_AIRFLOW): cv.templatable(
+                cv.enum(AIRFLOW_HORIZONTAL_DIRECTION_OPTIONS, upper=True)
+            ), 
+        }
+    ),
+)
+async def haier_set_horizontal_airflow_to_code(config, action_id, template_arg, args):
+    paren = await cg.get_variable(config[CONF_ID])
+    var = cg.new_Pvariable(action_id, template_arg, paren)
+    template_ = await cg.templatable(config[CONF_HORIZONTAL_AIRFLOW], args, AirflowHorizontalDirection)
+    cg.add(var.set_direction(template_))
+    return var
+
 
 async def to_code(config):
     uart_component = await cg.get_variable(config[CONF_UART_ID])

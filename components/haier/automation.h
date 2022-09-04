@@ -63,6 +63,35 @@ protected:
     HaierClimate* parent_;
 };
 
+template<typename... Ts> 
+class VerticalAirflowAction : public Action<Ts...> 
+{
+public:
+    VerticalAirflowAction(HaierClimate* parent) : parent_(parent) {}
+    TEMPLATABLE_VALUE(AirflowVerticalDirection, direction)
+    void play(Ts... x) 
+    {
+        this->parent_->set_vertical_airflow(this->direction_.value(x...));
+    }
+
+protected:
+    HaierClimate* parent_;
+};
+
+template<typename... Ts> 
+class HorizontalAirflowAction : public Action<Ts...> 
+{
+public:
+    HorizontalAirflowAction(HaierClimate* parent) : parent_(parent) {}
+    TEMPLATABLE_VALUE(AirflowHorizontalDirection, direction)
+    void play(Ts... x) 
+    {
+        this->parent_->set_horizontal_airflow(this->direction_.value(x...));
+    }
+
+protected:
+    HaierClimate* parent_;
+};
 
 }
 }

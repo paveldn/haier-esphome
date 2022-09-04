@@ -52,6 +52,7 @@ switch:
     id: ${device_id}_display_switch
     name: ${device_name} display
     icon: mdi:led-on
+    entity_category: config
     lambda: |-
       return id(${device_id}).get_display_state();
     turn_on_action:
@@ -60,6 +61,7 @@ switch:
       climate.haier.display_off: ${device_id}
   - platform: template
     id: ${device_id}_beeper_switch
+    entity_category: config
     name: ${device_name} beeper
     icon: mdi:volume-high
     lambda: |-
@@ -68,3 +70,47 @@ switch:
       climate.haier.beeper_on: ${device_id}
     turn_off_action:
       climate.haier.beeper_off: ${device_id}
+  - platform: restart
+    name: ${device_name} restart
+
+select:
+    # Vertical airflow direction setting. Works only if the vertical swing is off
+    # You can remove this control if you don't need it
+  - platform: template
+    id: ${device_id}_vertical_direction
+    name: ${device_name} airflow vertical
+    entity_category: config
+    icon: mdi:arrow-expand-vertical
+    optimistic: true
+    restore_value: true
+    initial_option: Center 
+    options:
+      - Up
+      - Center
+      - Down
+    on_value:
+      then:
+        - climate.haier.set_vertical_airflow:
+           id: ${device_id}
+           vertical_airflow: !lambda |-
+             return esphome::haier::AirflowVerticalDirection(i);
+    # Horizontal airflow direction setting. Works only if the horizontal swing is off
+    # You can remove this control if you don't need it
+  - platform: template
+    id: ${device_id}_horizontal_direction
+    name: ${device_name} airflow horizontal
+    entity_category: config
+    icon: mdi:arrow-expand-horizontal
+    optimistic: true
+    restore_value: true
+    initial_option: Center 
+    options:
+      - Left
+      - Center
+      - Right
+    on_value:
+      then:
+        - climate.haier.set_horizontal_airflow:
+           id: ${device_id}
+           horizontal_airflow: !lambda |-
+             return esphome::haier::AirflowHorizontalDirection(i);

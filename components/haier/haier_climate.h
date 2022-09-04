@@ -26,6 +26,20 @@ typedef std::lock_guard<Mutex> Lock;
 namespace esphome {
 namespace haier {
 
+enum AirflowVerticalDirection: size_t
+{
+	vdUp        = 0,
+	vdCenter    = 1,
+	vdDown      = 2,
+};
+
+enum AirflowHorizontalDirection: size_t
+{
+	hdLeft      = 0,
+	hdCenter    = 1,
+	hdRight     = 2,
+};
+
 class HaierClimate :    public esphome::Component,
                         public esphome::climate::Climate,
                         public esphome::uart::UARTDevice
@@ -42,12 +56,16 @@ public:
     float get_setup_priority() const override { return esphome::setup_priority::HARDWARE ; }
     void set_send_wifi_signal(bool sendWifi);
     void set_beeper_echo(bool beeper);
-    bool get_beeper_echo() const;
+    bool get_beeper_echo() const;	
     void set_fahrenheit(bool fahrenheit);
     void set_outdoor_temperature_sensor(esphome::sensor::Sensor *sensor);
     void set_outdoor_temperature_offset(int8_t offset);
     void set_display_state(bool state);
     bool get_display_state() const;
+    AirflowVerticalDirection get_vertical_airflow() const;
+    void set_vertical_airflow(AirflowVerticalDirection direction);
+    AirflowHorizontalDirection get_horizontal_airflow() const;
+    void set_horizontal_airflow(AirflowHorizontalDirection direction);
 protected:
     esphome::climate::ClimateTraits traits() override;
     void sendData(const uint8_t * message, size_t size, bool withCrc = true);
@@ -74,17 +92,19 @@ private:
         psSendingSignalLevel,
         psWaitingSignalLevelAnswer,
     };
-    ProtocolPhases      mPhase;
-    Mutex               mReadMutex;
-    uint8_t*            mLastPacket;
-    uint8_t             mFanModeFanSpeed;
-    uint8_t             mOtherModesFanSpeed;
-    int8_t              mOutdoorTemperatureOffset;
-    bool                mSendWifiSignal;
-    bool                mBeeperEcho;
-    bool                mUseFahrenheit;
-    bool                mDisplayStatus;
-    bool                mForceSendControl;
+    ProtocolPhases      		mPhase;
+    Mutex               		mReadMutex;
+    uint8_t*            		mLastPacket;
+    uint8_t             		mFanModeFanSpeed;
+    uint8_t             		mOtherModesFanSpeed;
+    int8_t              		mOutdoorTemperatureOffset;
+    bool                		mSendWifiSignal;
+    bool                		mBeeperEcho;
+    bool                		mUseFahrenheit;
+    bool                		mDisplayStatus;
+    bool                        mForceSendControl;
+    AirflowVerticalDirection 	mVerticalDirection;
+    AirflowHorizontalDirection	mHorizontalDirection;
     esphome::sensor::Sensor*                mOutdoorSensor;
     esphome::climate::ClimateTraits         mTraits;
     std::chrono::steady_clock::time_point   mLastByteTimestamp;         // For packet timeout

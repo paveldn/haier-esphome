@@ -81,6 +81,34 @@ std::string getHex(const uint8_t * message, size_t size)
   return raw;
 }
 
+VerticalSwingMode getVerticalSwingMode(AirflowVerticalDirection direction)
+{
+	switch (direction)
+	{
+		case vdUp:
+			return VerticalSwingUp;
+		case vdDown:
+			return VerticalSwingDown;
+		default:
+			return VerticalSwingCenter;
+	}
+}
+
+HorizontalSwingMode getHorizontalSwingMode(AirflowHorizontalDirection direction)
+{
+	switch (direction)
+	{
+		case hdLeft:
+			return HorizontalSwingLeft;
+		case hdRight:
+			return HorizontalSwingRight;
+		default:
+			return HorizontalSwingCenter;
+	}
+}
+
+
+
 namespace
 {
     enum HaierProtocolCommands
@@ -195,6 +223,8 @@ HaierClimate::HaierClimate(UARTComponent* parent) :
     mTraits.set_visual_max_temperature(MAX_SET_TEMPERATURE);
     mTraits.set_visual_temperature_step(1.0f);
     mTraits.set_supports_current_temperature(true);
+    mVerticalDirection = vdCenter;
+    mHorizontalDirection = hdCenter;
 }
 
 HaierClimate::~HaierClimate()
@@ -239,6 +269,34 @@ void HaierClimate::set_display_state(bool state)
         mDisplayStatus = state;
         mForceSendControl = true;
     }
+}
+
+AirflowVerticalDirection HaierClimate::get_vertical_airflow() const
+{
+    return mVerticalDirection;
+};
+
+void HaierClimate::set_vertical_airflow(AirflowVerticalDirection direction)
+{
+    if ((direction < 0) || (direction > vdDown))
+        mVerticalDirection = vdCenter;
+    else
+        mVerticalDirection = direction;
+    mForceSendControl = true;
+}
+
+AirflowHorizontalDirection HaierClimate::get_horizontal_airflow() const
+{
+    return mHorizontalDirection;
+}
+
+void HaierClimate::set_horizontal_airflow(AirflowHorizontalDirection direction)
+{
+    if ((direction < 0) || (direction > hdRight))
+        mHorizontalDirection = hdCenter;
+    else
+        mHorizontalDirection = direction;
+    mForceSendControl = true;
 }
     
 void HaierClimate::setup()
@@ -563,7 +621,7 @@ void HaierClimate::sendControlPacket(const ClimateCall* climateControl)
         return; //cancel the control, we cant do it without a poll answer.
     }
     uint8_t controlOutBuffer[CONTROL_PACKET_SIZE];
-	memcpy(controlOutBuffer, &control_command, HEADER_SIZE);
+    memcpy(controlOutBuffer, &control_command, HEADER_SIZE);
     {
         Lock _lock(mReadMutex);
         memcpy(&controlOutBuffer[HEADER_SIZE], &mLastPacket[HEADER_SIZE], CONTROL_PACKET_SIZE - HEADER_SIZE);
@@ -645,16 +703,16 @@ void HaierClimate::sendControlPacket(const ClimateCall* climateControl)
             switch(climateControl->get_swing_mode().value())
             {
                 case CLIMATE_SWING_OFF:
-                    outData.control.horizontal_swing_mode = HorizontalSwingCenter;
-                    outData.control.vertical_swing_mode = VerticalSwingCenter;
+                    outData.control.horizontal_swing_mode = getHorizontalSwingMode(mHorizontalDirection);
+                    outData.control.vertical_swing_mode = getVerticalSwingMode(mVerticalDirection);
                     break;
                 case CLIMATE_SWING_VERTICAL:
-                    outData.control.horizontal_swing_mode = HorizontalSwingCenter;
+                    outData.control.horizontal_swing_mode = getHorizontalSwingMode(mHorizontalDirection);
                     outData.control.vertical_swing_mode = VerticalSwingAuto;
                     break;
                 case CLIMATE_SWING_HORIZONTAL:
                     outData.control.horizontal_swing_mode = HorizontalSwingAuto;
-                    outData.control.vertical_swing_mode = VerticalSwingCenter;
+                    outData.control.vertical_swing_mode = getVerticalSwingMode(mVerticalDirection);
                     break;
                 case CLIMATE_SWING_BOTH:
                     outData.control.horizontal_swing_mode = HorizontalSwingAuto;
@@ -700,8 +758,8 @@ void HaierClimate::sendControlPacket(const ClimateCall* climateControl)
         }
     }
     outData.control.disable_beeper = (!mBeeperEcho || (climateControl == NULL)) ? 1 : 0;
-	controlOutBuffer[14] = 0;	// This byte should be cleared before setting values
-	outData.control.display_off = mDisplayStatus ? 0 : 1;
+    controlOutBuffer[14] = 0;   // This byte should be cleared before setting values
+    outData.control.display_off = mDisplayStatus ? 0 : 1;
     sendData(controlOutBuffer, controlOutBuffer[0]);
 }
 
@@ -730,22 +788,22 @@ void HaierClimate::processStatus(const uint8_t* packetBuffer, uint8_t size)
     }
     //extra modes/presets
     if (packet->control.quiet_mode != 0)
-	{
-		preset = CLIMATE_PRESET_ECO;
+    {
+        preset = CLIMATE_PRESET_ECO;
     }
-	else if (packet->control.fast_mode != 0)
+    else if (packet->control.fast_mode != 0)
     {    
-		preset = CLIMATE_PRESET_BOOST;
-	}
+        preset = CLIMATE_PRESET_BOOST;
+    }
     else if (packet->control.sleep_mode != 0)
     {    
-		preset = CLIMATE_PRESET_SLEEP;
-	}
+        preset = CLIMATE_PRESET_SLEEP;
+    }
     else
-	{
+    {
         preset = CLIMATE_PRESET_NONE;
-	}
-	target_temperature = packet->control.set_point + 16;
+    }
+    target_temperature = packet->control.set_point + 16;
     current_temperature = packet->sensors.room_temperature / 2.0f;
     //remember the fan speed we last had for climate vs fan
     if (packet->control.ac_mode ==  ConditioningFan)
