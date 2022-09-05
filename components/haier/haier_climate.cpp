@@ -757,6 +757,13 @@ void HaierClimate::sendControlPacket(const ClimateCall* climateControl)
             }
         }
     }
+	else
+	{
+		if (outData.control.vertical_swing_mode != VerticalSwingAuto)
+			outData.control.vertical_swing_mode = getVerticalSwingMode(mVerticalDirection);
+		if (outData.control.horizontal_swing_mode != HorizontalSwingAuto)
+			outData.control.horizontal_swing_mode = getHorizontalSwingMode(mHorizontalDirection);
+	}
     outData.control.disable_beeper = (!mBeeperEcho || (climateControl == NULL)) ? 1 : 0;
     controlOutBuffer[14] = 0;   // This byte should be cleared before setting values
     outData.control.display_off = mDisplayStatus ? 0 : 1;
