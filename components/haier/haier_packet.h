@@ -137,6 +137,17 @@ struct HaierControl
     HaierPacketControl  control;
 };
 
+struct DeviceVersionAnswer
+{
+    char        protocol_version[8];
+    char        software_version[8];
+    uint8_t     encryption[3];
+    char        hardware_version[8];
+    uint8_t     :8;
+    char        device_name[8];
+    uint8_t     functions[2];
+};
+
 #define NO_SUBCOMMAND               0xFFFF
 
 namespace HaierProtocol

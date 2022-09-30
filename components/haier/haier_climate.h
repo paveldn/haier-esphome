@@ -54,6 +54,7 @@ public:
     void setup() override;
     void loop() override;
     void control(const esphome::climate::ClimateCall &call) override;
+    void dump_config() override;
     float get_setup_priority() const override { return esphome::setup_priority::HARDWARE ; }
     void set_send_wifi_signal(bool sendWifi);
     void set_beeper_echo(bool beeper);
@@ -108,6 +109,12 @@ private:
     bool                        mForceSendControl;
     AirflowVerticalDirection    mVerticalDirection;
     AirflowHorizontalDirection  mHorizontalDirection;
+    bool                        mHvacHardwareInfoAvailable;
+    std::string                 mHvacProtocolVersion;
+    std::string                 mHvacSoftwareVersion;
+    std::string                 mHvacHardwareVersion;
+    std::string                 mHvacDeviceName;
+    bool                        mHvacFunctions[3];
     esphome::sensor::Sensor*                mOutdoorSensor;
     esphome::climate::ClimateTraits         mTraits;
     std::chrono::steady_clock::time_point   mLastByteTimestamp;         // For packet timeout
