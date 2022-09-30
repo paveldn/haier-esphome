@@ -598,7 +598,7 @@ void HaierClimate::sendControlPacket(const ClimateCall* climateControl)
     uint8_t controlOutBuffer[sizeof(HaierPacketControl)];
     {
         Lock _lock(mReadMutex);
-        memcpy(controlOutBuffer, &mLastPacket[HEADER_SIZE], sizeof(HaierPacketControl));
+        memcpy(controlOutBuffer, &mLastPacket[HEADER_SIZE + 2], sizeof(HaierPacketControl));
     }
     HaierPacketControl& outData = (HaierPacketControl&) controlOutBuffer;
     if (climateControl != NULL)
@@ -736,7 +736,7 @@ void HaierClimate::sendControlPacket(const ClimateCall* climateControl)
 			outData.horizontal_swing_mode = getHorizontalSwingMode(mHorizontalDirection);
 	}
     outData.disable_beeper = (!mBeeperEcho || (climateControl == NULL)) ? 1 : 0;
-    controlOutBuffer[14] = 0;   // This byte should be cleared before setting values
+    controlOutBuffer[4] = 0;   // This byte should be cleared before setting values
     outData.display_off = mDisplayStatus ? 0 : 1;
     sendFrameWithSubcommand(HaierProtocol::ftControl, 0x6001, controlOutBuffer, sizeof(HaierPacketControl));
 }

@@ -71,7 +71,7 @@ struct HaierPacketControl
     /* 14 */    uint8_t             ten_degree:1;               // 10 degree status
                 uint8_t             display_off:1;              // If the display is on or off
                 uint8_t             half_degree:1;              // Use half degree
-                uint8_t             intelegence_status:1;       // Intelegence status
+                uint8_t             intelegence_status:1;       // Intelligence status
                 uint8_t             pmv_status:1;               // Comfort/PMV status               
                 uint8_t             use_fahrenheit:1;           // Use Fahrenheit instead of Celsius
                 uint8_t             :0;
@@ -92,11 +92,11 @@ struct HaierPacketControl
     /* 19 */    uint8_t             fresh_air_status:1;         // Fresh air status
                 uint8_t             humidification_status:1;    // Humidification status
                 uint8_t             pm2p5_cleaning_status:1;    // PM2.5 cleaning status
-                uint8_t             ch20_cleaning_status:1;     // CH2O cleaning status
+                uint8_t             ch2o_cleaning_status:1;     // CH2O cleaning status
                 uint8_t             self_cleaning_status:1;     // Self cleaning status
                 uint8_t             light_status:1;             // Light status
                 uint8_t             energy_saving_status:1;     // Energy saving status
-                uint8_t             :0;
+                uint8_t             cleaning_time_status:1;     // Cleaning time (0 - accumulation, 1 - clear)
 };
 
 struct HaierPacketSensors
