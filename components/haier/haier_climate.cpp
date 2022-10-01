@@ -797,6 +797,12 @@ void HaierClimate::processStatus(const uint8_t* packetBuffer, uint8_t size)
     ESP_LOGD(TAG, "Horizontal Swing Status = 0x%X", packet->control.horizontal_swing_mode);
     ESP_LOGD(TAG, "Vertical Swing Status = 0x%X", packet->control.vertical_swing_mode);
     ESP_LOGD(TAG, "Set Point Status = 0x%X", packet->control.set_point);
+    if (packet->sensors.error_status != 0)
+    {
+        ESP_LOGW(TAG, "HVAC error, code=0x%02X message: %s", 
+            packet->sensors.error_status,
+            (packet->sensors.error_status < sizeof(ErrorMessages)) ? ErrorMessages[packet->sensors.error_status].c_str() : "Unknown error");
+    }
     if (mOutdoorSensor != nullptr)
     {
         float otemp = packet->sensors.outdoor_temperature / 2.0f + mOutdoorTemperatureOffset;
