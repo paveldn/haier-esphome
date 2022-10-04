@@ -13,7 +13,7 @@ using namespace esphome::uart;
 namespace esphome {
 namespace haier {
 
-#define TAG "Haier"
+#define TAG "haier.climate"
 
 #define PACKET_TIMEOUT_MS                300
 #define ANSWER_TIMEOUT_MS                1000
@@ -120,6 +120,7 @@ HaierClimate::HaierClimate(UARTComponent* parent) :
                                         mForceSendControl(false),
                                         mHvacHardwareInfoAvailable(false),
                                         mHvacFunctions{false, false, false},
+                                        mUseCrc(mHvacFunctions[0]),
                                         mOutdoorSensor(nullptr)
 {
     mLastPacket = new uint8_t[MAX_FRAME_SIZE];
@@ -314,7 +315,7 @@ void HaierClimate::loop()
                 // bit 3 - if 1 module support multiple devices
                 // bit 4..bit 15 - not used
                 uint8_t module_capabilities[2] = { 0b00000000, 0b00000111 };     
-                sendFrame(HaierProtocol::ftGetDeviceVersion, module_capabilities, sizeof(module_capabilities), false);
+                sendFrame(HaierProtocol::ftGetDeviceVersion, module_capabilities, sizeof(module_capabilities));
                 mPhase = psWaitingAnswerInit1;
                 mLastRequestTimestamp = now;
             }
@@ -576,12 +577,12 @@ void HaierClimate::handleIncomingPacket()
     ESP_LOG_L(level, TAG, "Received %s message during phase %d, size: %d, content: %02X %02X%s", packet_type.c_str(), oldPhase, currentPacket.size, HEADER, HEADER, raw.c_str());
 }
 
-void HaierClimate::sendFrame(HaierProtocol::FrameType type, const uint8_t* data, size_t data_size, bool withCrc)
+void HaierClimate::sendFrame(HaierProtocol::FrameType type, const uint8_t* data, size_t data_size)
 {
-    sendFrameWithSubcommand(type, NO_SUBCOMMAND, data, data_size, withCrc);
+    sendFrameWithSubcommand(type, NO_SUBCOMMAND, data, data_size);
 }
 
-void HaierClimate::sendFrameWithSubcommand(HaierProtocol::FrameType type, uint16_t subcommand, const uint8_t* data, size_t data_size, bool withCrc)
+void HaierClimate::sendFrameWithSubcommand(HaierProtocol::FrameType type, uint16_t subcommand, const uint8_t* data, size_t data_size)
 {
     if ((data == NULL) && (data_size > 0))
     {
@@ -589,7 +590,7 @@ void HaierClimate::sendFrameWithSubcommand(HaierProtocol::FrameType type, uint16
         return;
     }       
     uint8_t msg_size = HEADER_SIZE + (subcommand != NO_SUBCOMMAND ? 2 : 0) + data_size;
-    size_t frameSize = 2 + msg_size + 1 + (withCrc ? 2 : 0);
+    size_t frameSize = 2 + msg_size + 1 + (mUseCrc ? 2 : 0);
     if (frameSize > MAX_FRAME_SIZE)
     {
         ESP_LOGE(TAG, "Frame is to big: %d", frameSize);
@@ -599,7 +600,7 @@ void HaierClimate::sendFrameWithSubcommand(HaierProtocol::FrameType type, uint16
     size_t pos = 2;
     HaierPacketHeader* header = (HaierPacketHeader*)&buffer[pos];
     header->msg_length = msg_size;
-    header->crc_present = withCrc ? 0x40 : 0x00;
+    header->crc_present = mUseCrc ? 0x40 : 0x00;
     memset(header->reserved, 0, sizeof(header->reserved));
     header->frame_type = type;
     pos += HEADER_SIZE;
@@ -614,7 +615,7 @@ void HaierClimate::sendFrameWithSubcommand(HaierProtocol::FrameType type, uint16
         pos += data_size;
     }
     buffer[pos++] = getChecksum(buffer + 2, msg_size);
-    if (withCrc)
+    if (mUseCrc)
     {
         uint16_t crc_16 = crc16(buffer + 2, msg_size);
         buffer[pos++] = crc_16 >> 8;

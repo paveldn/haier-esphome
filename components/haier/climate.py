@@ -6,12 +6,18 @@ from esphome.const import (
     CONF_BEEPER,
     CONF_ID,
     CONF_OFFSET,
+    CONF_MAX_TEMPERATURE,
+    CONF_MIN_TEMPERATURE,
+    CONF_VISUAL,
     CONF_UART_ID,
     DEVICE_CLASS_TEMPERATURE,
     ICON_THERMOMETER,
     STATE_CLASS_MEASUREMENT,
     UNIT_CELSIUS,
 )
+
+PROTOCOL_MIN_TEMPERATURE = 16.0
+PROTOCOL_MAX_TEMPERATURE = 30.0
 
 AUTO_LOAD = ["sensor"]
 DEPENDENCIES = ["climate", "uart", "wifi"]
@@ -27,12 +33,12 @@ AirflowVerticalDirection = haier_ns.enum("AirflowVerticalDirection")
 AIRFLOW_VERTICAL_DIRECTION_OPTIONS = {
     "UP":       AirflowVerticalDirection.vdUp,
     "CENTER":   AirflowVerticalDirection.vdCenter,
-    "DOWN":	AirflowVerticalDirection.vdDown,
+    "DOWN": AirflowVerticalDirection.vdDown,
 }
 
 AirflowHorizontalDirection = haier_ns.enum("AirflowHorizontalDirection")
 AIRFLOW_HORIZONTAL_DIRECTION_OPTIONS = {
-    "LEFT":	AirflowHorizontalDirection.hdLeft,
+    "LEFT": AirflowHorizontalDirection.hdLeft,
     "CENTER":   AirflowHorizontalDirection.hdCenter,
     "RIGHT":    AirflowHorizontalDirection.hdRight,
 }
@@ -173,6 +179,26 @@ async def haier_set_horizontal_airflow_to_code(config, action_id, template_arg, 
 
 
 async def to_code(config):
+    if CONF_VISUAL in config:
+        visual_config = config[CONF_VISUAL]
+        if CONF_MIN_TEMPERATURE in visual_config:
+            min_temp = visual_config[CONF_MIN_TEMPERATURE]
+            if min_temp < PROTOCOL_MIN_TEMPERATURE:
+                raise cv.Invalid(f"Configured visual minimum temperature {min_temp} is lower than supported by Haier protocol {PROTOCOL_MIN_TEMPERATURE}")
+        else:
+            visual_config[CONF_MIN_TEMPERATURE] = PROTOCOL_MIN_TEMPERATURE
+        if CONF_MAX_TEMPERATURE in visual_config:
+            max_temp = visual_config[CONF_MAX_TEMPERATURE]
+            if max_temp > PROTOCOL_MAX_TEMPERATURE:
+                raise cv.Invalid(f"Configured visual maximum temperature {max_temp} is higher than supported by Haier protocol {PROTOCOL_MAX_TEMPERATURE}")
+        else:
+            visual_config[CONF_MAX_TEMPERATURE] = PROTOCOL_MAX_TEMPERATURE
+    else:
+        visual_config[CONF_MAX_TEMPERATURE] = {
+            CONF_MIN_TEMPERATURE: PROTOCOL_MIN_TEMPERATURE,
+            CONF_MAX_TEMPERATURE: PROTOCOL_MAX_TEMPERATURE,
+            CONF_TEMPERATURE_STEP: 1
+        }
     uart_component = await cg.get_variable(config[CONF_UART_ID])
     var = cg.new_Pvariable(config[CONF_ID], uart_component)
     await cg.register_component(var, config)

@@ -70,8 +70,8 @@ public:
     void set_horizontal_airflow(AirflowHorizontalDirection direction);
 protected:
     esphome::climate::ClimateTraits traits() override;
-    void sendFrame(HaierProtocol::FrameType type, const uint8_t* data=NULL, size_t data_size=0, bool withCrc=true); 
-    void sendFrameWithSubcommand(HaierProtocol::FrameType type, uint16_t subcommand, const uint8_t* data=NULL, size_t data_size=0, bool withCrc=true);
+    void sendFrame(HaierProtocol::FrameType type, const uint8_t* data=NULL, size_t data_size=0); 
+    void sendFrameWithSubcommand(HaierProtocol::FrameType type, uint16_t subcommand, const uint8_t* data=NULL, size_t data_size=0);
     void sendData(const uint8_t * message, size_t size, bool withCrc = true);
     void processStatus(const uint8_t* packet, uint8_t size);
     void handleIncomingPacket();
@@ -115,6 +115,7 @@ private:
     std::string                 mHvacHardwareVersion;
     std::string                 mHvacDeviceName;
     bool                        mHvacFunctions[3];
+    bool&                       mUseCrc;
     esphome::sensor::Sensor*                mOutdoorSensor;
     esphome::climate::ClimateTraits         mTraits;
     std::chrono::steady_clock::time_point   mLastByteTimestamp;         // For packet timeout
