@@ -9,6 +9,7 @@ from esphome.const import (
     CONF_MAX_TEMPERATURE,
     CONF_MIN_TEMPERATURE,
     CONF_VISUAL,
+    CONF_TEMPERATURE_STEP,
     CONF_UART_ID,
     DEVICE_CLASS_TEMPERATURE,
     ICON_THERMOMETER,
@@ -18,6 +19,7 @@ from esphome.const import (
 
 PROTOCOL_MIN_TEMPERATURE = 16.0
 PROTOCOL_MAX_TEMPERATURE = 30.0
+PROTOCOL_TEMPERATURE_STEP = 1.0
 
 AUTO_LOAD = ["sensor"]
 DEPENDENCIES = ["climate", "uart", "wifi"]
@@ -184,20 +186,28 @@ async def to_code(config):
         if CONF_MIN_TEMPERATURE in visual_config:
             min_temp = visual_config[CONF_MIN_TEMPERATURE]
             if min_temp < PROTOCOL_MIN_TEMPERATURE:
-                raise cv.Invalid(f"Configured visual minimum temperature {min_temp} is lower than supported by Haier protocol {PROTOCOL_MIN_TEMPERATURE}")
+                raise cv.Invalid(f"Configured visual minimum temperature {min_temp} is lower than supported by Haier protocol is {PROTOCOL_MIN_TEMPERATURE}")
         else:
             visual_config[CONF_MIN_TEMPERATURE] = PROTOCOL_MIN_TEMPERATURE
         if CONF_MAX_TEMPERATURE in visual_config:
             max_temp = visual_config[CONF_MAX_TEMPERATURE]
             if max_temp > PROTOCOL_MAX_TEMPERATURE:
-                raise cv.Invalid(f"Configured visual maximum temperature {max_temp} is higher than supported by Haier protocol {PROTOCOL_MAX_TEMPERATURE}")
+                raise cv.Invalid(f"Configured visual maximum temperature {max_temp} is higher than supported by Haier protocol is {PROTOCOL_MAX_TEMPERATURE}")
         else:
             visual_config[CONF_MAX_TEMPERATURE] = PROTOCOL_MAX_TEMPERATURE
+        if CONF_TEMPERATURE_STEP in visual_config:
+            temp_step = visual_config[CONF_TEMPERATURE_STEP]
+            if temp_step < PROTOCOL_TEMPERATURE_STEP:
+                raise cv.Invalid(f"Configured visual temperature step {temp_step} is too small, the minimum step allowed by Haier protocol is {PROTOCOL_TEMPERATURE_STEP}")
+            elif temp_step % 1 != 0:
+                raise cv.Invalid(f"Configured visual temperature step {temp_step} should be integer")
+        else:
+            visual_config[CONF_TEMPERATURE_STEP] = PROTOCOL_TEMPERATURE_STEP
     else:
         visual_config[CONF_MAX_TEMPERATURE] = {
             CONF_MIN_TEMPERATURE: PROTOCOL_MIN_TEMPERATURE,
             CONF_MAX_TEMPERATURE: PROTOCOL_MAX_TEMPERATURE,
-            CONF_TEMPERATURE_STEP: 1
+            CONF_TEMPERATURE_STEP: PROTOCOL_TEMPERATURE_STEP
         }
     uart_component = await cg.get_variable(config[CONF_UART_ID])
     var = cg.new_Pvariable(config[CONF_ID], uart_component)

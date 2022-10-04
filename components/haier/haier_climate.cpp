@@ -21,10 +21,6 @@ namespace haier {
 #define STATUS_REQUEST_INTERVAL_MS       5000
 #define SIGNAL_LEVEL_UPDATE_INTERVAL_MS  10000
 
-// temperatures supported by AC system
-#define MIN_SET_TEMPERATURE             16
-#define MAX_SET_TEMPERATURE             30
-
 #define MAX_MESSAGE_SIZE                254
 #define MAX_FRAME_SIZE                  (MAX_MESSAGE_SIZE + 4)
 #define HEADER                          0xFF
@@ -155,9 +151,6 @@ HaierClimate::HaierClimate(UARTComponent* parent) :
         climate::CLIMATE_PRESET_BOOST,
         climate::CLIMATE_PRESET_SLEEP,
     });
-    mTraits.set_visual_min_temperature(MIN_SET_TEMPERATURE);
-    mTraits.set_visual_max_temperature(MAX_SET_TEMPERATURE);
-    mTraits.set_visual_temperature_step(1.0f);
     mTraits.set_supports_current_temperature(true);
     mVerticalDirection = vdCenter;
     mHorizontalDirection = hdCenter;
