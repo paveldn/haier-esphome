@@ -9,6 +9,7 @@ from esphome.const import (
     CONF_MAX_TEMPERATURE,
     CONF_MIN_TEMPERATURE,
     CONF_VISUAL,
+    CONF_SUPPORTED_SWING_MODES,
     CONF_TEMPERATURE_STEP,
     CONF_UART_ID,
     DEVICE_CLASS_TEMPERATURE,
@@ -16,6 +17,10 @@ from esphome.const import (
     STATE_CLASS_MEASUREMENT,
     UNIT_CELSIUS,
 )
+from esphome.components.climate import (
+    ClimateSwingMode,
+)
+
 
 PROTOCOL_MIN_TEMPERATURE = 16.0
 PROTOCOL_MAX_TEMPERATURE = 30.0
@@ -45,12 +50,27 @@ AIRFLOW_HORIZONTAL_DIRECTION_OPTIONS = {
     "RIGHT":    AirflowHorizontalDirection.hdRight,
 }
 
+SUPPORTED_SWING_MODES_OPTIONS = {
+    "OFF": ClimateSwingMode.CLIMATE_SWING_OFF,                  # always available
+    "VERTICAL": ClimateSwingMode.CLIMATE_SWING_VERTICAL,        # always available
+    "HORIZONTAL": ClimateSwingMode.CLIMATE_SWING_HORIZONTAL,
+    "BOTH": ClimateSwingMode.CLIMATE_SWING_BOTH,
+}
+
 CONFIG_SCHEMA = cv.All(
     climate.CLIMATE_SCHEMA.extend(
         {
             cv.GenerateID(): cv.declare_id(HaierClimate),
             cv.Optional(CONF_WIFI_SIGNAL, default=True): cv.boolean,
             cv.Optional(CONF_BEEPER, default=True): cv.boolean,
+            cv.Optional(CONF_SUPPORTED_SWING_MODES, default=[
+                "OFF",
+                "VERTICAL",
+                "HORIZONTAL",
+                "BOTH",                
+            ]): cv.ensure_list(
+                cv.enum(SUPPORTED_SWING_MODES_OPTIONS, upper=True)
+            ),
             cv.Optional(CONF_OUTDOOR_TEMPERATURE): sensor.sensor_schema(
                 unit_of_measurement=UNIT_CELSIUS,
                 icon=ICON_THERMOMETER,
@@ -220,4 +240,6 @@ async def to_code(config):
         sens = await sensor.new_sensor(config[CONF_OUTDOOR_TEMPERATURE])
         cg.add(var.set_outdoor_temperature_sensor(sens))
         cg.add(var.set_outdoor_temperature_offset(config[CONF_OUTDOOR_TEMPERATURE][CONF_OFFSET]))
+    if CONF_SUPPORTED_SWING_MODES in config:
+        cg.add(var.set_supported_swing_modes(config[CONF_SUPPORTED_SWING_MODES]))
 

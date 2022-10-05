@@ -68,6 +68,7 @@ public:
     void set_vertical_airflow(AirflowVerticalDirection direction);
     AirflowHorizontalDirection get_horizontal_airflow() const;
     void set_horizontal_airflow(AirflowHorizontalDirection direction);
+    void set_supported_swing_modes(const std::set<climate::ClimateSwingMode> &modes);
 protected:
     esphome::climate::ClimateTraits traits() override;
     void sendFrame(HaierProtocol::FrameType type, const uint8_t* data=NULL, size_t data_size=0); 

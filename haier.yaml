@@ -46,6 +46,15 @@ climate:
     outdoor_temperature:        # Optional, outdoor temperature sensor
       name: ${device_name} outdoor temperature
       offset: -20               # Optional, sensor temperature offset, default -20
+    visual:                     # Optional, you can use it to limit min and max temperatures in UI (not working for remote!)
+      min_temperature: 16 °C
+      max_temperature: 30 °C
+      temperature_step: 1 °C
+    supported_swing_modes:      # Optional, can be used to disable some swing modes if your AC does not support it
+    - 'OFF'
+    - VERTICAL
+    - HORIZONTAL
+    - BOTH
 
 switch:
   - platform: template

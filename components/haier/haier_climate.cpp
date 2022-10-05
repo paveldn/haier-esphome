@@ -227,7 +227,14 @@ void HaierClimate::set_horizontal_airflow(AirflowHorizontalDirection direction)
         mHorizontalDirection = direction;
     mForceSendControl = true;
 }
-    
+
+void HaierClimate::set_supported_swing_modes(const std::set<climate::ClimateSwingMode> &modes)
+{
+    mTraits.set_supported_swing_modes(modes);
+    mTraits.add_supported_swing_mode(climate::CLIMATE_SWING_OFF);   // Always available
+    mTraits.add_supported_swing_mode(CLIMATE_SWING_VERTICAL);       // Always available
+}
+
 void HaierClimate::setup()
 {
     ESP_LOGI(TAG, "Haier initialization...");
