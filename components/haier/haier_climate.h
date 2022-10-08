@@ -97,6 +97,7 @@ private:
         psSendingSignalLevel,
         psWaitingSignalLevelAnswer,
     };
+    void                        setPhase(ProtocolPhases phase);
     ProtocolPhases              mPhase;
     Mutex                       mReadMutex;
     uint8_t*                    mLastPacket;

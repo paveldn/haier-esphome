@@ -35,6 +35,8 @@ namespace haier {
         else                                        { ESP_LOGVV(tag, format, __VA_ARGS__); } \
     } while(0)
 
+#define min(a,b) ((a)<(b)?(a):(b))
+
 uint8_t getChecksum(const uint8_t * message, size_t size) {
         uint8_t result = 0;
         for (int i = 0; i < size; i++){
@@ -107,6 +109,7 @@ HorizontalSwingMode getHorizontalSwingMode(AirflowHorizontalDirection direction)
 HaierClimate::HaierClimate(UARTComponent* parent) :
                                         Component(),
                                         UARTDevice(parent),
+                                        mPhase(psSendingInit1),
                                         mFanModeFanSpeed(FanMid),
                                         mOtherModesFanSpeed(FanAuto),
                                         mOutdoorTemperatureOffset(0),
@@ -159,6 +162,15 @@ HaierClimate::HaierClimate(UARTComponent* parent) :
 HaierClimate::~HaierClimate()
 {
     delete[] mLastPacket;
+}
+
+void HaierClimate::setPhase(ProtocolPhases phase)
+{
+    if (mPhase != phase)
+    {
+        ESP_LOGV(TAG, "Phase transition: %d => %d", mPhase, phase);
+        mPhase = phase;
+    }
 }
 
 void HaierClimate::set_send_wifi_signal(bool sendWifi) 
@@ -239,7 +251,7 @@ void HaierClimate::setup()
 {
     ESP_LOGI(TAG, "Haier initialization...");
     delay(2000); // Give time for AC to boot
-    mPhase = psSendingInit1;
+    setPhase(psSendingInit1);
 }
 
 void HaierClimate::dump_config()
@@ -300,7 +312,7 @@ void HaierClimate::loop()
     {
         ESP_LOGE(TAG, "No valid status answer for to long. Resetting protocol");
         currentPacket.Reset();
-        mPhase = psSendingInit1;
+        setPhase(psSendingInit1);
         return;
     }
     switch (mPhase)
@@ -316,13 +328,13 @@ void HaierClimate::loop()
                 // bit 4..bit 15 - not used
                 uint8_t module_capabilities[2] = { 0b00000000, 0b00000111 };     
                 sendFrame(HaierProtocol::ftGetDeviceVersion, module_capabilities, sizeof(module_capabilities));
-                mPhase = psWaitingAnswerInit1;
+                setPhase(psWaitingAnswerInit1);
                 mLastRequestTimestamp = now;
             }
             return;
         case psSendingInit2:
             sendFrame(HaierProtocol::ftGetDeviceId);
-            mPhase = psWaitingAnswerInit2;
+            setPhase(psWaitingAnswerInit2);
             mLastRequestTimestamp = now;
             return;
         case psSendingFirstStatusRequest:
@@ -335,7 +347,7 @@ void HaierClimate::loop()
         case psSendingUpdateSignalRequest:
             sendFrame(HaierProtocol::ftGetManagementInformation);
             mLastSignalRequest = now;
-            mPhase = psWaitingUpateSignalAnswer;
+            setPhase(psWaitingUpateSignalAnswer);
             mLastRequestTimestamp = now;
             return;
         case psSendingSignalLevel:
@@ -356,10 +368,10 @@ void HaierClimate::loop()
                     wifi_status_data[3] = 0;
                 }
                 sendFrame(HaierProtocol::ftReportNetworkStatus, wifi_status_data, sizeof(wifi_status_data));
-                mPhase = psWaitingSignalLevelAnswer;
+                setPhase(psWaitingSignalLevelAnswer);
             }
             else
-                mPhase = psIdle;    // We don't expect answer here
+                setPhase(psIdle);    // We don't expect answer here
             return;
         case psWaitingAnswerInit1:
         case psWaitingAnswerInit2:
@@ -370,7 +382,7 @@ void HaierClimate::loop()
                 // No valid communication yet, resetting protocol,
                 // No logs to avoid to many messages
                 currentPacket.Reset();
-                mPhase = psSendingInit1;
+                setPhase(psSendingInit1);
                 return;
             }
             break;
@@ -382,7 +394,7 @@ void HaierClimate::loop()
                 // We have valid communication here, no problem if we missed packet or two
                 // Just request packet again in next loop call. We also protected by protocol timeout
                 ESP_LOGW(TAG, "Request answer timeout, phase %d", mPhase);
-                mPhase = psIdle;
+                setPhase(psIdle);
                 return;
             }
             break;
@@ -397,7 +409,7 @@ void HaierClimate::loop()
             // Shouldn't get here
             ESP_LOGE(TAG, "Wrong protocol handler state: %d, resetting communication", mPhase);
             currentPacket.Reset();
-            mPhase = psSendingInit1;
+            setPhase(psSendingInit1);
             return;
     }
     // Here we expect some input from AC or just waiting for the proper time to send the request
@@ -412,9 +424,9 @@ void HaierClimate::loop()
     {
         // If we not waiting for answers check if there is a proper time to request data
         if (std::chrono::duration_cast<std::chrono::milliseconds>(now - mLastStatusRequest).count() > STATUS_REQUEST_INTERVAL_MS)
-            mPhase = psSendingStatusRequest;
+            setPhase(psSendingStatusRequest);
         else if (mSendWifiSignal && (std::chrono::duration_cast<std::chrono::milliseconds>(now - mLastSignalRequest).count() > SIGNAL_LEVEL_UPDATE_INTERVAL_MS))
-            mPhase = psSendingUpdateSignalRequest;
+            setPhase(psSendingUpdateSignalRequest);
     }
 }
 
@@ -441,6 +453,7 @@ void HaierClimate::getSerialData()
             }
             if (currentPacket.position >= currentPacket.size)
             {
+                ESP_LOGV(TAG, "Packet received: FF FF%s", getHex(currentPacket.buffer, currentPacket.size).c_str());
                 bool isValid = true;
                 if (currentPacket.checksum != currentPacket.buffer[currentPacket.size - (currentPacket.has_crc ? 3 : 1)])
                 {
@@ -518,7 +531,7 @@ void HaierClimate::handleIncomingPacket()
                 mHvacFunctions[1] = (answr->functions[1] & 0x08) != 0;
                 mHvacFunctions[2] = (answr->functions[1] & 0x20) != 0;
                 mHvacHardwareInfoAvailable = true;
-                mPhase = psSendingInit2;
+                setPhase(psSendingInit2);
             }
             else
                 level = ESPHOME_LOG_LEVEL_WARN;
@@ -526,7 +539,7 @@ void HaierClimate::handleIncomingPacket()
         case HaierProtocol::ftGetDeviceIdResponse:
             packet_type = "Init2 command answer";
             if (mPhase == psWaitingAnswerInit2)
-                mPhase = psSendingFirstStatusRequest;
+                setPhase(psSendingFirstStatusRequest);
             else
                 level = ESPHOME_LOG_LEVEL_WARN;
             break;
@@ -543,7 +556,7 @@ void HaierClimate::handleIncomingPacket()
                 processStatus(currentPacket.buffer, currentPacket.size);
                 if ((mPhase == psWaitingStatusAnswer) || (mPhase == psWaitingFirstStatusAnswer))
                     // Change phase only if we were waiting for status
-                    mPhase = psIdle;
+                    setPhase(psIdle);
             }
             else
                 level = ESPHOME_LOG_LEVEL_WARN;
@@ -551,7 +564,7 @@ void HaierClimate::handleIncomingPacket()
         case HaierProtocol::ftConfirm:
             packet_type = "Confirmation";
             if (mPhase == psWaitingSignalLevelAnswer)
-                mPhase = psIdle;
+                setPhase(psIdle);
             else
                 level = ESPHOME_LOG_LEVEL_WARN;
             break;
@@ -559,13 +572,13 @@ void HaierClimate::handleIncomingPacket()
             packet_type = "Command error";
             level = ESPHOME_LOG_LEVEL_WARN;
             if (mPhase == psWaitingStatusAnswer)
-                mPhase = psIdle;
+                setPhase(psIdle);
             // No else to avoid to many requests, we will retry on timeout
             break;
         case HaierProtocol::ftGetManagementInformationResponse:
             packet_type = "Signal request answer";
             if (mPhase == psWaitingUpateSignalAnswer)
-                mPhase = psSendingSignalLevel;
+                setPhase(psSendingSignalLevel);
             else
                 level = ESPHOME_LOG_LEVEL_WARN;
             break;
@@ -792,34 +805,35 @@ void HaierClimate::control(const ClimateCall &call)
 
 void HaierClimate::processStatus(const uint8_t* packetBuffer, uint8_t size)
 {
-    HaierStatus* packet = (HaierStatus*) packetBuffer;
-    ESP_LOGD(TAG, "HVAC Mode = 0x%X", packet->control.ac_mode);
-    ESP_LOGD(TAG, "Fan speed Status = 0x%X", packet->control.fan_mode);
-    ESP_LOGD(TAG, "Horizontal Swing Status = 0x%X", packet->control.horizontal_swing_mode);
-    ESP_LOGD(TAG, "Vertical Swing Status = 0x%X", packet->control.vertical_swing_mode);
-    ESP_LOGD(TAG, "Set Point Status = 0x%X", packet->control.set_point);
-    if (packet->sensors.error_status != 0)
+    HaierStatus packet;
+    memcpy(&packet, packetBuffer, min(size, sizeof(HaierStatus)));
+    ESP_LOGD(TAG, "HVAC Mode = 0x%X", packet.control.ac_mode);
+    ESP_LOGD(TAG, "Fan speed Status = 0x%X", packet.control.fan_mode);
+    ESP_LOGD(TAG, "Horizontal Swing Status = 0x%X", packet.control.horizontal_swing_mode);
+    ESP_LOGD(TAG, "Vertical Swing Status = 0x%X", packet.control.vertical_swing_mode);
+    ESP_LOGD(TAG, "Set Point Status = 0x%X", packet.control.set_point);
+    if (packet.sensors.error_status != 0)
     {
         ESP_LOGW(TAG, "HVAC error, code=0x%02X message: %s", 
-            packet->sensors.error_status,
-            (packet->sensors.error_status < sizeof(ErrorMessages)) ? ErrorMessages[packet->sensors.error_status].c_str() : "Unknown error");
+            packet.sensors.error_status,
+            (packet.sensors.error_status < sizeof(ErrorMessages)) ? ErrorMessages[packet.sensors.error_status].c_str() : "Unknown error");
     }
     if (mOutdoorSensor != nullptr)
     {
-        float otemp = packet->sensors.outdoor_temperature / 2.0f + mOutdoorTemperatureOffset;
+        float otemp = packet.sensors.outdoor_temperature / 2.0f + mOutdoorTemperatureOffset;
         if ((!mOutdoorSensor->has_state()) ||  (mOutdoorSensor->get_raw_state() != otemp))
           mOutdoorSensor->publish_state(otemp);
     }
     //extra modes/presets
-    if (packet->control.quiet_mode != 0)
+    if (packet.control.quiet_mode != 0)
     {
         preset = CLIMATE_PRESET_ECO;
     }
-    else if (packet->control.fast_mode != 0)
+    else if (packet.control.fast_mode != 0)
     {    
         preset = CLIMATE_PRESET_BOOST;
     }
-    else if (packet->control.sleep_mode != 0)
+    else if (packet.control.sleep_mode != 0)
     {    
         preset = CLIMATE_PRESET_SLEEP;
     }
@@ -827,14 +841,14 @@ void HaierClimate::processStatus(const uint8_t* packetBuffer, uint8_t size)
     {
         preset = CLIMATE_PRESET_NONE;
     }
-    target_temperature = packet->control.set_point + 16;
-    current_temperature = packet->sensors.room_temperature / 2.0f;
+    target_temperature = packet.control.set_point + 16;
+    current_temperature = packet.sensors.room_temperature / 2.0f;
     //remember the fan speed we last had for climate vs fan
-    if (packet->control.ac_mode ==  ConditioningFan)
-        mFanModeFanSpeed = packet->control.fan_mode;
+    if (packet.control.ac_mode ==  ConditioningFan)
+        mFanModeFanSpeed = packet.control.fan_mode;
     else
-        mOtherModesFanSpeed = packet->control.fan_mode;
-    switch (packet->control.fan_mode)
+        mOtherModesFanSpeed = packet.control.fan_mode;
+    switch (packet.control.fan_mode)
     {
                 case FanAuto:
                     fan_mode = CLIMATE_FAN_AUTO;
@@ -850,12 +864,12 @@ void HaierClimate::processStatus(const uint8_t* packetBuffer, uint8_t size)
                     break;
     }
     //climate mode
-    if (packet->control.ac_power == 0)
+    if (packet.control.ac_power == 0)
         mode = CLIMATE_MODE_OFF;
     else
     {
         // Check current hvac mode
-        switch (packet->control.ac_mode)
+        switch (packet.control.ac_mode)
         {
             case ConditioningCool:
                 mode = CLIMATE_MODE_COOL;
@@ -875,16 +889,16 @@ void HaierClimate::processStatus(const uint8_t* packetBuffer, uint8_t size)
         }
     }
     // Swing mode
-    if (packet->control.horizontal_swing_mode == HorizontalSwingAuto)
+    if (packet.control.horizontal_swing_mode == HorizontalSwingAuto)
     {
-        if (packet->control.vertical_swing_mode == VerticalSwingAuto)
+        if (packet.control.vertical_swing_mode == VerticalSwingAuto)
             swing_mode = CLIMATE_SWING_BOTH;
         else
             swing_mode = CLIMATE_SWING_HORIZONTAL;
     }
     else
     {
-        if (packet->control.vertical_swing_mode == VerticalSwingAuto)
+        if (packet.control.vertical_swing_mode == VerticalSwingAuto)
             swing_mode = CLIMATE_SWING_VERTICAL;
         else
             swing_mode = CLIMATE_SWING_OFF;
