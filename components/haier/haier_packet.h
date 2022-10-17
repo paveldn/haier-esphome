@@ -1,6 +1,8 @@
 ﻿#ifndef HAIER_PACKET_H
 #define HAIER_PACKET_H
 
+#define PROTOCOL_OUTDOOR_TEMPERATURE_OFFSET (-64)
+
 enum VerticalSwingMode
 {
     VerticalSwingHealthUp       = 0x01,

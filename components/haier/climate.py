@@ -74,22 +74,22 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_OUTDOOR_TEMPERATURE): sensor.sensor_schema(
                 unit_of_measurement=UNIT_CELSIUS,
                 icon=ICON_THERMOMETER,
-                accuracy_decimals=1,
+                accuracy_decimals=0,
                 device_class=DEVICE_CLASS_TEMPERATURE,
                 state_class=STATE_CLASS_MEASUREMENT,
             ).extend(
                 {
-                    cv.Optional(CONF_OFFSET, default=-20): cv.int_range(
-                        min=-50, max=50
+                    cv.Optional(CONF_OFFSET, default=0): cv.int_range(
+                        min=-30, max=30
                     ), 
                 }),
         }
     )
     .extend(uart.UART_DEVICE_SCHEMA)
     .extend(cv.COMPONENT_SCHEMA),
+    # Check minimum esphome version
+    cv.require_esphome_version(2022, 1, 0),
 )
-
-
 
 # Actions
 DisplayOnAction = haier_ns.class_("DisplayOnAction", automation.Action)

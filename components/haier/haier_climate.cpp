@@ -634,7 +634,7 @@ void HaierClimate::sendFrameWithSubcommand(HaierProtocol::FrameType type, uint16
     {
         ESP_LOGE(TAG, "Wrong data size: %d", data_size);
         return;
-    }       
+    }
     uint8_t msg_size = HEADER_SIZE + (subcommand != NO_SUBCOMMAND ? 2 : 0) + data_size;
     size_t frameSize = 2 + msg_size + 1 + (mUseCrc ? 2 : 0);
     if (frameSize > MAX_FRAME_SIZE)
@@ -853,7 +853,7 @@ void HaierClimate::processStatus(const uint8_t* packetBuffer, uint8_t size)
     }
     if (mOutdoorSensor != nullptr)
     {
-        float otemp = packet.sensors.outdoor_temperature / 2.0f + mOutdoorTemperatureOffset;
+        float otemp = packet.sensors.outdoor_temperature + PROTOCOL_OUTDOOR_TEMPERATURE_OFFSET + mOutdoorTemperatureOffset;
         if ((!mOutdoorSensor->has_state()) ||  (mOutdoorSensor->get_raw_state() != otemp))
           mOutdoorSensor->publish_state(otemp);
     }
