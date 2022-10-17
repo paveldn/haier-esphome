@@ -45,7 +45,6 @@ climate:
     beeper: true                # Optional, default true, disables beep on commands from ESP
     outdoor_temperature:        # Optional, outdoor temperature sensor
       name: ${device_name} outdoor temperature
-      offset: 0                 # Optional, sensor temperature offset, default 0
     visual:                     # Optional, you can use it to limit min and max temperatures in UI (not working for remote!)
       min_temperature: 16 °C
       max_temperature: 30 °C

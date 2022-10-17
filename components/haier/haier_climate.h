@@ -61,7 +61,6 @@ public:
     bool get_beeper_echo() const;   
     void set_fahrenheit(bool fahrenheit);
     void set_outdoor_temperature_sensor(esphome::sensor::Sensor *sensor);
-    void set_outdoor_temperature_offset(int8_t offset);
     void set_display_state(bool state);
     bool get_display_state() const;
     AirflowVerticalDirection get_vertical_airflow() const;
@@ -106,7 +105,6 @@ private:
     uint8_t*                    mLastPacket;
     uint8_t                     mFanModeFanSpeed;
     uint8_t                     mOtherModesFanSpeed;
-    int8_t                      mOutdoorTemperatureOffset;
     bool                        mSendWifiSignal;
     bool                        mBeeperEcho;
     bool                        mUseFahrenheit;

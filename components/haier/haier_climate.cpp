@@ -112,7 +112,6 @@ HaierClimate::HaierClimate(UARTComponent* parent) :
                                         mPhase(psSendingInit1),
                                         mFanModeFanSpeed(FanMid),
                                         mOtherModesFanSpeed(FanAuto),
-                                        mOutdoorTemperatureOffset(0),
                                         mSendWifiSignal(false),
                                         mBeeperEcho(true),
                                         mDisplayStatus(true),
@@ -197,11 +196,6 @@ bool HaierClimate::get_display_state() const
 void HaierClimate::set_outdoor_temperature_sensor(esphome::sensor::Sensor *sensor) 
 {
     mOutdoorSensor = sensor; 
-}
-
-void HaierClimate::set_outdoor_temperature_offset(int8_t offset)
-{
-    mOutdoorTemperatureOffset = offset;
 }
 
 void HaierClimate::set_display_state(bool state)
@@ -853,7 +847,7 @@ void HaierClimate::processStatus(const uint8_t* packetBuffer, uint8_t size)
     }
     if (mOutdoorSensor != nullptr)
     {
-        float otemp = packet.sensors.outdoor_temperature + PROTOCOL_OUTDOOR_TEMPERATURE_OFFSET + mOutdoorTemperatureOffset;
+        float otemp = packet.sensors.outdoor_temperature + PROTOCOL_OUTDOOR_TEMPERATURE_OFFSET;
         if ((!mOutdoorSensor->has_state()) ||  (mOutdoorSensor->get_raw_state() != otemp))
           mOutdoorSensor->publish_state(otemp);
     }

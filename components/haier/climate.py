@@ -5,7 +5,6 @@ from esphome import automation
 from esphome.const import (
     CONF_BEEPER,
     CONF_ID,
-    CONF_OFFSET,
     CONF_MAX_TEMPERATURE,
     CONF_MIN_TEMPERATURE,
     CONF_VISUAL,
@@ -77,12 +76,7 @@ CONFIG_SCHEMA = cv.All(
                 accuracy_decimals=0,
                 device_class=DEVICE_CLASS_TEMPERATURE,
                 state_class=STATE_CLASS_MEASUREMENT,
-            ).extend(
-                {
-                    cv.Optional(CONF_OFFSET, default=0): cv.int_range(
-                        min=-30, max=30
-                    ), 
-                }),
+            ),
         }
     )
     .extend(uart.UART_DEVICE_SCHEMA)
@@ -239,7 +233,6 @@ async def to_code(config):
     if CONF_OUTDOOR_TEMPERATURE in config:
         sens = await sensor.new_sensor(config[CONF_OUTDOOR_TEMPERATURE])
         cg.add(var.set_outdoor_temperature_sensor(sens))
-        cg.add(var.set_outdoor_temperature_offset(config[CONF_OUTDOOR_TEMPERATURE][CONF_OFFSET]))
     if CONF_SUPPORTED_SWING_MODES in config:
         cg.add(var.set_supported_swing_modes(config[CONF_SUPPORTED_SWING_MODES]))
 
