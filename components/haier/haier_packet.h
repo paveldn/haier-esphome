@@ -269,12 +269,12 @@ namespace HaierProtocol
 
     enum SubcomandsControl
     {
-        stControlGetParameters      = 0x014C,       // Request specific parameters (packet content: parameter ID1 + parameter ID2 + ...)
-        stControlGetUserData        = 0x014D,       // Request all user data from device (packet content: None)
-        stControlGetBigData         = 0xFE4D,       // Request big data information from device (master-slave mode only) (packet content: None)
-        stControlSetParameters      = 0x015C,       // Set parameters of the device and device return parameters (packet content: parameter ID1 + parameter data1 + parameter ID2 + parameter data 2 + ...)
-        stControlSetSingleParameter = 0x005D,       // Set single parameter (0xXX5D first byte define parameter ID) and return all user data (packet content: ???)
-        stControlSetGroupParameters = 0x016D,       // Set group parameters to device (0xXX6D first byte define parameter is group ID, the only group mentioned in document is 1) and return all user data (packet content: all values like in status packet)
+        stControlGetParameters      = 0x4C01,       // Request specific parameters (packet content: parameter ID1 + parameter ID2 + ...)
+        stControlGetUserData        = 0x4D01,       // Request all user data from device (packet content: None)
+        stControlGetBigData         = 0x4DFE,       // Request big data information from device (master-slave mode only) (packet content: None)
+        stControlSetParameters      = 0x5C01,       // Set parameters of the device and device return parameters (packet content: parameter ID1 + parameter data1 + parameter ID2 + parameter data 2 + ...)
+        stControlSetSingleParameter = 0x5D00,       // Set single parameter (0x5DXX second byte define parameter ID) and return all user data (packet content: ???)
+        stControlSetGroupParameters = 0x6001,       // Set group parameters to device (0x60XX second byte define parameter is group ID, the only group mentioned in document is 1) and return all user data (packet content: all values like in status packet)
     };
 }
 

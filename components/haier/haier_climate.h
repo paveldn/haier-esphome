@@ -18,7 +18,7 @@ struct Lock
 {
     Lock(const Mutex&) {};
 }; 
-#else
+#else // USE_ESP32
 #include <mutex>
 typedef std::mutex Mutex;
 typedef std::lock_guard<Mutex> Lock;
@@ -88,6 +88,8 @@ private:
         psWaitingAnswerInit2,
         psSendingFirstStatusRequest,
         psWaitingFirstStatusAnswer,
+        psSendingAlarmStatusReauest,
+        psWaitingAlarmStatusAnswer,
         // Functional state
         psIdle,
         psSendingStatusRequest,
@@ -96,6 +98,7 @@ private:
         psWaitingUpateSignalAnswer,
         psSendingSignalLevel,
         psWaitingSignalLevelAnswer,
+
     };
     void                        setPhase(ProtocolPhases phase);
     ProtocolPhases              mPhase;
@@ -116,8 +119,9 @@ private:
     std::string                 mHvacSoftwareVersion;
     std::string                 mHvacHardwareVersion;
     std::string                 mHvacDeviceName;
-    bool                        mHvacFunctions[3];
+    bool                        mHvacFunctions[5];
     bool&                       mUseCrc;
+    uint8_t                     mActiveAlarms[8];
     esphome::sensor::Sensor*                mOutdoorSensor;
     esphome::climate::ClimateTraits         mTraits;
     std::chrono::steady_clock::time_point   mLastByteTimestamp;         // For packet timeout

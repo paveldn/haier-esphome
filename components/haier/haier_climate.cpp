@@ -118,8 +118,9 @@ HaierClimate::HaierClimate(UARTComponent* parent) :
                                         mDisplayStatus(true),
                                         mForceSendControl(false),
                                         mHvacHardwareInfoAvailable(false),
-                                        mHvacFunctions{false, false, false},
-                                        mUseCrc(mHvacFunctions[0]),
+                                        mHvacFunctions{false, false, false, false, false},
+                                        mUseCrc(mHvacFunctions[2]),
+                                        mActiveAlarms{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
                                         mOutdoorSensor(nullptr)
 {
     mLastPacket = new uint8_t[MAX_FRAME_SIZE];
@@ -259,6 +260,7 @@ void HaierClimate::dump_config()
     LOG_CLIMATE("", "Haier hOn Climate", this);
     if (mHvacHardwareInfoAvailable)
     {
+        Lock _lock(mReadMutex);
         ESP_LOGCONFIG(TAG, "  Device protocol version: %s",
             mHvacProtocolVersion.c_str());
         ESP_LOGCONFIG(TAG, "  Device software version: %s", 
@@ -267,10 +269,15 @@ void HaierClimate::dump_config()
             mHvacHardwareVersion.c_str());
         ESP_LOGCONFIG(TAG, "  Device name: %s", 
             mHvacDeviceName.c_str());
-        ESP_LOGCONFIG(TAG, "  Device features:%s%s%s",
-            (mHvacFunctions[0] ? " crc" : ""), 
-            (mHvacFunctions[1] ? " backplane" : ""),
-            (mHvacFunctions[2] ? " role" : ""));
+        ESP_LOGCONFIG(TAG, "  Device features:%s%s%s%s%s",
+            (mHvacFunctions[0] ? " interactive" : ""), 
+            (mHvacFunctions[1] ? " master-slave" : ""),
+            (mHvacFunctions[2] ? " crc" : ""), 
+            (mHvacFunctions[3] ? " multinode" : ""),
+            (mHvacFunctions[4] ? " role" : ""));
+        ESP_LOGCONFIG(TAG, "  Active alarms: %s", 
+            getHex(mActiveAlarms, sizeof(mActiveAlarms)).c_str());
+
     }
 }
 
@@ -339,9 +346,14 @@ void HaierClimate::loop()
             return;
         case psSendingFirstStatusRequest:
         case psSendingStatusRequest:
-            sendFrameWithSubcommand(HaierProtocol::ftControl, 0x4D01);
+            sendFrameWithSubcommand(HaierProtocol::ftControl, HaierProtocol::stControlGetUserData);
             mLastStatusRequest = now;
-            mPhase = (ProtocolPhases)((uint8_t)mPhase + 1);
+            setPhase((ProtocolPhases)((uint8_t)mPhase + 1));
+            mLastRequestTimestamp = now;
+            return;
+        case psSendingAlarmStatusReauest:
+            sendFrame(HaierProtocol::ftGetAlarmStatus);
+            setPhase(psWaitingAlarmStatusAnswer); 
             mLastRequestTimestamp = now;
             return;
         case psSendingUpdateSignalRequest:
@@ -375,7 +387,8 @@ void HaierClimate::loop()
             return;
         case psWaitingAnswerInit1:
         case psWaitingAnswerInit2:
-        case psWaitingFirstStatusAnswer:            
+        case psWaitingFirstStatusAnswer:
+        case psWaitingAlarmStatusAnswer:
             // Using status request interval here to avoid pushing to many messages if AC is not ready
             if (std::chrono::duration_cast<std::chrono::milliseconds>(now - mLastRequestTimestamp).count() > STATUS_REQUEST_INTERVAL_MS)
             {
@@ -519,19 +532,37 @@ void HaierClimate::handleIncomingPacket()
                 DeviceVersionAnswer* answr = (DeviceVersionAnswer*)&currentPacket.buffer[HEADER_SIZE];
                 char tmp[9];
                 tmp[8] = 0;
-                strncpy(tmp, answr->protocol_version, 8);
-                mHvacProtocolVersion = std::string(tmp);
-                strncpy(tmp, answr->software_version, 8);
-                mHvacSoftwareVersion = std::string(tmp);
-                strncpy(tmp, answr->hardware_version, 8);
-                mHvacHardwareVersion = std::string(tmp);
-                strncpy(tmp, answr->device_name, 8);
-                mHvacDeviceName = std::string(tmp);
-                mHvacFunctions[0] = (answr->functions[1] & 0x04) != 0;
-                mHvacFunctions[1] = (answr->functions[1] & 0x08) != 0;
-                mHvacFunctions[2] = (answr->functions[1] & 0x20) != 0;
+                {
+                    Lock _lock(mReadMutex);
+                    strncpy(tmp, answr->protocol_version, 8);
+                    mHvacProtocolVersion = std::string(tmp);
+                    strncpy(tmp, answr->software_version, 8);
+                    mHvacSoftwareVersion = std::string(tmp);
+                    strncpy(tmp, answr->hardware_version, 8);
+                    mHvacHardwareVersion = std::string(tmp);
+                    strncpy(tmp, answr->device_name, 8);
+                    mHvacDeviceName = std::string(tmp);
+                    mHvacFunctions[0] = (answr->functions[1] & 0x01) != 0;      // interactive mode support
+                    mHvacFunctions[1] = (answr->functions[1] & 0x02) != 0;      // master-slave mode support
+                    mHvacFunctions[2] = (answr->functions[1] & 0x04) != 0;      // crc support
+                    mHvacFunctions[3] = (answr->functions[1] & 0x08) != 0;      // multiple AC support
+                    mHvacFunctions[4] = (answr->functions[1] & 0x20) != 0;      // roles support
+                }
                 mHvacHardwareInfoAvailable = true;
                 setPhase(psSendingInit2);
+            }
+            else
+                level = ESPHOME_LOG_LEVEL_WARN;
+            break;
+        case HaierProtocol::ftGetAlarmStatusResponse:
+            packet_type = "Alarm status answer";
+            if (mPhase == psWaitingAlarmStatusAnswer)
+            {
+                {
+                    Lock _lock(mReadMutex);
+                    memcpy(mActiveAlarms, &currentPacket.buffer[HEADER_SIZE + 2], 8);
+                }
+                setPhase(psIdle);
             }
             else
                 level = ESPHOME_LOG_LEVEL_WARN;
@@ -545,7 +576,7 @@ void HaierClimate::handleIncomingPacket()
             break;
         case HaierProtocol::ftStatus:
             packet_type = "Poll command answer";
-            if (mPhase >= psWaitingFirstStatusAnswer) // Accept status on any stage after initialization
+            if ((mPhase == psWaitingFirstStatusAnswer) || (mPhase >= psIdle)) // Accept status on any stage after initialization
             {
                 if (mPhase == psWaitingFirstStatusAnswer)
                     ESP_LOGI(TAG, "First status received");
@@ -554,8 +585,10 @@ void HaierClimate::handleIncomingPacket()
                     memcpy(mLastPacket, currentPacket.buffer, currentPacket.size);
                 }
                 processStatus(currentPacket.buffer, currentPacket.size);
-                if ((mPhase == psWaitingStatusAnswer) || (mPhase == psWaitingFirstStatusAnswer))
-                    // Change phase only if we were waiting for status
+                // Change phase only if we were waiting for status
+                if (mPhase == psWaitingFirstStatusAnswer)
+                    setPhase(psSendingAlarmStatusReauest);
+                else if (mPhase == psWaitingStatusAnswer)
                     setPhase(psIdle);
             }
             else
@@ -793,7 +826,7 @@ void HaierClimate::sendControlPacket(const ClimateCall* climateControl)
     outData->disable_beeper = (!mBeeperEcho || (climateControl == NULL)) ? 1 : 0;
     controlOutBuffer[4] = 0;   // This byte should be cleared before setting values
     outData->display_off = mDisplayStatus ? 0 : 1;
-    sendFrameWithSubcommand(HaierProtocol::ftControl, 0x6001, controlOutBuffer, sizeof(HaierPacketControl));
+    sendFrameWithSubcommand(HaierProtocol::ftControl, HaierProtocol::stControlSetGroupParameters, controlOutBuffer, sizeof(HaierPacketControl));
 }
 
 void HaierClimate::control(const ClimateCall &call)
