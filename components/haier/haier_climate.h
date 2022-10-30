@@ -106,7 +106,7 @@ private:
     uint8_t                     mFanModeFanSpeed;
     uint8_t                     mOtherModesFanSpeed;
     bool                        mSendWifiSignal;
-    bool                        mBeeperEcho;
+    bool                        mBeeperStatus;
     bool                        mUseFahrenheit;
     bool                        mDisplayStatus;
     bool                        mForceSendControl;
