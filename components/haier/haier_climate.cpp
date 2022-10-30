@@ -193,11 +193,6 @@ bool HaierClimate::get_display_state() const
     return mDisplayStatus;
 }
 
-void HaierClimate::set_outdoor_temperature_sensor(esphome::sensor::Sensor *sensor) 
-{
-    mOutdoorSensor = sensor; 
-}
-
 void HaierClimate::set_display_state(bool state)
 {
     if (mDisplayStatus != state)
@@ -205,6 +200,11 @@ void HaierClimate::set_display_state(bool state)
         mDisplayStatus = state;
         mForceSendControl = true;
     }
+}
+
+void HaierClimate::set_outdoor_temperature_sensor(esphome::sensor::Sensor *sensor) 
+{
+    mOutdoorSensor = sensor; 
 }
 
 AirflowVerticalDirection HaierClimate::get_vertical_airflow() const
@@ -819,7 +819,7 @@ void HaierClimate::sendControlPacket(const ClimateCall* climateControl)
     }
     outData->disable_beeper = (!mBeeperEcho || (climateControl == NULL)) ? 1 : 0;
     controlOutBuffer[4] = 0;   // This byte should be cleared before setting values
-    outData->display_off = mDisplayStatus ? 0 : 1;
+    outData->display_status = mDisplayStatus ? 1 : 0;
     sendFrameWithSubcommand(HaierProtocol::ftControl, HaierProtocol::stControlSetGroupParameters, controlOutBuffer, sizeof(HaierPacketControl));
 }
 

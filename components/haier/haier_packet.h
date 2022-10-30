@@ -126,7 +126,7 @@ struct HaierPacketControl
                 uint8_t             ac_mode:3;                  // See enum ConditioningMode
     /* 13 */    uint8_t             :8;
     /* 14 */    uint8_t             ten_degree:1;               // 10 degree status
-                uint8_t             display_off:1;              // If the display is on or off
+                uint8_t             display_status:1;           // If 0 disables AC's display
                 uint8_t             half_degree:1;              // Use half degree
                 uint8_t             intelegence_status:1;       // Intelligence status
                 uint8_t             pmv_status:1;               // Comfort/PMV status               
