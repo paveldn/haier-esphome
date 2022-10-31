@@ -178,12 +178,12 @@ void HaierClimate::set_send_wifi_signal(bool sendWifi)
     mSendWifiSignal = sendWifi; 
 }
 
-void HaierClimate::set_beeper_echo(bool beeper)
+void HaierClimate::set_beeper_state(bool state)
 {
-    mBeeperStatus = beeper;
+    mBeeperStatus = state;
 }
 
-bool HaierClimate::get_beeper_echo() const
+bool HaierClimate::get_beeper_state() const
 {
     return mBeeperStatus;
 }
