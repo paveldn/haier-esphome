@@ -126,7 +126,7 @@ struct HaierPacketControl
                 uint8_t             ac_mode:3;                  // See enum ConditioningMode
     /* 13 */    uint8_t             :8;
     /* 14 */    uint8_t             ten_degree:1;               // 10 degree status
-                uint8_t             display_off:1;              // If the display is on or off
+                uint8_t             display_status:1;           // If 0 disables AC's display
                 uint8_t             half_degree:1;              // Use half degree
                 uint8_t             intelegence_status:1;       // Intelligence status
                 uint8_t             pmv_status:1;               // Comfort/PMV status               
@@ -139,7 +139,7 @@ struct HaierPacketControl
                 uint8_t             quiet_mode:1;               // Quiet mode
                 uint8_t             sleep_mode:1;               // Sleep mode
                 uint8_t             lock_remote:1;              // Disable remote
-                uint8_t             disable_beeper:1;           // If 1 disables AC's command feedback beeper (need to be set on every control command)
+                uint8_t             beeper_status:1;            // If 1 disables AC's command feedback beeper (need to be set on every control command)
     /* 16 */    uint8_t             target_humidity;            // Target humidity (0=30% .. 3C=90%, step = 1%)
     /* 17 */    uint8_t             horizontal_swing_mode:3;    // See enum HorizontalSwingMode
                 uint8_t             :3;

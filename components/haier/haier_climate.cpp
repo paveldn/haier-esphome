@@ -113,7 +113,7 @@ HaierClimate::HaierClimate(UARTComponent* parent) :
                                         mFanModeFanSpeed(FanMid),
                                         mOtherModesFanSpeed(FanAuto),
                                         mSendWifiSignal(false),
-                                        mBeeperEcho(true),
+                                        mBeeperStatus(true),
                                         mDisplayStatus(true),
                                         mForceSendControl(false),
                                         mHvacHardwareInfoAvailable(false),
@@ -180,22 +180,17 @@ void HaierClimate::set_send_wifi_signal(bool sendWifi)
 
 void HaierClimate::set_beeper_echo(bool beeper)
 {
-    mBeeperEcho = beeper;
+    mBeeperStatus = beeper;
 }
 
 bool HaierClimate::get_beeper_echo() const
 {
-    return mBeeperEcho;
+    return mBeeperStatus;
 }
 
 bool HaierClimate::get_display_state() const
 {
     return mDisplayStatus;
-}
-
-void HaierClimate::set_outdoor_temperature_sensor(esphome::sensor::Sensor *sensor) 
-{
-    mOutdoorSensor = sensor; 
 }
 
 void HaierClimate::set_display_state(bool state)
@@ -205,6 +200,11 @@ void HaierClimate::set_display_state(bool state)
         mDisplayStatus = state;
         mForceSendControl = true;
     }
+}
+
+void HaierClimate::set_outdoor_temperature_sensor(esphome::sensor::Sensor *sensor) 
+{
+    mOutdoorSensor = sensor; 
 }
 
 AirflowVerticalDirection HaierClimate::get_vertical_airflow() const
@@ -817,9 +817,9 @@ void HaierClimate::sendControlPacket(const ClimateCall* climateControl)
         if (outData->horizontal_swing_mode != HorizontalSwingAuto)
             outData->horizontal_swing_mode = getHorizontalSwingMode(mHorizontalDirection);
     }
-    outData->disable_beeper = (!mBeeperEcho || (climateControl == NULL)) ? 1 : 0;
+    outData->beeper_status = (!mBeeperStatus || (climateControl == NULL)) ? 1 : 0;
     controlOutBuffer[4] = 0;   // This byte should be cleared before setting values
-    outData->display_off = mDisplayStatus ? 0 : 1;
+    outData->display_status = mDisplayStatus ? 1 : 0;
     sendFrameWithSubcommand(HaierProtocol::ftControl, HaierProtocol::stControlSetGroupParameters, controlOutBuffer, sizeof(HaierPacketControl));
 }
 
