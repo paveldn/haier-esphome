@@ -42,7 +42,7 @@ public:
     BeeperOnAction(HaierClimate* parent) : parent_(parent) {}
     void play(Ts... x) 
     {
-        this->parent_->set_beeper_echo(true);
+        this->parent_->set_beeper_state(true);
     }
 
 protected:
@@ -56,7 +56,7 @@ public:
     BeeperOffAction(HaierClimate* parent) : parent_(parent) {}
     void play(Ts... x) 
     {
-        this->parent_->set_beeper_echo(false);
+        this->parent_->set_beeper_state(false);
     }
 
 protected:
