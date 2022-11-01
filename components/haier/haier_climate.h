@@ -57,8 +57,8 @@ public:
     void dump_config() override;
     float get_setup_priority() const override { return esphome::setup_priority::HARDWARE ; }
     void set_send_wifi_signal(bool sendWifi);
-    void set_beeper_echo(bool beeper);
-    bool get_beeper_echo() const;   
+    void set_beeper_state(bool state);
+    bool get_beeper_state() const;   
     void set_fahrenheit(bool fahrenheit);
     void set_outdoor_temperature_sensor(esphome::sensor::Sensor *sensor);
     void set_display_state(bool state);
