@@ -23,7 +23,9 @@ namespace haier {
 
 #define MAX_MESSAGE_SIZE                254
 #define MAX_FRAME_SIZE                  (MAX_MESSAGE_SIZE + 4)
-#define HEADER                          0xFF
+#define SEPARATOR_BYTE					0xFF
+#define SEPARATOR_POST_BYTE				0x55
+#define CRC_INIT_VAL					0x00
 
 // ESP_LOG_LEVEL don't work as I want it so I implemented this macro
 #define ESP_LOG_L(level, tag, format, ...) do {                     \
@@ -45,7 +47,7 @@ uint8_t getChecksum(const uint8_t * message, size_t size) {
         return result;
     }
 
-uint16_t crc16(const uint8_t* message, int len, uint16_t initial_val = 0)
+uint16_t crc16(const uint8_t* message, int len, uint16_t initial_val = CRC_INIT_VAL)
 {
     constexpr uint16_t poly = 0xA001;
     uint16_t crc = initial_val;
@@ -442,13 +444,19 @@ void HaierClimate::getSerialData()
     while (available() > 0)
     {
         uint8_t val;
+		bool prev_separator = false;
+		bool ignore_byte = false;
         if (!read_byte(&val))
             break;
         if (currentPacket.size > 0) // Already found packet start
         {
+			// Skip 0x55 after 0xFF if it is not packets separator
+			ignore_byte = prev_separator && (val == SEPARATOR_POST_BYTE);
+			prev_separator = val == SEPARATOR_BYTE;
             if (currentPacket.position < currentPacket.size)
             {
-                currentPacket.buffer[currentPacket.position++] = val;
+				if (!ignore_byte)
+					currentPacket.buffer[currentPacket.position++] = val;
                 if (currentPacket.position == 2) // Found crc indication flags
                 {
                     currentPacket.has_crc = (val & 0x40) != 0;
@@ -456,6 +464,7 @@ void HaierClimate::getSerialData()
                         currentPacket.size += 2;    // Make space for CRC
                 }
                 if (currentPacket.position < currentPacket.size - (currentPacket.has_crc ? 2 : 0))
+					// Not checking ignore_byte here, extra 0x55 should be included in checksum but not CRC
                     currentPacket.checksum += val;
             }
             if (currentPacket.position >= currentPacket.size)
@@ -464,7 +473,7 @@ void HaierClimate::getSerialData()
                 bool isValid = true;
                 if (currentPacket.checksum != currentPacket.buffer[currentPacket.size - (currentPacket.has_crc ? 3 : 1)])
                 {
-                    ESP_LOGW(TAG, "Wrong packet checksum: 0x%02X (expected 0x%02X)", currentPacket.checksum, currentPacket.buffer[currentPacket.size -(currentPacket.has_crc ? 3 : 1)]);
+                    ESP_LOGW(TAG, "Wrong packet checksum: 0x%02X (expected 0x%02X)", currentPacket.checksum, currentPacket.buffer[currentPacket.size - (currentPacket.has_crc ? 3 : 1)]);
                     isValid = false;
                 }
                 else if (currentPacket.has_crc)
@@ -486,7 +495,7 @@ void HaierClimate::getSerialData()
         }
         else // Haven't found beginning of packet yet
         {
-            if (val == HEADER)
+            if (val == SEPARATOR_BYTE)
                 currentPacket.preHeaderCharsCounter++;
             else
             {
@@ -614,7 +623,7 @@ void HaierClimate::handleIncomingPacket()
             break;
     }
     std::string raw = getHex(currentPacket.buffer, currentPacket.size);
-    ESP_LOG_L(level, TAG, "Received %s message during phase %d, size: %d, content: %02X %02X%s", packet_type.c_str(), oldPhase, currentPacket.size, HEADER, HEADER, raw.c_str());
+    ESP_LOG_L(level, TAG, "Received %s message during phase %d, size: %d, content: %02X %02X%s", packet_type.c_str(), oldPhase, currentPacket.size, SEPARATOR_BYTE, SEPARATOR_BYTE, raw.c_str());
 }
 
 void HaierClimate::sendFrame(HaierProtocol::FrameType type, const uint8_t* data, size_t data_size)
@@ -636,30 +645,65 @@ void HaierClimate::sendFrameWithSubcommand(HaierProtocol::FrameType type, uint16
         ESP_LOGE(TAG, "Frame is to big: %d", frameSize);
         return;
     }
-    uint8_t buffer[MAX_FRAME_SIZE] = {0xFF, 0xFF};
+    uint8_t buffer[MAX_FRAME_SIZE * 2] = {SEPARATOR_BYTE, SEPARATOR_BYTE};
     size_t pos = 2;
-    HaierPacketHeader* header = (HaierPacketHeader*)&buffer[pos];
+	uint8_t checksum = 0;
+	uint16_t crc = CRC_INIT_VAL;
+	uint8_t header_buf[HEADER_SIZE] = {0};
+    HaierPacketHeader* header = (HaierPacketHeader*)header_buf;
     header->msg_length = msg_size;
     header->crc_present = mUseCrc ? 0x40 : 0x00;
     memset(header->reserved, 0, sizeof(header->reserved));
     header->frame_type = type;
-    pos += HEADER_SIZE;
+#define PROCESS_BYTE_FOR_PACKET(_buffer, _pos, _value) do { \
+				_buffer[_pos++] = _value; \
+				checksum += _value; \
+				if (mUseCrc) \
+					crc = crc16(&_value, 1, crc); \
+				if (_value == SEPARATOR_BYTE) \
+				{ \
+					_buffer[_pos++] = SEPARATOR_POST_BYTE; \
+					checksum += SEPARATOR_POST_BYTE; \
+					++frameSize; \
+				} \
+			} while (0)
+	for (int i = 0; i < sizeof(header_buf); i++)
+		PROCESS_BYTE_FOR_PACKET(buffer, pos, header_buf[i]);
     if (subcommand != NO_SUBCOMMAND)
     {
-        buffer[pos++] = subcommand >> 8;
-        buffer[pos++] = subcommand & 0xFF;
+		uint8_t val = subcommand >> 8;
+		PROCESS_BYTE_FOR_PACKET(buffer, pos, val);
+		val = subcommand & 0xFF;
+		PROCESS_BYTE_FOR_PACKET(buffer, pos, val);
     }
     if (data_size > 0)
     {
-        memcpy(buffer + pos, data, data_size);
-        pos += data_size;
+		for (int i = 0; i < data_size; i++)
+			PROCESS_BYTE_FOR_PACKET(buffer, pos, data[i]);
     }
-    buffer[pos++] = getChecksum(buffer + 2, msg_size);
+#undef PROCESS_BYTE_FOR_PACKET
+    buffer[pos++] = checksum;
+	if (checksum == SEPARATOR_BYTE)
+	{
+		buffer[pos++] = SEPARATOR_POST_BYTE;
+		++frameSize;
+	}
     if (mUseCrc)
     {
-        uint16_t crc_16 = crc16(buffer + 2, msg_size);
-        buffer[pos++] = crc_16 >> 8;
-        buffer[pos++] = crc_16 & 0xFF;
+		uint8_t val = crc >> 8;
+		buffer[pos++] = val;
+		if (val == SEPARATOR_BYTE)
+		{
+			buffer[pos++] = SEPARATOR_POST_BYTE;
+			++frameSize;
+		}
+		val = crc & 0xFF;
+		buffer[pos++] = val;
+		if (val == SEPARATOR_BYTE)
+		{
+			buffer[pos++] = SEPARATOR_POST_BYTE;
+			++frameSize;
+		}
     }
     write_array(buffer, frameSize);
     ESP_LOGD(TAG, "Message sent:%s", getHex(buffer, frameSize).c_str());
