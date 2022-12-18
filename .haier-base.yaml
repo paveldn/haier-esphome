@@ -1,7 +1,18 @@
-external_components:
+﻿external_components:
   source:
     type: local
-    path: ./components
+    path: ./components    
+
+logger:
+  level: ${log_lvl}
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+    
+api:
+
+ota:
 
 climate:
   - platform: haier

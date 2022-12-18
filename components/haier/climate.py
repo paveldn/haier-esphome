@@ -1,10 +1,15 @@
-﻿import esphome.codegen as cg
+﻿import logging
+import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import uart, sensor, climate
+import esphome.final_validate as fv
+from esphome.components import uart, sensor, climate, logger
 from esphome import automation
 from esphome.const import (
     CONF_BEEPER,
     CONF_ID,
+    CONF_LEVEL,
+    CONF_LOGGER,
+    CONF_LOGS,
     CONF_MAX_TEMPERATURE,
     CONF_MIN_TEMPERATURE,
     CONF_VISUAL,
@@ -20,6 +25,7 @@ from esphome.components.climate import (
     ClimateSwingMode,
 )
 
+_LOGGER = logging.getLogger(__name__)
 
 PROTOCOL_MIN_TEMPERATURE = 16.0
 PROTOCOL_MAX_TEMPERATURE = 30.0
@@ -193,6 +199,28 @@ async def haier_set_horizontal_airflow_to_code(config, action_id, template_arg, 
     cg.add(var.set_direction(template_))
     return var
 
+def _final_validate(_):
+    full_config = fv.full_config.get()
+    if CONF_LOGGER in full_config:
+        _level = 'NONE'
+        logger_config = full_config[CONF_LOGGER]
+        if CONF_LOGS in logger_config:
+            if 'haier.protocol' in logger_config[CONF_LOGS]:
+                _level = logger_config[CONF_LOGS]['haier.protocol']
+            else:
+                _level = logger_config[CONF_LEVEL]                
+        _LOGGER.info("Detected log level for Haier protocol: %s", _level)
+        if _level not in logger.LOG_LEVEL_SEVERITY:
+            raise cv.Invalid(f"Unknown log level for Haier protocol")
+        _severity = logger.LOG_LEVEL_SEVERITY.index(_level)
+        cg.add_build_flag(f"-DHAIER_LOG_LEVEL={_severity}")
+    else:
+        _LOGGER.warn("No logger component found, logging for Haier protocol is disabled")
+        cg.add_build_flag("-DHAIER_LOG_LEVEL=0")
+
+
+FINAL_VALIDATE_SCHEMA = _final_validate
+
 
 async def to_code(config):
     if CONF_VISUAL in config:
@@ -235,4 +263,4 @@ async def to_code(config):
         cg.add(var.set_outdoor_temperature_sensor(sens))
     if CONF_SUPPORTED_SWING_MODES in config:
         cg.add(var.set_supported_swing_modes(config[CONF_SUPPORTED_SWING_MODES]))
-
+    cg.add_library("pavlodn/HaierProtocol", None)

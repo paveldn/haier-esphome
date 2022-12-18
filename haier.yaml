@@ -2,6 +2,7 @@ substitutions:
   device_name: Haier AC
   device_id: haier_climate
   uart_id: ac_port 
+  log_lvl: DEBUG 
 
 esphome:
   name: haier
@@ -20,15 +21,4 @@ uart:
   rx_pin: 16
   id: ${uart_id}  
 
-logger:
-  level: DEBUG
-
-wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
-    
-api:
-
-ota:
-  
 <<: !include .haier-base.yaml

@@ -1,8 +1,6 @@
 ﻿#ifndef HAIER_PACKET_H
 #define HAIER_PACKET_H
 
-#define PROTOCOL_OUTDOOR_TEMPERATURE_OFFSET (-64)
-
 enum VerticalSwingMode
 {
     VerticalSwingHealthUp       = 0x01,
@@ -106,15 +104,6 @@ const std::string ErrorMessages[] = {
     "Firewall failure"
 };
 
-struct HaierPacketHeader
-{
-    // We skip start packet indication (0xFF 0xFF)
-    /*  0 */    uint8_t             msg_length;                 // message length
-    /*  1 */    uint8_t             crc_present;                //  0x40 if there is CRC16 at the end of the frame, 0x00 - otherwise
-    /*  2 */    uint8_t             reserved[5];                // reserved for future use, should be always 0
-    /*  7 */    uint8_t             frame_type;                 // type of frame
-};
-
 struct HaierPacketControl
 {
     // Control bytes starts here
@@ -181,7 +170,6 @@ struct HaierPacketSensors
 
 struct HaierStatus
 {
-    HaierPacketHeader   header;
     uint16_t            subcommand;
     HaierPacketControl  control;
     HaierPacketSensors  sensors;
@@ -189,7 +177,6 @@ struct HaierStatus
 
 struct HaierControl
 {
-    HaierPacketHeader   header;
     uint16_t            subcommand;
     HaierPacketControl  control;
 };
@@ -204,8 +191,6 @@ struct DeviceVersionAnswer
     char        device_name[8];
     uint8_t     functions[2];
 };
-
-#define NO_SUBCOMMAND               0xFFFF
 
 namespace HaierProtocol
 {
@@ -267,6 +252,7 @@ namespace HaierProtocol
         ftGetManagementInformation              = 0xFC,     // Request management information from device (module -> device, master-slave, required)
         ftGetManagementInformationResponse      = 0xFD,     // Response to management information request (module <- device, master-slave, required)
         ftWakeUp                                = 0xFE,     // Request to wake up (module <-> device, master-slave/interactive, optional)
+        ftNoCommand                             = 0xFF,
     };
 
     enum SubcomandsControl
@@ -279,9 +265,5 @@ namespace HaierProtocol
         stControlSetGroupParameters = 0x6001,       // Set group parameters to device (0x60XX second byte define parameter is group ID, the only group mentioned in document is 1) and return all user data (packet content: all values like in status packet)
     };
 }
-
-#define CONTROL_PACKET_SIZE         (sizeof(HaierPacketHeader) + sizeof(HaierPacketControl))
-#define HEADER_SIZE                 (sizeof(HaierPacketHeader))
-
 
 #endif // HAIER_PACKET_H
