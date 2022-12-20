@@ -1,5 +1,4 @@
-﻿#ifndef _HAIER_AUTOMATION_H_
-#define _HAIER_AUTOMATION_H_
+﻿#pragma once
 
 #include "esphome/core/automation.h"
 #include "haier_climate.h"
@@ -95,4 +94,3 @@ protected:
 
 }
 }
-#endif // _HAIER_AUTOMATION_H_
