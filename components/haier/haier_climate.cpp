@@ -30,6 +30,7 @@ namespace haier {
 constexpr size_t COMMUNICATION_TIMEOUT_MS =         60000;
 constexpr size_t STATUS_REQUEST_INTERVAL_MS =       5000;
 constexpr size_t DEFAULT_MESSAGES_INTERVAL_MS =     2000;
+constexpr size_t CONTROL_MESSAGES_INTERVAL_MS =     400;
 constexpr size_t SIGNAL_LEVEL_UPDATE_INTERVAL_MS =  10000;
 constexpr size_t CONTROL_TIMEOUT_MS =               7000;
 constexpr int PROTOCOL_OUTDOOR_TEMPERATURE_OFFSET = -64;
@@ -465,7 +466,6 @@ void HaierClimate::dump_config()
     }
 }
 
-
 void HaierClimate::loop()
 {
 	std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
@@ -476,6 +476,12 @@ void HaierClimate::loop()
             // No status too long, reseting protocol
             ESP_LOGW(TAG, "Communication timeout, reseting protocol");
             mLastValidStatusTimestamp = now;
+            mForceSendControl = false;
+            if (mHvacSettings.valid)
+            {
+                Lock _lock(mControlMutex);
+                mHvacSettings.reset();
+            }
             setPhase(psSendingInit1);
             return;
         }
@@ -483,6 +489,18 @@ void HaierClimate::loop()
             // No need to reset protocol if we didn't pass initialization phase
             mLastValidStatusTimestamp = now;
     };
+    if (mHvacSettings.valid || mForceSendControl)
+    {
+        // If control message is pending we should send it ASAP unless we are in initialisation procedure or waiting for an answer
+        if (    (mPhase == psIdle) ||
+                (mPhase == psSendingStatusRequest) || 
+                (mPhase == psSendingUpdateSignalRequest) ||
+                (mPhase == psSendingSignalLevel))
+        {
+            ESP_LOGV(TAG, "Control packet is pending...");
+            setPhase(psSendingControl);
+        }
+    }
     switch (mPhase)
     {
         case psSendingInit1:
@@ -581,7 +599,7 @@ void HaierClimate::loop()
                 mForcedPublish = true;
                 setPhase(psIdle);
             }
-            else if (canSendMessage() && (std::chrono::duration_cast<std::chrono::milliseconds>(now - mLastRequestTimestamp).count() > DEFAULT_MESSAGES_INTERVAL_MS))
+            else if (canSendMessage() && (std::chrono::duration_cast<std::chrono::milliseconds>(now - mLastRequestTimestamp).count() > CONTROL_MESSAGES_INTERVAL_MS)) // Usiing CONTROL_MESSAGES_INTERVAL_MS to speeduprequests
             {
                 HaierProtocol::HaierMessage message = getControlMessage();
                 sendMessage(message);
@@ -599,12 +617,7 @@ void HaierClimate::loop()
             break;
         case psIdle:
 			{
-				// If we not waiting for answers check if there is a proper time to send or request data
-                if (mHvacSettings.valid || mForceSendControl)
-                {
-                    setPhase(psSendingControl);
-                }
-                else if (mForcedRequestStatus || (std::chrono::duration_cast<std::chrono::milliseconds>(now - mLastStatusRequest).count() > STATUS_REQUEST_INTERVAL_MS))
+                if (mForcedRequestStatus || (std::chrono::duration_cast<std::chrono::milliseconds>(now - mLastStatusRequest).count() > STATUS_REQUEST_INTERVAL_MS))
                 {
                     setPhase(psSendingStatusRequest);
                     mForcedRequestStatus = false;
