@@ -56,7 +56,7 @@ public:
   virtual size_t available() noexcept { return esphome::uart::UARTDevice::available(); };
   virtual size_t read_array(uint8_t* data, size_t len) noexcept { return esphome::uart::UARTDevice::read_array(data, len) ? len : 0; };
   virtual void write_array(const uint8_t* data, size_t len) noexcept { esphome::uart::UARTDevice::write_array(data, len);};
-  bool can_send_message() const { return mHaierProtocol.getOutgoingQueueSize() == 0; };
+  bool can_send_message() const { return haier_protocol_.getOutgoingQueueSize() == 0; };
 protected:
   enum class ProtocolPhases
   {
@@ -109,37 +109,36 @@ protected:
     HvacSettings() : valid(false) {};
     void reset();
   };
-  HaierProtocol::ProtocolHandler        mHaierProtocol;
-  ProtocolPhases                        mPhase;
-  uint8_t*                              mLastStatusMessage;
-  uint8_t                               mFanModeFanSpeed;
-  uint8_t                               mOtherModesFanSpeed;
-  bool                                  mSendWifiSignal;
-  bool                                  mBeeperStatus;
-  bool                                  mUseFahrenheit;
-  bool                                  mDisplayStatus;
-  bool                                  mForceSendControl;
-  bool                                  mForcedPublish;
-  bool                                  mForcedRequestStatus;
-  bool                                  mControlCalled;
-  AirflowVerticalDirection              mVerticalDirection;
-  AirflowHorizontalDirection            mHorizontalDirection;
-  bool                                  mHvacHardwareInfoAvailable;
-  std::string                           mHvacProtocolVersion;
-  std::string                           mHvacSoftwareVersion;
-  std::string                           mHvacHardwareVersion;
-  std::string                           mHvacDeviceName;
-  bool                                  mHvacFunctions[5];
-  bool&                                 mUseCrc;
-  uint8_t                               mActiveAlarms[8];
-  esphome::sensor::Sensor*              mOutdoorSensor;
-  esphome::climate::ClimateTraits       mTraits;
-  HvacSettings                          mHvacSettings;
-  std::chrono::steady_clock::time_point mLastRequestTimestamp;      // For interval between messages
-  std::chrono::steady_clock::time_point mLastValidStatusTimestamp;  // For protocol timeout
-  std::chrono::steady_clock::time_point mLastStatusRequest;         // To request AC status
-  std::chrono::steady_clock::time_point mLastSignalRequest;         // To send WiFI signal level
-  std::chrono::steady_clock::time_point mControlRequestTimestamp;   // To send control message
+  HaierProtocol::ProtocolHandler        haier_protocol_;
+  ProtocolPhases                        protocol_phase_;
+  uint8_t*                              last_status_message_;
+  uint8_t                               fan_mode_speed_;
+  uint8_t                               other_modes_fan_speed_;
+  bool                                  send_wifi_signal_;
+  bool                                  beeper_status_;
+  bool                                  display_status_;
+  bool                                  force_send_control_;
+  bool                                  forced_publish_;
+  bool                                  forced_request_status_;
+  bool                                  control_called_;
+  AirflowVerticalDirection              vertical_direction_;
+  AirflowHorizontalDirection            horizontal_direction_;
+  bool                                  hvac_hardware_info_available_;
+  std::string                           hvac_protocol_version_;
+  std::string                           hvac_software_version_;
+  std::string                           hvac_hardware_version_;
+  std::string                           hvac_device_name_;
+  bool                                  hvac_functions_[5];
+  bool&                                 use_crc_;
+  uint8_t                               active_alarms_[8];
+  esphome::sensor::Sensor*              outdoor_sensor_;
+  esphome::climate::ClimateTraits       traits_;
+  HvacSettings                          hvac_settings_;
+  std::chrono::steady_clock::time_point last_request_timestamp_;      // For interval between messages
+  std::chrono::steady_clock::time_point last_valid_status_timestamp_; // For protocol timeout
+  std::chrono::steady_clock::time_point last_status_request_;         // To request AC status
+  std::chrono::steady_clock::time_point last_signal_request_;         // To send WiFI signal level
+  std::chrono::steady_clock::time_point control_request_timestamp_;   // To send control message
 };
 
 } // namespace haier
