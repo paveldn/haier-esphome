@@ -43,23 +43,23 @@ HaierClimate = haier_ns.class_("HaierClimate", climate.Climate, cg.Component)
 
 AirflowVerticalDirection = haier_ns.enum("AirflowVerticalDirection")
 AIRFLOW_VERTICAL_DIRECTION_OPTIONS = {
-    "UP":       AirflowVerticalDirection.vdUp,
-    "CENTER":   AirflowVerticalDirection.vdCenter,
-    "DOWN": AirflowVerticalDirection.vdDown,
+    "UP":       AirflowVerticalDirection.UP,
+    "CENTER":   AirflowVerticalDirection.CENTER,
+    "DOWN":     AirflowVerticalDirection.DOWN,
 }
 
 AirflowHorizontalDirection = haier_ns.enum("AirflowHorizontalDirection")
 AIRFLOW_HORIZONTAL_DIRECTION_OPTIONS = {
-    "LEFT": AirflowHorizontalDirection.hdLeft,
-    "CENTER":   AirflowHorizontalDirection.hdCenter,
-    "RIGHT":    AirflowHorizontalDirection.hdRight,
+    "LEFT":     AirflowHorizontalDirection.LEFT,
+    "CENTER":   AirflowHorizontalDirection.CENTER,
+    "RIGHT":    AirflowHorizontalDirection.RIGHT,
 }
 
 SUPPORTED_SWING_MODES_OPTIONS = {
-    "OFF": ClimateSwingMode.CLIMATE_SWING_OFF,                  # always available
-    "VERTICAL": ClimateSwingMode.CLIMATE_SWING_VERTICAL,        # always available
+    "OFF":        ClimateSwingMode.CLIMATE_SWING_OFF,             # always available
+    "VERTICAL":   ClimateSwingMode.CLIMATE_SWING_VERTICAL,        # always available
     "HORIZONTAL": ClimateSwingMode.CLIMATE_SWING_HORIZONTAL,
-    "BOTH": ClimateSwingMode.CLIMATE_SWING_BOTH,
+    "BOTH":       ClimateSwingMode.CLIMATE_SWING_BOTH,
 }
 
 CONFIG_SCHEMA = cv.All(

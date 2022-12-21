@@ -1,51 +1,55 @@
 ﻿#pragma once
 
-enum VerticalSwingMode
+namespace esphome {
+namespace haier {
+namespace hon {
+
+enum class VerticalSwingMode : uint8_t
 {
-  VerticalSwingHealthUp       = 0x01,
-  VerticalSwingMaxUp          = 0x02,
-  VerticalSwingHealthDown     = 0x03,
-  VerticalSwingUp             = 0x04,
-  VerticalSwingCenter         = 0x06,
-  VerticalSwingDown           = 0x08,
-  VerticalSwingAuto           = 0x0C
+  HEALTH_UP       = 0x01,
+  MAX_UP          = 0x02,
+  HEALTH_DOWN     = 0x03,
+  UP              = 0x04,
+  CENTER          = 0x06,
+  DOWN            = 0x08,
+  AUTO            = 0x0C
 };
 
-enum HorizontalSwingMode
+enum class HorizontalSwingMode : uint8_t
 {
-  HorizontalSwingCenter       = 0x00,
-  HorizontalSwingMaxLeft      = 0x03,
-  HorizontalSwingLeft         = 0x04,
-  HorizontalSwingRight        = 0x05,
-  HorizontalSwingMaxRight     = 0x06,
-  HorizontalSwingAuto         = 0x07
+  CENTER          = 0x00,
+  MAX_LEFT        = 0x03,
+  LEFT            = 0x04,
+  RIGHT           = 0x05,
+  MAX_RIGHT       = 0x06,
+  AUTO            = 0x07
 };
 
-enum ConditioningMode
+enum class ConditioningMode : uint8_t
 {
-  ConditioningAuto            = 0x00,
-  ConditioningCool            = 0x01,
-  ConditioningDry             = 0x02,
-  ConditioningHealthyDry      = 0x03,
-  ConditioningHeat            = 0x04,
-  ConditioningEnergySaving    = 0x05,
-  ConditioningFan             = 0x06
+  AUTO            = 0x00,
+  COOL            = 0x01,
+  DRY             = 0x02,
+  HEALTHY_DRY     = 0x03,
+  HEAT            = 0x04,
+  ENERGY_SAVING   = 0x05,
+  FAN             = 0x06
 };
 
-enum SpecialMode
+enum class SpecialMode : uint8_t
 {
-  SpecialModeNone             = 0x00,
-  SpecialModeElderly          = 0x01,
-  SpecialModeChildren         = 0x02,
-  SpecialModePregnant         = 0x03
+  NONE           = 0x00,
+  ELDERLY        = 0x01,
+  CHILDREN       = 0x02,
+  PREGNANT       = 0x03
 };
 
-enum FanMode
+enum class FanMode : uint8_t
 {
-  FanHigh                     = 0x01,
-  FanMid                      = 0x02,
-  FanLow                      = 0x03,
-  FanAuto                     = 0x05
+  HIGH           = 0x01,
+  MID            = 0x02,
+  LOW            = 0x03,
+  AUTO           = 0x05
 };
 
 const std::string ErrorMessages[] = {
@@ -174,12 +178,6 @@ struct HaierStatus
   HaierPacketSensors  sensors;
 };
 
-struct HaierControl
-{
-  uint16_t            subcommand;
-  HaierPacketControl  control;
-};
-
 struct DeviceVersionAnswer
 {
   char        protocol_version[8];
@@ -253,10 +251,14 @@ enum class FrameType : uint8_t
 
 enum class SubcomandsControl : uint16_t
 {
-  CONTROL_GET_PARAMETERS        = 0x4C01,    // Request specific parameters (packet content: parameter ID1 + parameter ID2 + ...)
-  CONTROL_GET_USER_DATA         = 0x4D01,    // Request all user data from device (packet content: None)
-  CONTROL_GET_BIG_DATA          = 0x4DFE,    // Request big data information from device (master-slave mode only) (packet content: None)
-  CONTROL_SET_PARAMETERS        = 0x5C01,    // Set parameters of the device and device return parameters (packet content: parameter ID1 + parameter data1 + parameter ID2 + parameter data 2 + ...)
-  CONTROL_SET_SINGLE_PARAMETER  = 0x5D00,    // Set single parameter (0x5DXX second byte define parameter ID) and return all user data (packet content: ???)
-  CONTROL_SET_GROUP_PARAMETERS  = 0x6001,    // Set group parameters to device (0x60XX second byte define parameter is group ID, the only group mentioned in document is 1) and return all user data (packet content: all values like in status packet)
+  GET_PARAMETERS        = 0x4C01,    // Request specific parameters (packet content: parameter ID1 + parameter ID2 + ...)
+  GET_USER_DATA         = 0x4D01,    // Request all user data from device (packet content: None)
+  GET_BIG_DATA          = 0x4DFE,    // Request big data information from device (master-slave mode only) (packet content: None)
+  SET_PARAMETERS        = 0x5C01,    // Set parameters of the device and device return parameters (packet content: parameter ID1 + parameter data1 + parameter ID2 + parameter data 2 + ...)
+  SET_SINGLE_PARAMETER  = 0x5D00,    // Set single parameter (0x5DXX second byte define parameter ID) and return all user data (packet content: ???)
+  SET_GROUP_PARAMETERS  = 0x6001,    // Set group parameters to device (0x60XX second byte define parameter is group ID, the only group mentioned in document is 1) and return all user data (packet content: all values like in status packet)
 };
+
+} // namespace hon
+} // namespace haier
+} // namespace esphome
