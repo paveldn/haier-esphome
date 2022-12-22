@@ -2,7 +2,7 @@
 
 namespace esphome {
 namespace haier {
-namespace hon {
+namespace hon_protocol {
 
 enum class VerticalSwingMode : uint8_t
 {
