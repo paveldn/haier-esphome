@@ -11,7 +11,6 @@
 using namespace esphome::climate;
 using namespace esphome::uart;
 
-#define TAG "haier.climate"
 
 #ifndef ESPHOME_LOG_LEVEL
 #warning "No ESPHOME_LOG_LEVEL defined!"
@@ -20,6 +19,7 @@ using namespace esphome::uart;
 namespace esphome {
 namespace haier {
 
+const char TAG[] = "haier.climate";
 constexpr size_t COMMUNICATION_TIMEOUT_MS =         60000;
 constexpr size_t STATUS_REQUEST_INTERVAL_MS =       5000;
 constexpr size_t DEFAULT_MESSAGES_INTERVAL_MS =     2000;
@@ -74,9 +74,9 @@ HaierClimate::HaierClimate(UARTComponent* parent) :
               active_alarms_{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
               outdoor_sensor_(nullptr)
 {
-  last_status_message_ = new uint8_t[sizeof(hon::HaierPacketControl)];
-  traits_ = climate::ClimateTraits();
-  traits_.set_supported_modes(
+  this->last_status_message_ = new uint8_t[sizeof(hon::HaierPacketControl)];
+  this->traits_ = climate::ClimateTraits();
+  this->traits_.set_supported_modes(
   {
     climate::CLIMATE_MODE_OFF,
     climate::CLIMATE_MODE_COOL,
@@ -85,114 +85,113 @@ HaierClimate::HaierClimate(UARTComponent* parent) :
     climate::CLIMATE_MODE_DRY,
     climate::CLIMATE_MODE_AUTO
   });
-  traits_.set_supported_fan_modes(
+  this->traits_.set_supported_fan_modes(
   {
     climate::CLIMATE_FAN_AUTO,
     climate::CLIMATE_FAN_LOW,
     climate::CLIMATE_FAN_MEDIUM,
     climate::CLIMATE_FAN_HIGH,
   });
-  traits_.set_supported_swing_modes(
+  this->traits_.set_supported_swing_modes(
   {
     climate::CLIMATE_SWING_OFF,
     climate::CLIMATE_SWING_BOTH,
     climate::CLIMATE_SWING_VERTICAL,
     climate::CLIMATE_SWING_HORIZONTAL
   });
-  traits_.set_supported_presets(
+  this->traits_.set_supported_presets(
   {
     climate::CLIMATE_PRESET_NONE,
     climate::CLIMATE_PRESET_ECO,
     climate::CLIMATE_PRESET_BOOST,
     climate::CLIMATE_PRESET_SLEEP,
   });
-  traits_.set_supports_current_temperature(true);
-  vertical_direction_ = AirflowVerticalDirection::CENTER;
-  horizontal_direction_ = AirflowHorizontalDirection::CENTER;
-  //mLastValidStatusTimestamp = std::chrono::steady_clock::now();
-}
+  this->traits_.set_supports_current_temperature(true);
+  this->vertical_direction_ = AirflowVerticalDirection::CENTER;
+  this->horizontal_direction_ = AirflowHorizontalDirection::CENTER;
+ }
 
 HaierClimate::~HaierClimate()
 {
-  delete[] last_status_message_;
+  delete[] this->last_status_message_;
 }
 
 void HaierClimate::set_phase(ProtocolPhases phase)
 {
-  if (protocol_phase_ != phase)
+  if (this->protocol_phase_ != phase)
   {
-    ESP_LOGV(TAG, "Phase transition: %d => %d", protocol_phase_, phase);
-    protocol_phase_ = phase;
+    ESP_LOGV(TAG, "Phase transition: %d => %d", this->protocol_phase_, phase);
+    this->protocol_phase_ = phase;
   }
 }
 
 void HaierClimate::set_send_wifi_signal(bool sendWifi) 
 {
-  send_wifi_signal_ = sendWifi; 
+  this->send_wifi_signal_ = sendWifi; 
 }
 
 void HaierClimate::set_beeper_state(bool state)
 {
-  beeper_status_ = state;
+  this->beeper_status_ = state;
 }
 
 bool HaierClimate::get_beeper_state() const
 {
-  return beeper_status_;
+  return this->beeper_status_;
 }
 
 bool HaierClimate::get_display_state() const
 {
-  return display_status_;
+  return this->display_status_;
 }
 
 void HaierClimate::set_display_state(bool state)
 {
-  if (display_status_ != state)
+  if (this->display_status_ != state)
   {
-    display_status_ = state;
-    force_send_control_ = true;
+    this->display_status_ = state;
+    this->force_send_control_ = true;
   }
 }
 
 void HaierClimate::set_outdoor_temperature_sensor(esphome::sensor::Sensor *sensor) 
 {
-  outdoor_sensor_ = sensor; 
+  this->outdoor_sensor_ = sensor; 
 }
 
 AirflowVerticalDirection HaierClimate::get_vertical_airflow() const
 {
-  return vertical_direction_;
+  return this->vertical_direction_;
 };
 
 void HaierClimate::set_vertical_airflow(AirflowVerticalDirection direction)
 {
   if (direction > AirflowVerticalDirection::DOWN)
-    vertical_direction_ = AirflowVerticalDirection::CENTER;
+    this->vertical_direction_ = AirflowVerticalDirection::CENTER;
   else
-    vertical_direction_ = direction;
-  force_send_control_ = true;
+    this->vertical_direction_ = direction;
+  this->force_send_control_ = true;
 }
 
 AirflowHorizontalDirection HaierClimate::get_horizontal_airflow() const
 {
-  return horizontal_direction_;
+  return this->horizontal_direction_;
 }
 
 void HaierClimate::set_horizontal_airflow(AirflowHorizontalDirection direction)
 {
   if (direction > AirflowHorizontalDirection::RIGHT)
-    horizontal_direction_ = AirflowHorizontalDirection::CENTER;
+    this->horizontal_direction_ = AirflowHorizontalDirection::CENTER;
   else
-    horizontal_direction_ = direction;
-  force_send_control_ = true;
+    this->horizontal_direction_ = direction;
+  this->force_send_control_ = true;
 }
 
 void HaierClimate::set_supported_swing_modes(const std::set<climate::ClimateSwingMode> &modes)
 {
-  traits_.set_supported_swing_modes(modes);
-  traits_.add_supported_swing_mode(climate::CLIMATE_SWING_OFF);   // Always available
-  traits_.add_supported_swing_mode(CLIMATE_SWING_VERTICAL);       // Always available
+  this->traits_.set_supported_swing_modes(modes);
+  this->traits_.add_supported_swing_mode(climate::CLIMATE_SWING_OFF);   // Always available
+  this->traits_.add_supported_swing_mode(CLIMATE_SWING_VERTICAL);       // Always available
 }
 
 void esphome_logger(HaierProtocol::HaierLogLevel level, const char* tag, const char* message)
@@ -227,7 +226,7 @@ HaierProtocol::HandlerError HaierClimate::answer_preprocess(uint8_t requestMessa
     result = HaierProtocol::HandlerError::heUnsuportedMessage;
   if ((expectedAnswerMessageType != (uint8_t)hon::FrameType::NO_COMMAND) && (answerMessageType != expectedAnswerMessageType))
     result = HaierProtocol::HandlerError::heUnsuportedMessage;
-  if ((expectedPhase != ProtocolPhases::UNKNOWN) && (expectedPhase != protocol_phase_))
+  if ((expectedPhase != ProtocolPhases::UNKNOWN) && (expectedPhase != this->protocol_phase_))
     result = HaierProtocol::HandlerError::heUnexpectedMessage;
   if (answerMessageType == (uint8_t)hon::FrameType::INVALID)
     result = HaierProtocol::HandlerError::heInvalidAnswer;
@@ -250,25 +249,25 @@ HaierProtocol::HandlerError HaierClimate::get_device_version_answer_handler(uint
     char tmp[9];
     tmp[8] = 0;
     strncpy(tmp, answr->protocol_version, 8);
-    hvac_protocol_version_ = std::string(tmp);
+    this->hvac_protocol_version_ = std::string(tmp);
     strncpy(tmp, answr->software_version, 8);
-    hvac_software_version_ = std::string(tmp);
+    this->hvac_software_version_ = std::string(tmp);
     strncpy(tmp, answr->hardware_version, 8);
-    hvac_hardware_version_ = std::string(tmp);
+    this->hvac_hardware_version_ = std::string(tmp);
     strncpy(tmp, answr->device_name, 8);
-    hvac_device_name_ = std::string(tmp);
-    hvac_functions_[0] = (answr->functions[1] & 0x01) != 0;      // interactive mode support
-    hvac_functions_[1] = (answr->functions[1] & 0x02) != 0;      // master-slave mode support
-    hvac_functions_[2] = (answr->functions[1] & 0x04) != 0;      // crc support
-    hvac_functions_[3] = (answr->functions[1] & 0x08) != 0;      // multiple AC support
-    hvac_functions_[4] = (answr->functions[1] & 0x20) != 0;      // roles support
-    hvac_hardware_info_available_ = true;
+    this->hvac_device_name_ = std::string(tmp);
+    this->hvac_functions_[0] = (answr->functions[1] & 0x01) != 0;      // interactive mode support
+    this->hvac_functions_[1] = (answr->functions[1] & 0x02) != 0;      // master-slave mode support
+    this->hvac_functions_[2] = (answr->functions[1] & 0x04) != 0;      // crc support
+    this->hvac_functions_[3] = (answr->functions[1] & 0x08) != 0;      // multiple AC support
+    this->hvac_functions_[4] = (answr->functions[1] & 0x20) != 0;      // roles support
+    this->hvac_hardware_info_available_ = true;
     set_phase(ProtocolPhases::SENDING_INIT_2);
     return result;
   }
   else
   {
-    set_phase((protocol_phase_ >= ProtocolPhases::IDLE) ? ProtocolPhases::IDLE : ProtocolPhases::SENDING_INIT_1);
+    set_phase((this->protocol_phase_ >= ProtocolPhases::IDLE) ? ProtocolPhases::IDLE : ProtocolPhases::SENDING_INIT_1);
     return result;
   }
 }
@@ -283,7 +282,7 @@ HaierProtocol::HandlerError HaierClimate::get_device_id_answer_handler(uint8_t r
   }
   else
   {
-    set_phase((protocol_phase_ >= ProtocolPhases::IDLE) ? ProtocolPhases::IDLE : ProtocolPhases::SENDING_INIT_1);
+    set_phase((this->protocol_phase_ >= ProtocolPhases::IDLE) ? ProtocolPhases::IDLE : ProtocolPhases::SENDING_INIT_1);
     return result;
   }
 }
@@ -297,37 +296,36 @@ HaierProtocol::HandlerError HaierClimate::status_handler(uint8_t requestType, ui
     if (result != HaierProtocol::HandlerError::heOK)
     {
       ESP_LOGW(TAG, "Error %d while parsing Status packet", (int)result);
-      set_phase((protocol_phase_ >= ProtocolPhases::IDLE) ? ProtocolPhases::IDLE : ProtocolPhases::SENDING_INIT_1);
+      set_phase((this->protocol_phase_ >= ProtocolPhases::IDLE) ? ProtocolPhases::IDLE : ProtocolPhases::SENDING_INIT_1);
     }
     else
     {
       if (dataSize >= sizeof(hon::HaierPacketControl) + 2)
       {
-        memcpy(last_status_message_, data + 2, sizeof(hon::HaierPacketControl));
-        ESP_LOGV(TAG, "Last status message <= %s", buf2hex(last_status_message_, sizeof(hon::HaierPacketControl)).c_str());
+        memcpy(this->last_status_message_, data + 2, sizeof(hon::HaierPacketControl));
       }
       else
         ESP_LOGW(TAG, "Status packet too small: %d (should be >= %d)", dataSize, sizeof(hon::HaierPacketControl));
-      if (protocol_phase_ == ProtocolPhases::WAITING_FIRST_STATUS_ANSWER)
+      if (this->protocol_phase_ == ProtocolPhases::WAITING_FIRST_STATUS_ANSWER)
       {
         ESP_LOGI(TAG, "First HVAC status received");
         set_phase(ProtocolPhases::SENDING_ALARM_STATUS_REQUEST);
       }
-      else if (protocol_phase_ == ProtocolPhases::WAITING_STATUS_ANSWER)
+      else if (this->protocol_phase_ == ProtocolPhases::WAITING_STATUS_ANSWER)
         set_phase(ProtocolPhases::IDLE);
-      else if (protocol_phase_ == ProtocolPhases::WAITING_CONTROL_ANSWER)
+      else if (this->protocol_phase_ == ProtocolPhases::WAITING_CONTROL_ANSWER)
       {
         set_phase(ProtocolPhases::IDLE); 
-        force_send_control_ = false;
-        if (hvac_settings_.valid)
-          hvac_settings_.reset();
+        this->force_send_control_ = false;
+        if (this->hvac_settings_.valid)
+          this->hvac_settings_.reset();
       }
     }
     return result;
   }
   else
   {
-    set_phase((protocol_phase_ >= ProtocolPhases::IDLE) ? ProtocolPhases::IDLE : ProtocolPhases::SENDING_INIT_1);
+    set_phase((this->protocol_phase_ >= ProtocolPhases::IDLE) ? ProtocolPhases::IDLE : ProtocolPhases::SENDING_INIT_1);
     return result;
   }
 }
@@ -372,19 +370,17 @@ HaierProtocol::HandlerError HaierClimate::get_alarm_status_answer_handler(uint8_
       set_phase(ProtocolPhases::IDLE);
       return HaierProtocol::HandlerError::heUnsuportedMessage;
     }
-    if (protocol_phase_ != ProtocolPhases::WAITING_ALARM_STATUS_ANSWER)
+    if (this->protocol_phase_ != ProtocolPhases::WAITING_ALARM_STATUS_ANSWER)
     {
       // Don't expect this answer now
       set_phase(ProtocolPhases::IDLE);
       return HaierProtocol::HandlerError::heUnexpectedMessage;
     }
-    memcpy(active_alarms_, data + 2, 8);
+    memcpy(this->active_alarms_, data + 2, 8);
     set_phase(ProtocolPhases::IDLE);        return HaierProtocol::HandlerError::heOK;
   }
   else
   {
-    // Answer to unexpected command,
-    // Shouldn't get here!
     set_phase(ProtocolPhases::IDLE);
     return HaierProtocol::HandlerError::heUnsuportedMessage;
   }
@@ -392,8 +388,8 @@ HaierProtocol::HandlerError HaierClimate::get_alarm_status_answer_handler(uint8_
 
 HaierProtocol::HandlerError HaierClimate::timeout_default_handler(uint8_t requestType)
 {
-  ESP_LOGW(TAG, "Answer timeout for command %02X, phase %d", requestType, protocol_phase_);
-  if (protocol_phase_ > ProtocolPhases::IDLE)
+  ESP_LOGW(TAG, "Answer timeout for command %02X, phase %d", requestType, this->protocol_phase_);
+  if (this->protocol_phase_ > ProtocolPhases::IDLE)
     set_phase(ProtocolPhases::IDLE);
   else
     set_phase(ProtocolPhases::SENDING_INIT_1);
@@ -405,7 +401,7 @@ void HaierClimate::setup()
   HaierProtocol::setLogHandler(esphome_logger);
   ESP_LOGI(TAG, "Haier initialization...");
   // Set timestamp here to give AC time to boot
-  last_request_timestamp_ = std::chrono::steady_clock::now();
+  this->last_request_timestamp_ = std::chrono::steady_clock::now();
   set_phase(ProtocolPhases::SENDING_INIT_1);
   // Set handlers
 #define SET_HANDLER(command, handler) this->haier_protocol_.setAnswerHandler((uint8_t)(command), std::bind(&handler, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
@@ -422,69 +418,65 @@ void HaierClimate::setup()
 void HaierClimate::dump_config()
 {
   LOG_CLIMATE("", "Haier hOn Climate", this);
-  if (hvac_hardware_info_available_)
+  if (this->hvac_hardware_info_available_)
   {
     ESP_LOGCONFIG(TAG, "  Device protocol version: %s",
-      hvac_protocol_version_.c_str());
+      this->hvac_protocol_version_.c_str());
     ESP_LOGCONFIG(TAG, "  Device software version: %s", 
-      hvac_software_version_.c_str());
+      this->hvac_software_version_.c_str());
     ESP_LOGCONFIG(TAG, "  Device hardware version: %s",
-      hvac_hardware_version_.c_str());
+      this->hvac_hardware_version_.c_str());
     ESP_LOGCONFIG(TAG, "  Device name: %s", 
-      hvac_device_name_.c_str());
+      this->hvac_device_name_.c_str());
     ESP_LOGCONFIG(TAG, "  Device features:%s%s%s%s%s",
-      (hvac_functions_[0] ? " interactive" : ""), 
-      (hvac_functions_[1] ? " master-slave" : ""),
-      (hvac_functions_[2] ? " crc" : ""), 
-      (hvac_functions_[3] ? " multinode" : ""),
-      (hvac_functions_[4] ? " role" : ""));
+      (this->hvac_functions_[0] ? " interactive" : ""), 
+      (this->hvac_functions_[1] ? " master-slave" : ""),
+      (this->hvac_functions_[2] ? " crc" : ""), 
+      (this->hvac_functions_[3] ? " multinode" : ""),
+      (this->hvac_functions_[4] ? " role" : ""));
     ESP_LOGCONFIG(TAG, "  Active alarms: %s", 
-      buf2hex(active_alarms_, sizeof(active_alarms_)).c_str());
-#if (HAIER_LOG_LEVEL > 4)
-    ESP_LOGCONFIG(TAG, "  Protocol phase: %d",
-      protocol_phase_);
-#endif
+      buf2hex(this->active_alarms_, sizeof(this->active_alarms_)).c_str());
   }
 }
 
 void HaierClimate::loop()
 {
   std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
-  if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_valid_status_timestamp_).count() > COMMUNICATION_TIMEOUT_MS)
+  if (std::chrono::duration_cast<std::chrono::milliseconds>(now - this->last_valid_status_timestamp_).count() > COMMUNICATION_TIMEOUT_MS)
   {
-    if (protocol_phase_ > ProtocolPhases::IDLE)
+    if (this->protocol_phase_ > ProtocolPhases::IDLE)
     {
       // No status too long, reseting protocol
       ESP_LOGW(TAG, "Communication timeout, reseting protocol");
-      last_valid_status_timestamp_ = now;
-      force_send_control_ = false;
-      if (hvac_settings_.valid)
-        hvac_settings_.reset();
+      this->last_valid_status_timestamp_ = now;
+      this->force_send_control_ = false;
+      if (this->hvac_settings_.valid)
+        this->hvac_settings_.reset();
       set_phase(ProtocolPhases::SENDING_INIT_1);
       return;
     }
     else
       // No need to reset protocol if we didn't pass initialization phase
-      last_valid_status_timestamp_ = now;
+      this->last_valid_status_timestamp_ = now;
   };
-  if (hvac_settings_.valid || force_send_control_)
+  if (this->hvac_settings_.valid || this->force_send_control_)
   {
     // If control message is pending we should send it ASAP unless we are in initialisation procedure or waiting for an answer
-    if (    (protocol_phase_ == ProtocolPhases::IDLE) ||
-        (protocol_phase_ == ProtocolPhases::SENDING_STATUS_REQUEST) || 
-        (protocol_phase_ == ProtocolPhases::SENDING_UPDATE_SIGNAL_REQUEST) ||
-        (protocol_phase_ == ProtocolPhases::SENDING_SIGNAL_LEVEL))
+    if ((this->protocol_phase_ == ProtocolPhases::IDLE) ||
+        (this->protocol_phase_ == ProtocolPhases::SENDING_STATUS_REQUEST) || 
+        (this->protocol_phase_ == ProtocolPhases::SENDING_UPDATE_SIGNAL_REQUEST) ||
+        (this->protocol_phase_ == ProtocolPhases::SENDING_SIGNAL_LEVEL))
     {
       ESP_LOGV(TAG, "Control packet is pending...");
       set_phase(ProtocolPhases::SENDING_CONTROL);
     }
   }
-  switch (protocol_phase_)
+  switch (this->protocol_phase_)
   {
     case ProtocolPhases::SENDING_INIT_1:
-      if (can_send_message() && (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_request_timestamp_).count() > DEFAULT_MESSAGES_INTERVAL_MS))
+      if (can_send_message() && (std::chrono::duration_cast<std::chrono::milliseconds>(now - this->last_request_timestamp_).count() > DEFAULT_MESSAGES_INTERVAL_MS))
       {
-        hvac_hardware_info_available_ = false;
+        this->hvac_hardware_info_available_ = false;
         // Indicate device capabilities:
         // bit 0 - if 1 module support interactive mode
         // bit 1 - if 1 module support master-slave mode
@@ -492,8 +484,8 @@ void HaierClimate::loop()
         // bit 3 - if 1 module support multiple devices
         // bit 4..bit 15 - not used
         uint8_t module_capabilities[2] = { 0b00000000, 0b00000111 };     
-        static const HaierProtocol::HaierMessage deviceVersion_request((uint8_t)hon::FrameType::GET_DEVICE_VERSION, module_capabilities, sizeof(module_capabilities));
-        send_message(deviceVersion_request);
+        static const HaierProtocol::HaierMessage device_version_request((uint8_t)hon::FrameType::GET_DEVICE_VERSION, module_capabilities, sizeof(module_capabilities));
+        send_message(device_version_request);
         set_phase(ProtocolPhases::WAITING_ANSWER_INIT_1);
       }
       break;
@@ -512,7 +504,7 @@ void HaierClimate::loop()
         static const HaierProtocol::HaierMessage status_request((uint8_t)hon::FrameType::CONTROL, (uint16_t)hon::SubcomandsControl::GET_USER_DATA);
         send_message(status_request);
         last_status_request_ = now;
-        set_phase((ProtocolPhases)((uint8_t)protocol_phase_ + 1));
+        set_phase((ProtocolPhases)((uint8_t)this->protocol_phase_ + 1));
       }
       break;
     case ProtocolPhases::SENDING_UPDATE_SIGNAL_REQUEST:
@@ -576,8 +568,8 @@ void HaierClimate::loop()
       }
       else if (can_send_message() && (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_request_timestamp_).count() > CONTROL_MESSAGES_INTERVAL_MS)) // Usiing CONTROL_MESSAGES_INTERVAL_MS to speeduprequests
       {
-        HaierProtocol::HaierMessage message = get_control_message();
-        send_message(message);
+        HaierProtocol::HaierMessage control_message = get_control_message();
+        send_message(control_message);
         set_phase(ProtocolPhases::WAITING_CONTROL_ANSWER);       
       }
       break;
@@ -603,7 +595,7 @@ void HaierClimate::loop()
       break;
     default:
       // Shouldn't get here
-      ESP_LOGE(TAG, "Wrong protocol handler state: %d, resetting communication", protocol_phase_);
+      ESP_LOGE(TAG, "Wrong protocol handler state: %d, resetting communication", this->protocol_phase_);
       set_phase(ProtocolPhases::SENDING_INIT_1);
       break;
   }
@@ -618,7 +610,7 @@ ClimateTraits HaierClimate::traits()
 void HaierClimate::control(const ClimateCall &call)
 {
   ESP_LOGD("Control", "Control call");
-  if (protocol_phase_ < ProtocolPhases::IDLE)
+  if (this->protocol_phase_ < ProtocolPhases::IDLE)
   {
     ESP_LOGW(TAG, "Can't send control packet, first poll answer not received");
     return; //cancel the control, we cant do it without a poll answer.
