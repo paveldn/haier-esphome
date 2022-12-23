@@ -468,6 +468,7 @@ void HaierClimate::loop()
         (this->protocol_phase_ == ProtocolPhases::SENDING_SIGNAL_LEVEL))
     {
       ESP_LOGV(TAG, "Control packet is pending...");
+      this->control_request_timestamp_ = now;
       this->set_phase(ProtocolPhases::SENDING_CONTROL);
     }
   }
@@ -570,6 +571,7 @@ void HaierClimate::loop()
       {
         HaierProtocol::HaierMessage control_message = get_control_message();
         this->send_message(control_message);
+        ESP_LOGI(TAG, "Control packet sent");
         this->set_phase(ProtocolPhases::WAITING_CONTROL_ANSWER);       
       }
       break;
