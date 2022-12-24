@@ -33,9 +33,9 @@ climate:
     outdoor_temperature:        # Optional, outdoor temperature sensor
       name: Haier AC outdoor temperature
     visual:                     # Optional, you can use it to limit min and max temperatures in UI (not working for remote!)
-      min_temperature: 16 °C
-      max_temperature: 30 °C
-      temperature_step: 1 °C
+      min_temperature: 16 Â°C
+      max_temperature: 30 Â°C
+      temperature_step: 1 Â°C
     supported_swing_modes:      # Optional, can be used to disable some swing modes if your AC does not support it
     - 'OFF'
     - VERTICAL
@@ -130,7 +130,7 @@ on_value:
 To flash the firmware you will need to use a USB to TTL converter and solder wires to access UART0 on board (or use something like this: [Pogo Pin Probe Clip 2x5p 2.54 mm]( https://www.tinytronics.nl/shop/en/tools-and-mounting/measuring/accessories/test-probe-with-clamp-pogo-pin-2x5p))
 
 **UART0 pinout:**
-<p><a href="https://github.com/paveldn/ESP32-S0WD-Haier/blob/master/img/ESP32_front.jpg?raw=true"><img src="https://github.com/paveldn/ESP32-S0WD-Haier/blob/master/img/ESP32_Haier_UAR0_pinout.jpg?raw=true" height="50%" width="50%"></a></p>
+<p><a href="https://github.com/paveldn/ESP32-S0WD-Haier/blob/master/img/ESP32_Haier_UAR0_pinout.jpg?raw=true"><img src="https://github.com/paveldn/ESP32-S0WD-Haier/blob/master/img/ESP32_Haier_UAR0_pinout.jpg?raw=true" height="50%" width="50%"></a></p>
 
 To put the device in the flash mode you will need to shortcut GPIO0 to the ground before powering the device.
 
