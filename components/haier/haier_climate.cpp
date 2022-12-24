@@ -388,7 +388,7 @@ HaierProtocol::HandlerError HaierClimate::get_alarm_status_answer_handler(uint8_
 
 HaierProtocol::HandlerError HaierClimate::timeout_default_handler(uint8_t requestType)
 {
-  ESP_LOGW(TAG, "Answer timeout for command %02X, phase %d", requestType, this->protocol_phase_);
+  ESP_LOGW(TAG, "Answer timeout for command %02X, phase %d", requestType, (int)this->protocol_phase_);
   if (this->protocol_phase_ > ProtocolPhases::IDLE)
     this->set_phase(ProtocolPhases::IDLE);
   else
@@ -597,7 +597,7 @@ void HaierClimate::loop()
       break;
     default:
       // Shouldn't get here
-      ESP_LOGE(TAG, "Wrong protocol handler state: %d, resetting communication", this->protocol_phase_);
+      ESP_LOGE(TAG, "Wrong protocol handler state: %d, resetting communication", (int)this->protocol_phase_);
       this->set_phase(ProtocolPhases::SENDING_INIT_1);
       break;
   }
