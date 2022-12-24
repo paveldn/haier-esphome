@@ -46,10 +46,10 @@ enum class SpecialMode : uint8_t
 
 enum class FanMode : uint8_t
 {
-  HIGH           = 0x01,
-  MID            = 0x02,
-  LOW            = 0x03,
-  AUTO           = 0x05
+  FAN_HIGH       = 0x01,
+  FAN_MID        = 0x02,
+  FAN_LOW        = 0x03,
+  FAN_AUTO       = 0x05
 };
 
 const std::string ErrorMessages[] = {

@@ -80,6 +80,7 @@ protected:
     WAITING_SIGNAL_LEVEL_ANSWER   = 14,
     SENDING_CONTROL               = 15,
     WAITING_CONTROL_ANSWER        = 16,
+    NUM_PROTOCOL_PHASES
   };
   esphome::climate::ClimateTraits traits() override;
   // Answers handlers

@@ -59,8 +59,8 @@ HaierClimate::HaierClimate(UARTComponent* parent) :
               UARTDevice(parent),
               haier_protocol_(*this),
               protocol_phase_(ProtocolPhases::SENDING_INIT_1),
-              fan_mode_speed_((uint8_t)hon_protocol::FanMode::MID),
-              other_modes_fan_speed_((uint8_t)hon_protocol::FanMode::AUTO),
+              fan_mode_speed_((uint8_t)hon_protocol::FanMode::FAN_MID),
+              other_modes_fan_speed_((uint8_t)hon_protocol::FanMode::FAN_AUTO),
               send_wifi_signal_(false),
               beeper_status_(true),
               display_status_(true),
@@ -120,7 +120,35 @@ void HaierClimate::set_phase(ProtocolPhases phase)
 {
   if (this->protocol_phase_ != phase)
   {
-    ESP_LOGV(TAG, "Phase transition: %d => %d", this->protocol_phase_, phase);
+#if (HAIER_LOG_LEVEL > 4)
+    static const char* phaseNames[] = {
+      "SENDING_INIT_1",
+      "WAITING_ANSWER_INIT_1",
+      "SENDING_INIT_2",
+      "WAITING_ANSWER_INIT_2",
+      "SENDING_FIRST_STATUS_REQUEST",
+      "WAITING_FIRST_STATUS_ANSWER",
+      "SENDING_ALARM_STATUS_REQUEST",
+      "WAITING_ALARM_STATUS_ANSWER",
+      "IDLE",
+      "SENDING_STATUS_REQUEST",
+      "WAITING_STATUS_ANSWER",
+      "SENDING_UPDATE_SIGNAL_REQUEST",
+      "WAITING_UPDATE_SIGNAL_ANSWER",
+      "SENDING_SIGNAL_LEVEL",
+      "WAITING_SIGNAL_LEVEL_ANSWER",
+      "SENDING_CONTROL",
+      "WAITING_CONTROL_ANSWER",
+      "UNKNOWN"     // Should be the last!
+    };
+    int _p1 = (int)this->protocol_phase_;
+    if (_p1 > (int)ProtocolPhases::NUM_PROTOCOL_PHASES)
+      _p1 = (int)ProtocolPhases::NUM_PROTOCOL_PHASES;
+    int _p2 = (int)phase;
+    if (_p2 > (int)ProtocolPhases::NUM_PROTOCOL_PHASES)
+      _p2 = (int)ProtocolPhases::NUM_PROTOCOL_PHASES;
+    ESP_LOGV(TAG, "Phase transition: %s => %s", phaseNames[_p1], phaseNames[_p2]);
+#endif
     this->protocol_phase_ = phase;
   }
 }
@@ -695,17 +723,17 @@ const HaierProtocol::HaierMessage HaierClimate::get_control_message()
       switch (climateControl.fan_mode.value())
       {
       case CLIMATE_FAN_LOW:
-        outData->fan_mode = (uint8_t)hon_protocol::FanMode::LOW;
+        outData->fan_mode = (uint8_t)hon_protocol::FanMode::FAN_LOW;
         break;
       case CLIMATE_FAN_MEDIUM:
-        outData->fan_mode = (uint8_t)hon_protocol::FanMode::MID;
+        outData->fan_mode = (uint8_t)hon_protocol::FanMode::FAN_MID;
         break;
       case CLIMATE_FAN_HIGH:
-        outData->fan_mode = (uint8_t)hon_protocol::FanMode::HIGH;
+        outData->fan_mode = (uint8_t)hon_protocol::FanMode::FAN_HIGH;
         break;
       case CLIMATE_FAN_AUTO:
         if (mode != CLIMATE_MODE_FAN_ONLY) //if we are not in fan only mode
-          outData->fan_mode = (uint8_t)hon_protocol::FanMode::AUTO;
+          outData->fan_mode = (uint8_t)hon_protocol::FanMode::FAN_AUTO;
         break;
       default:
         ESP_LOGE("Control", "Unsupported fan mode");
@@ -850,16 +878,16 @@ HaierProtocol::HandlerError HaierClimate::process_status_message(const uint8_t* 
       this->other_modes_fan_speed_ = packet.control.fan_mode;
     switch (packet.control.fan_mode)
     {
-    case (uint8_t)hon_protocol::FanMode::AUTO:
+    case (uint8_t)hon_protocol::FanMode::FAN_AUTO:
       this->fan_mode = CLIMATE_FAN_AUTO;
       break;
-    case (uint8_t)hon_protocol::FanMode::MID:
+    case (uint8_t)hon_protocol::FanMode::FAN_MID:
       this->fan_mode = CLIMATE_FAN_MEDIUM;
       break;
-    case (uint8_t)hon_protocol::FanMode::LOW:
+    case (uint8_t)hon_protocol::FanMode::FAN_LOW:
       this->fan_mode = CLIMATE_FAN_LOW;
       break;
-    case (uint8_t)hon_protocol::FanMode::HIGH:
+    case (uint8_t)hon_protocol::FanMode::FAN_HIGH:
       this->fan_mode = CLIMATE_FAN_HIGH;
       break;
     }
