@@ -5,8 +5,8 @@
 #include "esphome.h"
 #include "esphome/components/climate/climate.h"
 #include "esphome/components/uart/uart.h"
-#include "Transport/protocol_transport.h"
-#include "Protocol/haier_protocol.h"
+#include "transport/protocol_transport.h"
+#include "protocol/haier_protocol.h"
 
 namespace esphome {
 namespace haier {
@@ -28,7 +28,7 @@ enum class AirflowHorizontalDirection : uint8_t
 class HaierClimate :  public esphome::Component,
       public esphome::climate::Climate,
       public esphome::uart::UARTDevice,
-      public HaierProtocol::ProtocolStream
+      public haier_protocol::ProtocolStream
 {
 public:
   HaierClimate() = delete;
@@ -56,7 +56,7 @@ public:
   virtual size_t available() noexcept { return esphome::uart::UARTDevice::available(); };
   virtual size_t read_array(uint8_t* data, size_t len) noexcept { return esphome::uart::UARTDevice::read_array(data, len) ? len : 0; };
   virtual void write_array(const uint8_t* data, size_t len) noexcept { esphome::uart::UARTDevice::write_array(data, len);};
-  bool can_send_message() const { return haier_protocol_.getOutgoingQueueSize() == 0; };
+  bool can_send_message() const { return haier_protocol_.get_outgoing_queue_size() == 0; };
 protected:
   enum class ProtocolPhases
   {
@@ -82,21 +82,22 @@ protected:
     WAITING_CONTROL_ANSWER        = 16,
     NUM_PROTOCOL_PHASES
   };
+  const char* phase_to_string_(ProtocolPhases phase);
   esphome::climate::ClimateTraits traits() override;
   // Answers handlers
-  HaierProtocol::HandlerError answer_preprocess(uint8_t requestMessageType, uint8_t expectedRequestMessageType, uint8_t answerMessageType, uint8_t expectedAnswerMessageType, ProtocolPhases expectedPhase);
-  HaierProtocol::HandlerError get_device_version_answer_handler(uint8_t requestType, uint8_t messageType, const uint8_t* data, size_t dataSize);
-  HaierProtocol::HandlerError get_device_id_answer_handler(uint8_t requestType, uint8_t messageType, const uint8_t* data, size_t dataSize);
-  HaierProtocol::HandlerError status_handler(uint8_t requestType, uint8_t messageType, const uint8_t* data, size_t dataSize);
-  HaierProtocol::HandlerError get_management_information_answer_handler(uint8_t requestType, uint8_t messageType, const uint8_t* data, size_t dataSize);
-  HaierProtocol::HandlerError report_network_status_answer_handler(uint8_t requestType, uint8_t messageType, const uint8_t* data, size_t dataSize);
-  HaierProtocol::HandlerError get_alarm_status_answer_handler(uint8_t requestType, uint8_t messageType, const uint8_t* data, size_t dataSize);
+  haier_protocol::HandlerError answer_preprocess(uint8_t requestMessageType, uint8_t expectedRequestMessageType, uint8_t answerMessageType, uint8_t expectedAnswerMessageType, ProtocolPhases expectedPhase);
+  haier_protocol::HandlerError get_device_version_answer_handler(uint8_t requestType, uint8_t messageType, const uint8_t* data, size_t dataSize);
+  haier_protocol::HandlerError get_device_id_answer_handler(uint8_t requestType, uint8_t messageType, const uint8_t* data, size_t dataSize);
+  haier_protocol::HandlerError status_handler(uint8_t requestType, uint8_t messageType, const uint8_t* data, size_t dataSize);
+  haier_protocol::HandlerError get_management_information_answer_handler(uint8_t requestType, uint8_t messageType, const uint8_t* data, size_t dataSize);
+  haier_protocol::HandlerError report_network_status_answer_handler(uint8_t requestType, uint8_t messageType, const uint8_t* data, size_t dataSize);
+  haier_protocol::HandlerError get_alarm_status_answer_handler(uint8_t requestType, uint8_t messageType, const uint8_t* data, size_t dataSize);
   // Timeout handler
-  HaierProtocol::HandlerError timeout_default_handler(uint8_t requestType);
+  haier_protocol::HandlerError timeout_default_handler(uint8_t requestType);
   // Helper functions
-  HaierProtocol::HandlerError process_status_message(const uint8_t* packet, uint8_t size);
-  void send_message(const HaierProtocol::HaierMessage& command);
-  const HaierProtocol::HaierMessage get_control_message();
+  haier_protocol::HandlerError process_status_message(const uint8_t* packet, uint8_t size);
+  void send_message(const haier_protocol::HaierMessage& command);
+  const haier_protocol::HaierMessage get_control_message();
   void set_phase(ProtocolPhases phase);
 protected:
   struct HvacSettings
@@ -110,7 +111,7 @@ protected:
     HvacSettings() : valid(false) {};
     void reset();
   };
-  HaierProtocol::ProtocolHandler        haier_protocol_;
+  haier_protocol::ProtocolHandler       haier_protocol_;
   ProtocolPhases                        protocol_phase_;
   uint8_t*                              last_status_message_;
   uint8_t                               fan_mode_speed_;

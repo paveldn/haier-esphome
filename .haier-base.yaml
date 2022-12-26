@@ -3,9 +3,6 @@
     type: local
     path: ./components    
 
-logger:
-  level: ${log_lvl}
-
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
