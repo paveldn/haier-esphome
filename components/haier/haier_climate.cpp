@@ -28,6 +28,8 @@ constexpr size_t SIGNAL_LEVEL_UPDATE_INTERVAL_MS =  10000;
 constexpr size_t CONTROL_TIMEOUT_MS =               7000;
 constexpr int PROTOCOL_OUTDOOR_TEMPERATURE_OFFSET = -64;
 
+#if (HAIER_LOG_LEVEL > 4)
+// To reduce size of binary this function only available when log level is Verbose
 const char* HaierClimate::phase_to_string_(ProtocolPhases phase)
 {
   static const char* phase_names[] = {
@@ -55,6 +57,7 @@ const char* HaierClimate::phase_to_string_(ProtocolPhases phase)
     phase_index = (int)ProtocolPhases::NUM_PROTOCOL_PHASES;
   return phase_names[phase_index];
 }
+#endif
 
 hon_protocol::VerticalSwingMode get_vertical_swing_mode(AirflowVerticalDirection direction)
 {
@@ -96,6 +99,7 @@ HaierClimate::HaierClimate(UARTComponent* parent) :
               forced_publish_(false),
               forced_request_status_(false),
               control_called_(false),
+              got_valid_outdoor_temp_(false),
               hvac_hardware_info_available_(false),
               hvac_functions_{false, false, false, false, false},
               use_crc_(hvac_functions_[2]),
@@ -416,7 +420,11 @@ haier_protocol::HandlerError HaierClimate::get_alarm_status_answer_handler(uint8
 
 haier_protocol::HandlerError HaierClimate::timeout_default_handler(uint8_t requestType)
 {
+#if (HAIER_LOG_LEVEL > 4)
   ESP_LOGW(TAG, "Answer timeout for command %02X, phase %s", requestType, phase_to_string_(this->protocol_phase_));
+#else
+  ESP_LOGW(TAG, "Answer timeout for command %02X, phase %d", requestType, this->protocol_phase_);
+#endif
   if (this->protocol_phase_ > ProtocolPhases::IDLE)
     this->set_phase(ProtocolPhases::IDLE);
   else
@@ -625,7 +633,11 @@ void HaierClimate::loop()
       break;
     default:
       // Shouldn't get here
+#if (HAIER_LOG_LEVEL > 4)
       ESP_LOGE(TAG, "Wrong protocol handler state: %s (%d), resetting communication", phase_to_string_(this->protocol_phase_), (int)this->protocol_phase_);
+#else
+      ESP_LOGE(TAG, "Wrong protocol handler state: %d, resetting communication", (int)this->protocol_phase_);
+#endif
       this->set_phase(ProtocolPhases::SENDING_INIT_1);
       break;
   }
@@ -828,8 +840,9 @@ haier_protocol::HandlerError HaierClimate::process_status_message(const uint8_t*
       packet.sensors.error_status,
       (packet.sensors.error_status < sizeof(hon_protocol::ErrorMessages)) ? hon_protocol::ErrorMessages[packet.sensors.error_status].c_str() : "Unknown error");
   }
-  if (this->outdoor_sensor_ != nullptr)
+  if ((this->outdoor_sensor_ != nullptr) && (got_valid_outdoor_temp_ || (packet.sensors.outdoor_temperature > 0)))
   {
+    got_valid_outdoor_temp_ = true; 
     float otemp = (float)(packet.sensors.outdoor_temperature + PROTOCOL_OUTDOOR_TEMPERATURE_OFFSET);
     if ((!this->outdoor_sensor_->has_state()) || (this->outdoor_sensor_->get_raw_state() != otemp))
       this->outdoor_sensor_->publish_state(otemp);

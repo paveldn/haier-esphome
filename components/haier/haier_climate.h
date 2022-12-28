@@ -82,7 +82,9 @@ protected:
     WAITING_CONTROL_ANSWER        = 16,
     NUM_PROTOCOL_PHASES
   };
+#if (HAIER_LOG_LEVEL > 4)
   const char* phase_to_string_(ProtocolPhases phase);
+#endif
   esphome::climate::ClimateTraits traits() override;
   // Answers handlers
   haier_protocol::HandlerError answer_preprocess(uint8_t requestMessageType, uint8_t expectedRequestMessageType, uint8_t answerMessageType, uint8_t expectedAnswerMessageType, ProtocolPhases expectedPhase);
@@ -123,6 +125,7 @@ protected:
   bool                                  forced_publish_;
   bool                                  forced_request_status_;
   bool                                  control_called_;
+  bool                                  got_valid_outdoor_temp_;
   AirflowVerticalDirection              vertical_direction_;
   AirflowHorizontalDirection            horizontal_direction_;
   bool                                  hvac_hardware_info_available_;
