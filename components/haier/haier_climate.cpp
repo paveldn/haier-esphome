@@ -226,30 +226,6 @@ void HaierClimate::set_supported_swing_modes(const std::set<climate::ClimateSwin
   this->traits_.add_supported_swing_mode(CLIMATE_SWING_VERTICAL);       // Always available
 }
 
-void esphome_logger(haier_protocol::HaierLogLevel level, const char* tag, const char* message)
-{
-  switch (level)
-  {
-    case haier_protocol::HaierLogLevel::LEVEL_ERROR:
-      esp_log_printf_(ESPHOME_LOG_LEVEL_ERROR, tag, __LINE__, message);
-      break;
-    case haier_protocol::HaierLogLevel::LEVEL_WARNING:
-      esp_log_printf_(ESPHOME_LOG_LEVEL_WARN, tag, __LINE__, message);
-      break;
-    case haier_protocol::HaierLogLevel::LEVEL_INFO:
-      esp_log_printf_(ESPHOME_LOG_LEVEL_INFO, tag, __LINE__, message);
-      break;
-    case haier_protocol::HaierLogLevel::LEVEL_DEBUG:
-      esp_log_printf_(ESPHOME_LOG_LEVEL_DEBUG, tag, __LINE__, message);
-      break;
-    case haier_protocol::HaierLogLevel::LEVEL_VERBOSE:
-      esp_log_printf_(ESPHOME_LOG_LEVEL_VERBOSE, tag, __LINE__, message);
-      break;
-    default:
-      // Just ignore everything else
-      break;
-  }
-}
 
 haier_protocol::HandlerError HaierClimate::answer_preprocess(uint8_t requestMessageType, uint8_t expectedRequestMessageType, uint8_t answerMessageType, uint8_t expectedAnswerMessageType, ProtocolPhases expectedPhase)
 {
@@ -434,7 +410,6 @@ haier_protocol::HandlerError HaierClimate::timeout_default_handler(uint8_t reque
 
 void HaierClimate::setup()
 {
-  haier_protocol::set_log_handler(esphome_logger);
   ESP_LOGI(TAG, "Haier initialization...");
   // Set timestamp here to give AC time to boot
   this->last_request_timestamp_ = std::chrono::steady_clock::now();

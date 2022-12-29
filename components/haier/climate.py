@@ -224,6 +224,7 @@ FINAL_VALIDATE_SCHEMA = _final_validate
 
 
 async def to_code(config):
+    cg.add(haier_ns.init_haier_protocol_logging())
     if CONF_VISUAL in config:
         visual_config = config[CONF_VISUAL]
         if CONF_MIN_TEMPERATURE in visual_config:
