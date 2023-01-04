@@ -937,7 +937,7 @@ haier_protocol::HandlerError HaierClimate::process_status_message(const uint8_t*
 #endif
     this->publish_state();
 #if (HAIER_LOG_LEVEL > 4)
-    ESP_LOGV(TAG, "Publish delay: %d ms", std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - _publish_start).count());
+    ESP_LOGV(TAG, "Publish delay: %lld ms", std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - _publish_start).count());
 #endif
     this->forced_publish_ = false;
   }
