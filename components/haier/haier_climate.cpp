@@ -3,7 +3,9 @@
 #include <string>
 #include "esphome/components/climate/climate.h"
 #include "esphome/components/uart/uart.h"
+#ifdef USE_WIFI
 #include "esphome/components/wifi/wifi_component.h"
+#endif
 #include "haier_climate.h"
 #include "haier_packet.h"
 #include "protocol/haier_protocol.h"
@@ -535,6 +537,7 @@ void HaierClimate::loop()
         this->set_phase(ProtocolPhases::IDLE);
       else if (this->can_send_message() && (std::chrono::duration_cast<std::chrono::milliseconds>(now - this->last_request_timestamp_).count() > DEFAULT_MESSAGES_INTERVAL_MS))
       {
+#ifdef USE_WIFI
         static uint8_t wifi_status_data[4] = { 0x00, 0x00, 0x00, 0x00 };
         if (wifi::global_wifi_component->is_connected())
         {
@@ -551,6 +554,7 @@ void HaierClimate::loop()
         }
         haier_protocol::HaierMessage wifi_status_request((uint8_t)hon_protocol::FrameType::REPORT_NETWORK_STATUS, wifi_status_data, sizeof(wifi_status_data));
         this->send_message(wifi_status_request);
+#endif
         this->set_phase(ProtocolPhases::WAITING_SIGNAL_LEVEL_ANSWER);
       }
       break;

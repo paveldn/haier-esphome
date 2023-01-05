@@ -16,6 +16,7 @@ from esphome.const import (
     CONF_SUPPORTED_SWING_MODES,
     CONF_TEMPERATURE_STEP,
     CONF_UART_ID,
+    CONF_WIFI,
     DEVICE_CLASS_TEMPERATURE,
     ICON_THERMOMETER,
     STATE_CLASS_MEASUREMENT,
@@ -33,7 +34,7 @@ PROTOCOL_TEMPERATURE_STEP = 1.0
 
 CODEOWNERS = ["@paveldn"]
 AUTO_LOAD = ["sensor"]
-DEPENDENCIES = ["climate", "uart", "wifi"]
+DEPENDENCIES = ["climate", "uart"]
 CONF_WIFI_SIGNAL = "wifi_signal"
 CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
 CONF_VERTICAL_AIRFLOW = "vertical_airflow"
@@ -200,7 +201,7 @@ async def haier_set_horizontal_airflow_to_code(config, action_id, template_arg, 
     cg.add(var.set_direction(template_))
     return var
 
-def _final_validate(_):
+def _final_validate(config):
     full_config = fv.full_config.get()
     if CONF_LOGGER in full_config:
         _level = 'NONE'
@@ -218,7 +219,10 @@ def _final_validate(_):
     else:
         _LOGGER.warn("No logger component found, logging for Haier protocol is disabled")
         cg.add_build_flag("-DHAIER_LOG_LEVEL=0")
-
+    if config[CONF_WIFI_SIGNAL] and CONF_WIFI not in full_config:
+        raise cv.Invalid(f"No WiFi configured, if you want to use haier climate without WiFi add {CONF_WIFI_SIGNAL}: false to climate configuration")
+    return config
+        
 
 FINAL_VALIDATE_SCHEMA = _final_validate
 
@@ -258,6 +262,8 @@ async def to_code(config):
     await cg.register_component(var, config)
     await uart.register_uart_device(var, config)
     await climate.register_climate(var, config)
+    if config[CONF_WIFI_SIGNAL]:
+        cg.add_build_flag("-DUSE_WIFI")
     cg.add(var.set_send_wifi_signal(config[CONF_WIFI_SIGNAL]))
     cg.add(var.set_beeper_state(config[CONF_BEEPER]))
     if CONF_OUTDOOR_TEMPERATURE in config:
