@@ -4,6 +4,7 @@
 #include <set>
 #include "esphome.h"
 #include "esphome/components/climate/climate.h"
+#include "esphome/components/sensor/sensor.h"
 #include "esphome/components/uart/uart.h"
 #include "transport/protocol_transport.h"
 #include "protocol/haier_protocol.h"
@@ -41,7 +42,6 @@ public:
   void control(const esphome::climate::ClimateCall &call) override;
   void dump_config() override;
   float get_setup_priority() const override { return esphome::setup_priority::HARDWARE ; }
-  void set_send_wifi_signal(bool sendWifi);
   void set_beeper_state(bool state);
   bool get_beeper_state() const;   
   void set_fahrenheit(bool fahrenheit);
@@ -118,7 +118,6 @@ protected:
   uint8_t*                              last_status_message_;
   uint8_t                               fan_mode_speed_;
   uint8_t                               other_modes_fan_speed_;
-  bool                                  send_wifi_signal_;
   bool                                  beeper_status_;
   bool                                  display_status_;
   bool                                  force_send_control_;
@@ -142,7 +141,9 @@ protected:
   std::chrono::steady_clock::time_point last_request_timestamp_;      // For interval between messages
   std::chrono::steady_clock::time_point last_valid_status_timestamp_; // For protocol timeout
   std::chrono::steady_clock::time_point last_status_request_;         // To request AC status
+#ifdef HAIER_REPORT_WIFI_SIGNAL
   std::chrono::steady_clock::time_point last_signal_request_;         // To send WiFI signal level
+#endif
   std::chrono::steady_clock::time_point control_request_timestamp_;   // To send control message
 };
 

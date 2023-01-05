@@ -263,8 +263,7 @@ async def to_code(config):
     await uart.register_uart_device(var, config)
     await climate.register_climate(var, config)
     if config[CONF_WIFI_SIGNAL]:
-        cg.add_build_flag("-DUSE_WIFI")
-    cg.add(var.set_send_wifi_signal(config[CONF_WIFI_SIGNAL]))
+        cg.add_build_flag("-DHAIER_REPORT_WIFI_SIGNAL")
     cg.add(var.set_beeper_state(config[CONF_BEEPER]))
     if CONF_OUTDOOR_TEMPERATURE in config:
         sens = await sensor.new_sensor(config[CONF_OUTDOOR_TEMPERATURE])

@@ -3,7 +3,7 @@
 #include <string>
 #include "esphome/components/climate/climate.h"
 #include "esphome/components/uart/uart.h"
-#ifdef USE_WIFI
+#ifdef HAIER_REPORT_WIFI_SIGNAL
 #include "esphome/components/wifi/wifi_component.h"
 #endif
 #include "haier_climate.h"
@@ -26,7 +26,9 @@ constexpr size_t COMMUNICATION_TIMEOUT_MS =         60000;
 constexpr size_t STATUS_REQUEST_INTERVAL_MS =       5000;
 constexpr size_t DEFAULT_MESSAGES_INTERVAL_MS =     2000;
 constexpr size_t CONTROL_MESSAGES_INTERVAL_MS =     400;
+#ifdef HAIER_REPORT_WIFI_SIGNAL
 constexpr size_t SIGNAL_LEVEL_UPDATE_INTERVAL_MS =  10000;
+#endif
 constexpr size_t CONTROL_TIMEOUT_MS =               7000;
 constexpr int PROTOCOL_OUTDOOR_TEMPERATURE_OFFSET = -64;
 
@@ -94,7 +96,6 @@ HaierClimate::HaierClimate(UARTComponent* parent) :
               protocol_phase_(ProtocolPhases::SENDING_INIT_1),
               fan_mode_speed_((uint8_t)hon_protocol::FanMode::FAN_MID),
               other_modes_fan_speed_((uint8_t)hon_protocol::FanMode::FAN_AUTO),
-              send_wifi_signal_(false),
               beeper_status_(true),
               display_status_(true),
               force_send_control_(false),
@@ -157,11 +158,6 @@ void HaierClimate::set_phase(ProtocolPhases phase)
     ESP_LOGV(TAG, "Phase transition: %s => %s", phase_to_string_(this->protocol_phase_), phase_to_string_(phase));
     this->protocol_phase_ = phase;
   }
-}
-
-void HaierClimate::set_send_wifi_signal(bool sendWifi) 
-{
-  this->send_wifi_signal_ = sendWifi; 
 }
 
 void HaierClimate::set_beeper_state(bool state)
@@ -521,10 +517,9 @@ void HaierClimate::loop()
         this->set_phase((ProtocolPhases)((uint8_t)this->protocol_phase_ + 1));
       }
       break;
+#ifdef HAIER_REPORT_WIFI_SIGNAL
     case ProtocolPhases::SENDING_UPDATE_SIGNAL_REQUEST:
-      if (!this->send_wifi_signal_)
-        this->set_phase(ProtocolPhases::IDLE);
-      else if (this->can_send_message() && (std::chrono::duration_cast<std::chrono::milliseconds>(now - this->last_request_timestamp_).count() > DEFAULT_MESSAGES_INTERVAL_MS))
+      if (this->can_send_message() && (std::chrono::duration_cast<std::chrono::milliseconds>(now - this->last_request_timestamp_).count() > DEFAULT_MESSAGES_INTERVAL_MS))
       {
         static const haier_protocol::HaierMessage update_signal_request((uint8_t)hon_protocol::FrameType::GET_MANAGEMENT_INFORMATION);
         this->send_message(update_signal_request);
@@ -533,11 +528,8 @@ void HaierClimate::loop()
       }
       break;
     case ProtocolPhases::SENDING_SIGNAL_LEVEL:
-      if (!this->send_wifi_signal_)
-        this->set_phase(ProtocolPhases::IDLE);
-      else if (this->can_send_message() && (std::chrono::duration_cast<std::chrono::milliseconds>(now - this->last_request_timestamp_).count() > DEFAULT_MESSAGES_INTERVAL_MS))
+      if (this->can_send_message() && (std::chrono::duration_cast<std::chrono::milliseconds>(now - this->last_request_timestamp_).count() > DEFAULT_MESSAGES_INTERVAL_MS))
       {
-#ifdef USE_WIFI
         static uint8_t wifi_status_data[4] = { 0x00, 0x00, 0x00, 0x00 };
         if (wifi::global_wifi_component->is_connected())
         {
@@ -554,10 +546,20 @@ void HaierClimate::loop()
         }
         haier_protocol::HaierMessage wifi_status_request((uint8_t)hon_protocol::FrameType::REPORT_NETWORK_STATUS, wifi_status_data, sizeof(wifi_status_data));
         this->send_message(wifi_status_request);
-#endif
         this->set_phase(ProtocolPhases::WAITING_SIGNAL_LEVEL_ANSWER);
       }
       break;
+    case ProtocolPhases::WAITING_UPDATE_SIGNAL_ANSWER:
+    case ProtocolPhases::WAITING_SIGNAL_LEVEL_ANSWER:
+      break;
+#else
+    case ProtocolPhases::SENDING_UPDATE_SIGNAL_REQUEST:
+    case ProtocolPhases::SENDING_SIGNAL_LEVEL:
+    case ProtocolPhases::WAITING_UPDATE_SIGNAL_ANSWER:
+    case ProtocolPhases::WAITING_SIGNAL_LEVEL_ANSWER:
+      this->set_phase(ProtocolPhases::IDLE);
+      break;
+#endif
     case ProtocolPhases::SENDING_ALARM_STATUS_REQUEST:
       if (this->can_send_message() && (std::chrono::duration_cast<std::chrono::milliseconds>(now - this->last_request_timestamp_).count() > DEFAULT_MESSAGES_INTERVAL_MS))
       {
@@ -595,8 +597,6 @@ void HaierClimate::loop()
     case ProtocolPhases::WAITING_FIRST_STATUS_ANSWER:
     case ProtocolPhases::WAITING_ALARM_STATUS_ANSWER:
     case ProtocolPhases::WAITING_STATUS_ANSWER:
-    case ProtocolPhases::WAITING_UPDATE_SIGNAL_ANSWER:
-    case ProtocolPhases::WAITING_SIGNAL_LEVEL_ANSWER:
     case ProtocolPhases::WAITING_CONTROL_ANSWER:
       break;
     case ProtocolPhases::IDLE:
@@ -606,8 +606,10 @@ void HaierClimate::loop()
           this->set_phase(ProtocolPhases::SENDING_STATUS_REQUEST);
           this->forced_request_status_ = false;
         }
-        else if (this->send_wifi_signal_ && (std::chrono::duration_cast<std::chrono::milliseconds>(now - this->last_signal_request_).count() > SIGNAL_LEVEL_UPDATE_INTERVAL_MS))
+#ifdef HAIER_REPORT_WIFI_SIGNAL
+        else if (std::chrono::duration_cast<std::chrono::milliseconds>(now - this->last_signal_request_).count() > SIGNAL_LEVEL_UPDATE_INTERVAL_MS)
           this->set_phase(ProtocolPhases::SENDING_UPDATE_SIGNAL_REQUEST);
+#endif
       }
       break;
     default:
