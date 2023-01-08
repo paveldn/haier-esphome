@@ -2,7 +2,6 @@
 
 #include <chrono>
 #include <set>
-#include "esphome.h"
 #include "esphome/components/climate/climate.h"
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/uart/uart.h"

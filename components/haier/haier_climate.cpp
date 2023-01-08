@@ -1,4 +1,3 @@
-#include "esphome.h"
 #include <chrono>
 #include <string>
 #include "esphome/components/climate/climate.h"
