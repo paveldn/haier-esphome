@@ -36,6 +36,13 @@ climate:
       min_temperature: 16 °C
       max_temperature: 30 °C
       temperature_step: 1 °C
+    supported_modes:            # Optional, can be used to disable some modes if you don't need them
+    - 'OFF'
+    - AUTO
+    - COOL
+    - HEAT
+    - DRY
+    - FAN_ONLY
     supported_swing_modes:      # Optional, can be used to disable some swing modes if your AC does not support it
     - 'OFF'
     - VERTICAL
@@ -54,6 +61,7 @@ climate:
   - **name (Required, string):** The name of the sensor.
   - **id (Optional, [ID](https://esphome.io/guides/configuration-types.html#config-id)):** ID of the sensor, can be used for code generation
   - All other options from Sensor.
+- **supported_modes (Optional, list):** Can be used to disable some of AC modes Possible values: OFF (use quotes in opposite case ESPHome will convert it to False), AUTO, COOL, HEAT, DRY, FAN_ONLY
 - **supported_swing_modes (Optional, list):** Can be used to disable some swing modes if your AC does not support it. Possible values: OFF (use quotes in opposite case ESPHome will convert it to False), VERTICAL, HORIZONTAL, BOTH
 - All other options from [Climate](https://esphome.io/components/climate/index.html#config-climate).
 
