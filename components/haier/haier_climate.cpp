@@ -219,10 +219,16 @@ void HaierClimate::set_horizontal_airflow(AirflowHorizontalDirection direction)
 void HaierClimate::set_supported_swing_modes(const std::set<climate::ClimateSwingMode> &modes)
 {
   this->traits_.set_supported_swing_modes(modes);
-  this->traits_.add_supported_swing_mode(climate::CLIMATE_SWING_OFF);   // Always available
-  this->traits_.add_supported_swing_mode(CLIMATE_SWING_VERTICAL);       // Always available
+  this->traits_.add_supported_swing_mode(climate::CLIMATE_SWING_OFF);       // Always available
+  this->traits_.add_supported_swing_mode(climate::CLIMATE_SWING_VERTICAL);  // Always available
 }
 
+void HaierClimate::set_supported_modes(const std::set<climate::ClimateMode> &modes)
+{
+  this->traits_.set_supported_modes(modes);
+  this->traits_.add_supported_mode(climate::CLIMATE_MODE_OFF);   // Always available
+  this->traits_.add_supported_mode(climate::CLIMATE_MODE_AUTO);  // Always available
+}
 
 haier_protocol::HandlerError HaierClimate::answer_preprocess(uint8_t requestMessageType, uint8_t expectedRequestMessageType, uint8_t answerMessageType, uint8_t expectedAnswerMessageType, ProtocolPhases expectedPhase)
 {

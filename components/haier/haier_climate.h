@@ -47,10 +47,12 @@ public:
   void set_outdoor_temperature_sensor(esphome::sensor::Sensor *sensor);
   void set_display_state(bool state);
   bool get_display_state() const;
+  void set_default_mode(const esphome::climate::ClimateMode mode) { this->default_mode_ = mode; };
   AirflowVerticalDirection get_vertical_airflow() const;
   void set_vertical_airflow(AirflowVerticalDirection direction);
   AirflowHorizontalDirection get_horizontal_airflow() const;
   void set_horizontal_airflow(AirflowHorizontalDirection direction);
+  void set_supported_modes(const std::set<esphome::climate::ClimateMode> &modes);
   void set_supported_swing_modes(const std::set<esphome::climate::ClimateSwingMode> &modes);
   virtual size_t available() noexcept { return esphome::uart::UARTDevice::available(); };
   virtual size_t read_array(uint8_t* data, size_t len) noexcept { return esphome::uart::UARTDevice::read_array(data, len) ? len : 0; };
@@ -124,6 +126,7 @@ protected:
   bool                                  forced_request_status_;
   bool                                  control_called_;
   bool                                  got_valid_outdoor_temp_;
+  esphome::climate::ClimateMode         default_mode_{esphome::climate::CLIMATE_MODE_AUTO};
   AirflowVerticalDirection              vertical_direction_;
   AirflowHorizontalDirection            horizontal_direction_;
   bool                                  hvac_hardware_info_available_;

@@ -6,6 +6,7 @@ from esphome.components import uart, sensor, climate, logger
 from esphome import automation
 from esphome.const import (
     CONF_BEEPER,
+    CONF_DEFAULT_MODE,
     CONF_ID,
     CONF_LEVEL,
     CONF_LOGGER,
@@ -13,6 +14,7 @@ from esphome.const import (
     CONF_MAX_TEMPERATURE,
     CONF_MIN_TEMPERATURE,
     CONF_VISUAL,
+    CONF_SUPPORTED_MODES,
     CONF_SUPPORTED_SWING_MODES,
     CONF_TEMPERATURE_STEP,
     CONF_UART_ID,
@@ -24,6 +26,7 @@ from esphome.const import (
 )
 from esphome.components.climate import (
     ClimateSwingMode,
+    ClimateMode
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,11 +67,24 @@ SUPPORTED_SWING_MODES_OPTIONS = {
     "BOTH":       ClimateSwingMode.CLIMATE_SWING_BOTH,
 }
 
+SUPPORTED_CLIMATE_MODES_OPTIONS = {
+    "OFF":      ClimateMode.CLIMATE_MODE_OFF,       # always available
+    "AUTO":     ClimateMode.CLIMATE_MODE_AUTO,      # always available 
+    "COOL":     ClimateMode.CLIMATE_MODE_COOL,
+    "HEAT":     ClimateMode.CLIMATE_MODE_HEAT,
+    "DRY":      ClimateMode.CLIMATE_MODE_DRY,
+    "FAN_ONLY": ClimateMode.CLIMATE_MODE_FAN_ONLY,
+}
+
+validate_climate_modes = cv.enum(SUPPORTED_CLIMATE_MODES_OPTIONS, upper=True)
+
 CONFIG_SCHEMA = cv.All(
     climate.CLIMATE_SCHEMA.extend(
         {
             cv.GenerateID(): cv.declare_id(HaierClimate),
             cv.Optional(CONF_WIFI_SIGNAL, default=True): cv.boolean,
+            cv.Optional(CONF_SUPPORTED_MODES): cv.ensure_list(validate_climate_modes),
+            cv.Optional(CONF_DEFAULT_MODE, default="AUTO") : validate_climate_modes, 
             cv.Optional(CONF_BEEPER, default=True): cv.boolean,
             cv.Optional(CONF_SUPPORTED_SWING_MODES, default=[
                 "OFF",
@@ -236,13 +252,13 @@ async def to_code(config):
             if min_temp < PROTOCOL_MIN_TEMPERATURE:
                 raise cv.Invalid(f"Configured visual minimum temperature {min_temp} is lower than supported by Haier protocol is {PROTOCOL_MIN_TEMPERATURE}")
         else:
-            visual_config[CONF_MIN_TEMPERATURE] = PROTOCOL_MIN_TEMPERATURE
+            config[CONF_VISUAL][CONF_MIN_TEMPERATURE] = PROTOCOL_MIN_TEMPERATURE
         if CONF_MAX_TEMPERATURE in visual_config:
             max_temp = visual_config[CONF_MAX_TEMPERATURE]
             if max_temp > PROTOCOL_MAX_TEMPERATURE:
                 raise cv.Invalid(f"Configured visual maximum temperature {max_temp} is higher than supported by Haier protocol is {PROTOCOL_MAX_TEMPERATURE}")
         else:
-            visual_config[CONF_MAX_TEMPERATURE] = PROTOCOL_MAX_TEMPERATURE
+            config[CONF_VISUAL][CONF_MAX_TEMPERATURE] = PROTOCOL_MAX_TEMPERATURE
         if CONF_TEMPERATURE_STEP in visual_config:
             temp_step = visual_config[CONF_TEMPERATURE_STEP]
             if temp_step < PROTOCOL_TEMPERATURE_STEP:
@@ -250,13 +266,13 @@ async def to_code(config):
             elif temp_step % 1 != 0:
                 raise cv.Invalid(f"Configured visual temperature step {temp_step} should be integer")
         else:
-            visual_config[CONF_TEMPERATURE_STEP] = PROTOCOL_TEMPERATURE_STEP
+            config[CONF_VISUAL][CONF_TEMPERATURE_STEP] = PROTOCOL_TEMPERATURE_STEP
     else:
-        visual_config[CONF_MAX_TEMPERATURE] = {
+        config[CONF_VISUAL][CONF_MAX_TEMPERATURE] = {
             CONF_MIN_TEMPERATURE: PROTOCOL_MIN_TEMPERATURE,
             CONF_MAX_TEMPERATURE: PROTOCOL_MAX_TEMPERATURE,
             CONF_TEMPERATURE_STEP: PROTOCOL_TEMPERATURE_STEP
-        }
+        }       
     uart_component = await cg.get_variable(config[CONF_UART_ID])
     var = cg.new_Pvariable(config[CONF_ID], uart_component)
     await cg.register_component(var, config)
@@ -268,6 +284,9 @@ async def to_code(config):
     if CONF_OUTDOOR_TEMPERATURE in config:
         sens = await sensor.new_sensor(config[CONF_OUTDOOR_TEMPERATURE])
         cg.add(var.set_outdoor_temperature_sensor(sens))
+    if CONF_SUPPORTED_MODES in config: 
+        cg.add(var.set_supported_modes(config[CONF_SUPPORTED_MODES]))
+    cg.add(var.set_default_mode(config[CONF_DEFAULT_MODE]))
     if CONF_SUPPORTED_SWING_MODES in config:
         cg.add(var.set_supported_swing_modes(config[CONF_SUPPORTED_SWING_MODES]))
     cg.add_library("pavlodn/HaierProtocol", "0.9.15")
