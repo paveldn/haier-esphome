@@ -6,7 +6,6 @@ from esphome.components import uart, sensor, climate, logger
 from esphome import automation
 from esphome.const import (
     CONF_BEEPER,
-    CONF_DEFAULT_MODE,
     CONF_ID,
     CONF_LEVEL,
     CONF_LOGGER,
@@ -84,16 +83,16 @@ CONFIG_SCHEMA = cv.All(
             cv.GenerateID(): cv.declare_id(HaierClimate),
             cv.Optional(CONF_WIFI_SIGNAL, default=True): cv.boolean,
             cv.Optional(CONF_SUPPORTED_MODES): cv.ensure_list(validate_climate_modes),
-            cv.Optional(CONF_DEFAULT_MODE, default="AUTO") : validate_climate_modes, 
             cv.Optional(CONF_BEEPER, default=True): cv.boolean,
-            cv.Optional(CONF_SUPPORTED_SWING_MODES, default=[
+            cv.Optional(
+                CONF_SUPPORTED_SWING_MODES,
+                default=[
                 "OFF",
                 "VERTICAL",
                 "HORIZONTAL",
                 "BOTH",                
-            ]): cv.ensure_list(
-                cv.enum(SUPPORTED_SWING_MODES_OPTIONS, upper=True)
-            ),
+                ],
+            ): cv.ensure_list(cv.enum(SUPPORTED_SWING_MODES_OPTIONS, upper=True)),
             cv.Optional(CONF_OUTDOOR_TEMPERATURE): sensor.sensor_schema(
                 unit_of_measurement=UNIT_CELSIUS,
                 icon=ICON_THERMOMETER,
@@ -177,7 +176,7 @@ async def haier_set_beeper_off_to_code(config, action_id, template_arg, args):
     var = cg.new_Pvariable(action_id, template_arg, paren)
     return var
 
-# Set vertiocal airflow direction action
+# Set vertical airflow direction action
 @automation.register_action(
     "climate.haier.set_vertical_airflow",
     VerticalAirflowAction,
@@ -193,11 +192,13 @@ async def haier_set_beeper_off_to_code(config, action_id, template_arg, args):
 async def haier_set_vertical_airflow_to_code(config, action_id, template_arg, args):
     paren = await cg.get_variable(config[CONF_ID])
     var = cg.new_Pvariable(action_id, template_arg, paren)
-    template_ = await cg.templatable(config[CONF_VERTICAL_AIRFLOW], args, AirflowVerticalDirection)
+    template_ = await cg.templatable(
+        config[CONF_VERTICAL_AIRFLOW], args, AirflowVerticalDirection
+    )
     cg.add(var.set_direction(template_))
     return var
 
-# Set vertiocal airflow direction action
+# Set horizontal airflow direction action
 @automation.register_action(
     "climate.haier.set_horizontal_airflow",
     HorizontalAirflowAction,
@@ -213,30 +214,36 @@ async def haier_set_vertical_airflow_to_code(config, action_id, template_arg, ar
 async def haier_set_horizontal_airflow_to_code(config, action_id, template_arg, args):
     paren = await cg.get_variable(config[CONF_ID])
     var = cg.new_Pvariable(action_id, template_arg, paren)
-    template_ = await cg.templatable(config[CONF_HORIZONTAL_AIRFLOW], args, AirflowHorizontalDirection)
+    template_ = await cg.templatable(
+        config[CONF_HORIZONTAL_AIRFLOW], args, AirflowHorizontalDirection
+    )
     cg.add(var.set_direction(template_))
     return var
 
 def _final_validate(config):
     full_config = fv.full_config.get()
     if CONF_LOGGER in full_config:
-        _level = 'NONE'
+        _level = "NONE"
         logger_config = full_config[CONF_LOGGER]
         if CONF_LOGS in logger_config:
-            if 'haier.protocol' in logger_config[CONF_LOGS]:
-                _level = logger_config[CONF_LOGS]['haier.protocol']
+            if "haier.protocol" in logger_config[CONF_LOGS]:
+                _level = logger_config[CONF_LOGS]["haier.protocol"]
             else:
                 _level = logger_config[CONF_LEVEL]                
         _LOGGER.info("Detected log level for Haier protocol: %s", _level)
         if _level not in logger.LOG_LEVEL_SEVERITY:
-            raise cv.Invalid(f"Unknown log level for Haier protocol")
+            raise cv.Invalid("Unknown log level for Haier protocol")
         _severity = logger.LOG_LEVEL_SEVERITY.index(_level)
         cg.add_build_flag(f"-DHAIER_LOG_LEVEL={_severity}")
     else:
-        _LOGGER.warn("No logger component found, logging for Haier protocol is disabled")
+        _LOGGER.info(
+            "No logger component found, logging for Haier protocol is disabled"
+        )
         cg.add_build_flag("-DHAIER_LOG_LEVEL=0")
     if config[CONF_WIFI_SIGNAL] and CONF_WIFI not in full_config:
-        raise cv.Invalid(f"No WiFi configured, if you want to use haier climate without WiFi add {CONF_WIFI_SIGNAL}: false to climate configuration")
+        raise cv.Invalid(
+            f"No WiFi configured, if you want to use haier climate without WiFi add {CONF_WIFI_SIGNAL}: false to climate configuration"
+        )
     return config
         
 
@@ -250,28 +257,36 @@ async def to_code(config):
         if CONF_MIN_TEMPERATURE in visual_config:
             min_temp = visual_config[CONF_MIN_TEMPERATURE]
             if min_temp < PROTOCOL_MIN_TEMPERATURE:
-                raise cv.Invalid(f"Configured visual minimum temperature {min_temp} is lower than supported by Haier protocol is {PROTOCOL_MIN_TEMPERATURE}")
+                raise cv.Invalid(
+                    f"Configured visual minimum temperature {min_temp} is lower than supported by Haier protocol is {PROTOCOL_MIN_TEMPERATURE}"
+                )
         else:
             config[CONF_VISUAL][CONF_MIN_TEMPERATURE] = PROTOCOL_MIN_TEMPERATURE
         if CONF_MAX_TEMPERATURE in visual_config:
             max_temp = visual_config[CONF_MAX_TEMPERATURE]
             if max_temp > PROTOCOL_MAX_TEMPERATURE:
-                raise cv.Invalid(f"Configured visual maximum temperature {max_temp} is higher than supported by Haier protocol is {PROTOCOL_MAX_TEMPERATURE}")
+                raise cv.Invalid(
+                    f"Configured visual maximum temperature {max_temp} is higher than supported by Haier protocol is {PROTOCOL_MAX_TEMPERATURE}"
+                )
         else:
             config[CONF_VISUAL][CONF_MAX_TEMPERATURE] = PROTOCOL_MAX_TEMPERATURE
         if CONF_TEMPERATURE_STEP in visual_config:
             temp_step = visual_config[CONF_TEMPERATURE_STEP]
             if temp_step < PROTOCOL_TEMPERATURE_STEP:
-                raise cv.Invalid(f"Configured visual temperature step {temp_step} is too small, the minimum step allowed by Haier protocol is {PROTOCOL_TEMPERATURE_STEP}")
-            elif temp_step % 1 != 0:
-                raise cv.Invalid(f"Configured visual temperature step {temp_step} should be integer")
+                raise cv.Invalid(
+                    f"Configured visual temperature step {temp_step} is too small, the minimum step allowed by Haier protocol is {PROTOCOL_TEMPERATURE_STEP}"
+                )
+            if temp_step % 1 != 0:
+                raise cv.Invalid(
+                    f"Configured visual temperature step {temp_step} should be integer"
+                )
         else:
             config[CONF_VISUAL][CONF_TEMPERATURE_STEP] = PROTOCOL_TEMPERATURE_STEP
     else:
         config[CONF_VISUAL][CONF_MAX_TEMPERATURE] = {
             CONF_MIN_TEMPERATURE: PROTOCOL_MIN_TEMPERATURE,
             CONF_MAX_TEMPERATURE: PROTOCOL_MAX_TEMPERATURE,
-            CONF_TEMPERATURE_STEP: PROTOCOL_TEMPERATURE_STEP
+            CONF_TEMPERATURE_STEP: PROTOCOL_TEMPERATURE_STEP,
         }       
     uart_component = await cg.get_variable(config[CONF_UART_ID])
     var = cg.new_Pvariable(config[CONF_ID], uart_component)
@@ -286,7 +301,6 @@ async def to_code(config):
         cg.add(var.set_outdoor_temperature_sensor(sens))
     if CONF_SUPPORTED_MODES in config: 
         cg.add(var.set_supported_modes(config[CONF_SUPPORTED_MODES]))
-    cg.add(var.set_default_mode(config[CONF_DEFAULT_MODE]))
     if CONF_SUPPORTED_SWING_MODES in config:
         cg.add(var.set_supported_swing_modes(config[CONF_SUPPORTED_SWING_MODES]))
     cg.add_library("pavlodn/HaierProtocol", "0.9.15")
