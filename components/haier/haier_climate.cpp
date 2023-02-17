@@ -832,6 +832,23 @@ haier_protocol::HandlerError HaierClimate::process_status_message_(const uint8_t
     should_publish = should_publish || (!old_fan_mode.has_value()) || (old_fan_mode.value() != fan_mode.value());
   }
   {
+    // Display status
+    // should be before "Climate mode" because it is changing this->mode
+    if (packet.control.ac_power != 0) { 
+      // if AC is off display status always ON so process it only when AC is on
+      bool disp_status = packet.control.display_status != 0;
+      if (disp_status != this->display_status_) { 
+        // Do something only if display status changed
+        if (this->mode == CLIMATE_MODE_OFF) {
+          // AC just turned on from remote need to turn off display
+          this->force_send_control_ = true;
+        } else {
+            this->display_status_ = disp_status;
+        }
+      }
+    }
+  }
+  {
     // Climate mode
     ClimateMode old_mode = this->mode;
     if (packet.control.ac_power == 0) {
@@ -875,10 +892,6 @@ haier_protocol::HandlerError HaierClimate::process_status_message_(const uint8_t
     }
     }
     should_publish = should_publish || (old_swing_mode != this->swing_mode);
-  }
-  {
-	  // Display status
-	  this->display_status_ = packet.control.display_status != 0;
   }
   this->last_valid_status_timestamp_ = std::chrono::steady_clock::now();
   if (this->forced_publish_ || should_publish) {
