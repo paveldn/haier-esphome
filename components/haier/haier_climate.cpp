@@ -876,6 +876,10 @@ haier_protocol::HandlerError HaierClimate::process_status_message_(const uint8_t
     }
     should_publish = should_publish || (old_swing_mode != this->swing_mode);
   }
+  {
+	  // Display status
+	  this->display_status_ = packet.control.display_status != 0;
+  }
   this->last_valid_status_timestamp_ = std::chrono::steady_clock::now();
   if (this->forced_publish_ || should_publish) {
 #if (HAIER_LOG_LEVEL > 4)
