@@ -303,4 +303,4 @@ async def to_code(config):
         cg.add(var.set_supported_modes(config[CONF_SUPPORTED_MODES]))
     if CONF_SUPPORTED_SWING_MODES in config:
         cg.add(var.set_supported_swing_modes(config[CONF_SUPPORTED_SWING_MODES]))
-    cg.add_library("pavlodn/HaierProtocol", "0.9.15")
+    cg.add_library("pavlodn/HaierProtocol", "0.9.18")
