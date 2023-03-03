@@ -14,6 +14,7 @@ ota:
 climate:
   - platform: haier
     id: ${device_id}
+    protocol: hOn
     name: ${device_name} 
     uart_id: ${uart_id}
     wifi_signal: true           # Optional, default true, enables WiFI signal transmission from ESP to AC
