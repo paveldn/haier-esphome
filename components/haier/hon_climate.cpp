@@ -55,9 +55,14 @@ HonClimate::HonClimate(UARTComponent *parent)
       use_crc_(hvac_functions_[2]),
       active_alarms_{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
       outdoor_sensor_(nullptr) {
+  this->traits_.set_supported_presets({
+    climate::CLIMATE_PRESET_NONE,
+    climate::CLIMATE_PRESET_ECO,
+    climate::CLIMATE_PRESET_BOOST,
+    climate::CLIMATE_PRESET_SLEEP,
+  });
   this->fan_mode_speed_ = (uint8_t) hon_protocol::FanMode::FAN_MID;
   this->other_modes_fan_speed_ = (uint8_t) hon_protocol::FanMode::FAN_AUTO;
-  this->traits_.set_supports_current_temperature(true);
 }
 
 HonClimate::~HonClimate() {}

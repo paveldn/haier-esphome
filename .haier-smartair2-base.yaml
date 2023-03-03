@@ -1,0 +1,51 @@
+external_components:
+  source:
+    type: local
+    path: ./components
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+    
+api:
+
+ota:
+
+climate:
+  - platform: haier
+    id: ${device_id}
+    protocol: smartAir2
+    name: ${device_name} 
+    uart_id: ${uart_id}
+    visual:                     # Optional, you can use it to limit min and max temperatures in UI (not working for remote!)
+      min_temperature: 16 °C
+      max_temperature: 30 °C
+      temperature_step: 1 °C
+    supported_modes:            # Optional, can be used to disable some modes if you don't need them
+    - 'OFF'                     # always available
+    - AUTO                      # always available
+    - COOL
+    - HEAT
+    - DRY
+    - FAN_ONLY
+    supported_swing_modes:      # Optional, can be used to disable some swing modes if your AC does not support it
+    - 'OFF'                     # always available
+    - VERTICAL                  # always available
+    - HORIZONTAL
+    - BOTH
+
+switch:
+  - platform: template
+    id: ${device_id}_display_switch
+    name: ${device_name} display
+    icon: mdi:led-on
+    entity_category: config
+    restore_state: yes
+    lambda: |-
+      return id(${device_id}).get_display_state();
+    turn_on_action:
+      climate.haier.display_on: ${device_id}
+    turn_off_action:
+      climate.haier.display_off: ${device_id}
+  - platform: restart
+    name: ${device_name} restart
