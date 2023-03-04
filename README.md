@@ -55,7 +55,7 @@ climate:
 
 - **id (Optional, [ID](https://esphome.io/guides/configuration-types.html#config-id)):** Manually specify the ID used for code generation
 - **uart_id (Optional, [ID](https://esphome.io/guides/configuration-types.html#config-id)):** ID of the UART port to communicate with AC
-- **protocol (Required, list):** Defines protocol of communication with AC. Possible values: hon or smartair2
+- **protocol (Required, string):** Defines protocol of communication with AC. Possible values: hon or smartair2
 - **name (Required, string):** The name of the climate device
 - **wifi_signal (Optional, boolean):** If true - send wifi signal level to AC
 - **beeper (Optional, boolean):** (supported only by hOn) Can be used to disable beeping on commands from AC
