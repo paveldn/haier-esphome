@@ -149,42 +149,42 @@ haier_protocol::HaierMessage Smartair2Climate::get_control_message_() {
     climate_control = this->hvac_settings_;
     if (climate_control.mode.has_value()) {
       switch (climate_control.mode.value()) {
-		case CLIMATE_MODE_OFF:
-			out_data->ac_power = 0;
-			break;
+		  case CLIMATE_MODE_OFF:
+		  	out_data->ac_power = 0;
+		  	break;
 
-		case CLIMATE_MODE_AUTO:
-			out_data->ac_power = 1;
-			out_data->ac_mode = (uint8_t) smartair2_protocol::ConditioningMode::AUTO;
-			out_data->fan_mode = other_modes_fan_speed_;
-			break;
+		  case CLIMATE_MODE_AUTO:
+		  	out_data->ac_power = 1;
+		  	out_data->ac_mode = (uint8_t) smartair2_protocol::ConditioningMode::AUTO;
+		  	out_data->fan_mode = this->other_modes_fan_speed_;
+		  	break;
 
-		case CLIMATE_MODE_HEAT:
-			out_data->ac_power = 1;
-			out_data->ac_mode = (uint8_t) smartair2_protocol::ConditioningMode::HEAT;
-			out_data->fan_mode = other_modes_fan_speed_;
-			break;
+		  case CLIMATE_MODE_HEAT:
+		  	out_data->ac_power = 1;
+		  	out_data->ac_mode = (uint8_t) smartair2_protocol::ConditioningMode::HEAT;
+		  	out_data->fan_mode = this->other_modes_fan_speed_;
+		  	break;
 
-		case CLIMATE_MODE_DRY:
-			out_data->ac_power = 1;
-			out_data->ac_mode = (uint8_t) smartair2_protocol::ConditioningMode::DRY;
-			out_data->fan_mode = other_modes_fan_speed_;
-			break;
+		  case CLIMATE_MODE_DRY:
+		  	out_data->ac_power = 1;
+		  	out_data->ac_mode = (uint8_t) smartair2_protocol::ConditioningMode::DRY;
+		  	out_data->fan_mode = this->other_modes_fan_speed_;
+		  	break;
 
-		case CLIMATE_MODE_FAN_ONLY:
-			out_data->ac_power = 1;
-			out_data->ac_mode = (uint8_t) smartair2_protocol::ConditioningMode::FAN;
-			out_data->fan_mode = fan_mode_speed_;    // Auto doesn't work in fan only mode
-			break;
+		  case CLIMATE_MODE_FAN_ONLY:
+		  	out_data->ac_power = 1;
+		  	out_data->ac_mode = (uint8_t) smartair2_protocol::ConditioningMode::FAN;
+		  	out_data->fan_mode = this->fan_mode_speed_;    // Auto doesn't work in fan only mode
+		  	break;
 
-		case CLIMATE_MODE_COOL:
-			out_data->ac_power = 1;
-			out_data->ac_mode = (uint8_t) smartair2_protocol::ConditioningMode::COOL;
-			out_data->fan_mode = other_modes_fan_speed_;
-			break;
-		default:
-			ESP_LOGE("Control", "Unsupported climate mode");
-			break;
+		  case CLIMATE_MODE_COOL:
+		  	out_data->ac_power = 1;
+		  	out_data->ac_mode = (uint8_t) smartair2_protocol::ConditioningMode::COOL;
+		  	out_data->fan_mode = this->other_modes_fan_speed_;
+		  	break;
+		  default:
+		  	ESP_LOGE("Control", "Unsupported climate mode");
+		  	break;
       }
     }
     //Set fan speed, if we are in fan mode, reject auto in fan mode
@@ -266,13 +266,19 @@ haier_protocol::HandlerError Smartair2Climate::process_status_message_(const uin
     optional<ClimateFanMode> old_fan_mode = this->fan_mode;
     //remember the fan speed we last had for climate vs fan
     if (packet.control.ac_mode == (uint8_t) smartair2_protocol::ConditioningMode::FAN) {
-      this->fan_mode_speed_ = packet.control.fan_mode;
+      if (packet.control.fan_mode != (uint8_t)smartair2_protocol::FanMode::FAN_AUTO)
+        this->fan_mode_speed_ = packet.control.fan_mode;
     } else {
       this->other_modes_fan_speed_ = packet.control.fan_mode;
     }
     switch (packet.control.fan_mode) {
     case (uint8_t)smartair2_protocol::FanMode::FAN_AUTO:
-      this->fan_mode = CLIMATE_FAN_AUTO;
+      // Somtimes AC reports in fan only mode that fan speed is auto 
+      // but never accept this value back   
+      if (packet.control.ac_mode == (uint8_t) smartair2_protocol::ConditioningMode::FAN)
+        this->fan_mode = CLIMATE_FAN_AUTO;
+      else
+        should_publish = true;
       break;
     case (uint8_t)smartair2_protocol::FanMode::FAN_MID:
       this->fan_mode = CLIMATE_FAN_MEDIUM;
