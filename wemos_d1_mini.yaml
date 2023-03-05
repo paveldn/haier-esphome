@@ -27,4 +27,4 @@ wifi:
     
 web_server:
 
-<<: !include .haier-hon-base.yaml
+<<: !include .haier-base.yaml

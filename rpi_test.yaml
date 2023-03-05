@@ -23,4 +23,4 @@ uart:
   rx_pin: 16
   id: ${uart_id}  
 
-<<: !include .haier-hon-base.yaml
+<<: !include .haier-base.yaml

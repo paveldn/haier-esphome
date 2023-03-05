@@ -19,13 +19,13 @@ enum class AirflowHorizontalDirection : uint8_t {
   RIGHT = 2,
 };
 
-class HonClimate : public HaierClimateBase {
+class HaierClimate : public HaierClimateBase {
  public:
-  HonClimate() = delete;
-  HonClimate(const HonClimate &) = delete;
-  HonClimate &operator=(const HonClimate &) = delete;
-  HonClimate(esphome::uart::UARTComponent *parent);
-  ~HonClimate();
+  HaierClimate() = delete;
+  HaierClimate(const HaierClimate &) = delete;
+  HaierClimate &operator=(const HaierClimate &) = delete;
+  HaierClimate(esphome::uart::UARTComponent *parent);
+  ~HaierClimate();
   void dump_config() override;
   void set_beeper_state(bool state);
   bool get_beeper_state() const;

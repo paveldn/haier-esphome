@@ -172,6 +172,8 @@ void HaierClimateBase::setup() {
 
 void HaierClimateBase::dump_config() {
   LOG_CLIMATE("", "Haier Climate", this);
+  // TODO: Add protocol name value print
+  ESP_LOGCONFIG(TAG, "  AC protocol: %s", "Unknown");
   ESP_LOGCONFIG(TAG, "  Device communication status: %s", (this->protocol_phase_ >= ProtocolPhases::IDLE) ?  "established" : "none");
 }
 
