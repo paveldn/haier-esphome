@@ -1,0 +1,23 @@
+substitutions:
+  device_name: Haier AC
+  device_id: haier_climate
+  uart_id: ac_port 
+
+esphome:
+  name: haier
+  name_add_mac_suffix: true
+
+esp8266:
+  board: esp01_1m
+
+uart:
+  baud_rate: 9600
+  tx_pin: 1
+  rx_pin: 3
+  id: ${uart_id} 
+
+logger:
+  level: VERBOSE
+  baud_rate: 0
+
+<<: !include .haier-smartair2-base.yaml

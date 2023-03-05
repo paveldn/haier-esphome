@@ -112,9 +112,8 @@ void Smartair2Climate::process_phase_(std::chrono::steady_clock::time_point now)
         this->forced_request_status_ = true;
         this->forced_publish_ = true;
         this->set_phase_(ProtocolPhases::IDLE);
-      } else if (this->can_send_message() && this->is_control_message_interval_exceeded_(now))  // Using CONTROL_MESSAGES_INTERVAL_MS to speedup requests
-      {
-        haier_protocol::HaierMessage control_message = get_control_message_();
+      } else if (this->can_send_message() && this->is_control_message_interval_exceeded_(now)) {  // Using CONTROL_MESSAGES_INTERVAL_MS to speedup requests
+        haier_protocol::HaierMessage control_message = this->get_control_message_();
         this->send_message_(control_message, false);
         ESP_LOGI(TAG, "Control packet sent");
         this->set_phase_(ProtocolPhases::WAITING_CONTROL_ANSWER);
@@ -142,9 +141,7 @@ haier_protocol::HaierMessage Smartair2Climate::get_control_message_() {
   uint8_t control_out_buffer[sizeof(smartair2_protocol::HaierPacketControl)];
   memcpy(control_out_buffer, this->last_status_message_.get(), sizeof(smartair2_protocol::HaierPacketControl));
   smartair2_protocol::HaierPacketControl *out_data = (smartair2_protocol::HaierPacketControl *) control_out_buffer;
-  bool has_hvac_settings = false;
   if (this->hvac_settings_.valid) {
-    has_hvac_settings = true;
     HvacSettings climate_control;
     climate_control = this->hvac_settings_;
     if (climate_control.mode.has_value()) {
@@ -243,11 +240,11 @@ haier_protocol::HaierMessage Smartair2Climate::get_control_message_() {
                                       control_out_buffer, sizeof(smartair2_protocol::HaierPacketControl));
 }
 
-haier_protocol::HandlerError Smartair2Climate::process_status_message_(const uint8_t *packetBuffer, uint8_t size) {
+haier_protocol::HandlerError Smartair2Climate::process_status_message_(const uint8_t *packet_buffer, uint8_t size) {
   if (size < sizeof(smartair2_protocol::HaierStatus))
     return haier_protocol::HandlerError::WRONG_MESSAGE_STRUCTURE;
   smartair2_protocol::HaierStatus packet;
-  memcpy(&packet, packetBuffer, size);
+  memcpy(&packet, packet_buffer, size);
   bool should_publish = false;
   {
     // Target temperature

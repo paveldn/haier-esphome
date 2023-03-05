@@ -379,7 +379,7 @@ void HonClimate::process_phase_(std::chrono::steady_clock::time_point now) {
         this->set_phase_(ProtocolPhases::IDLE);
       } else if (this->can_send_message() &&  this->is_control_message_interval_exceeded_(now))
       {
-        haier_protocol::HaierMessage control_message = get_control_message_();
+        haier_protocol::HaierMessage control_message = this->get_control_message_();
         this->send_message_(control_message, this->use_crc_);
         ESP_LOGI(TAG, "Control packet sent");
         this->set_phase_(ProtocolPhases::WAITING_CONTROL_ANSWER);
