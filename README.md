@@ -25,7 +25,7 @@ uart:
 
 climate:
   - platform: haier
-    id: ac_port
+    id: haier_ac
     protocol: hOn
     name: Haier AC 
     uart_id: ac_port
