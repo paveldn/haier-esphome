@@ -235,7 +235,7 @@ haier_protocol::HaierMessage Smartair2Climate::get_control_message_() {
           climate_control.target_temperature.value() - 16;  // set the temperature at our offset, subtract 16.
     }
   }
-  out_data->display_status = this->display_status_ ? 1 : 0;
+  out_data->display_status = this->display_status_ ? 0 : 1;
   return haier_protocol::HaierMessage((uint8_t) smartair2_protocol::FrameType::CONTROL, 0x4D5F,
                                       control_out_buffer, sizeof(smartair2_protocol::HaierPacketControl));
 }
