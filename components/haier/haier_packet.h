@@ -37,6 +37,59 @@ enum class SpecialMode : uint8_t { NONE = 0x00, ELDERLY = 0x01, CHILDREN = 0x02,
 
 enum class FanMode : uint8_t { FAN_HIGH = 0x01, FAN_MID = 0x02, FAN_LOW = 0x03, FAN_AUTO = 0x05 };
 
+const std::string ERROR_MESSAGES[] = {"Alarm clear",
+                                      "Outdoor module failure",
+                                      "Faulty outdoor defrost sensor",
+                                      "Outdoor compressor discharge sensor fault",
+                                      "Outdoor EEPROM Abnormal",
+                                      "Indoor coil sensor failure",
+                                      "Indoor and outdoor communication failure",
+                                      "Power supply overvoltage protection",
+                                      "Communication failure between panel and internal unit",
+                                      "Outdoor compressor overheating protection",
+                                      "Abnormal outdoor environment sensor",
+                                      "full water protection",
+                                      "Indoor EEPROM fault",
+                                      "Outdoor return air sensor failure",
+                                      "CBD and module communication failure",
+                                      "Indoor DC fan failure",
+                                      "Outdoor DC fan failure",
+                                      "Door switch failure",
+                                      "Tips for cleaning the dust net",
+                                      "Water shortage protection",
+                                      "Humidity sensor failure",
+                                      "Indoor temperature sensor failure",
+                                      "Robot limit fault",
+                                      "Indoor PM2.5 sensor failure",
+                                      "Outdoor PM2.5 sensor failure",
+                                      "Indoor heating overload/high load alarm",
+                                      "Outdoor AC current protection",
+                                      "The outdoor compressor is running abnormally",
+                                      "Outdoor DC current protection",
+                                      "Outdoor no load fault",
+                                      "Abnormal CT current",
+                                      "Indoor refrigeration freeze protection",
+                                      "High and low pressure protection",
+                                      "Compressor return air temperature is too high",
+                                      "Faulty outdoor evaporation sensor",
+                                      "Outdoor cooling overload",
+                                      "Water pump drainage failure",
+                                      "Three-phase power failure",
+                                      "Four-way valve failure",
+                                      "External alarm/rake switch failure",
+                                      "Temperature cut-off protection alarm",
+                                      "Idiosyncratic operation failure",
+                                      "Electronic expansion valve failure",
+                                      "Dual heat source sensor Tw failure",
+                                      "Communication failure with the wired controller",
+                                      "Indoor unit address duplicate fault",
+                                      "50Hz zero crossing fault",
+                                      "Outdoor unit failure",
+                                      "Formaldehyde sensor failure",
+                                      "VOC sensor failure",
+                                      "CO2 sensor failure",
+                                      "Firewall failure"};
+
 struct HaierPacketControl {
   // Control bytes starts here
   /* 10 */ uint8_t set_point;                // Target temperature with 16°C offset (0x00 = 16°C)
@@ -183,6 +236,7 @@ enum class FrameType : uint8_t {
   GET_MANAGEMENT_INFORMATION_RESPONSE =
       0xFD,           // Response to management information request (module <- device, required)
   WAKE_UP = 0xFE,     // Request to wake up (module <-> device, optional)
+  NO_COMMAND = 0xFF,  // Indicate that there is no command supplied
 };
 
 enum class SubcomandsControl : uint16_t {
