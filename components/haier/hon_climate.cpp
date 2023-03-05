@@ -449,9 +449,6 @@ haier_protocol::HaierMessage HonClimate::get_control_message_() {
           out_data->ac_power = 1;
           out_data->ac_mode = (uint8_t) hon_protocol::ConditioningMode::FAN;
           out_data->fan_mode = this->fan_mode_speed_;  // Auto doesn't work in fan only mode
-          // Disabling boost and eco mode for Fan only
-          out_data->quiet_mode = 0;
-          out_data->fast_mode = 0;
           break;
         case CLIMATE_MODE_COOL:
           out_data->ac_power = 1;
@@ -509,13 +506,7 @@ haier_protocol::HaierMessage HonClimate::get_control_message_() {
       out_data->set_point =
           climate_control.target_temperature.value() - 16;  // set the temperature at our offset, subtract 16.
     }
-    if (out_data->ac_power == 0)
-    {
-      // If AC is off - no presets alowed
-      out_data->quiet_mode = 0;
-      out_data->fast_mode = 0;
-      out_data->sleep_mode = 0;
-    } else if (climate_control.preset.has_value()) {
+    if (climate_control.preset.has_value()) {
       switch (climate_control.preset.value()) {
         case CLIMATE_PRESET_NONE:
           out_data->quiet_mode = 0;
@@ -523,15 +514,13 @@ haier_protocol::HaierMessage HonClimate::get_control_message_() {
           out_data->sleep_mode = 0;
           break;
         case CLIMATE_PRESET_ECO:
-          // Eco is not supported in Fan only mode
-          out_data->quiet_mode = (this->mode != CLIMATE_MODE_FAN_ONLY) ? 1 : 0;
+          out_data->quiet_mode = 1;
           out_data->fast_mode = 0;
           out_data->sleep_mode = 0;
           break;
         case CLIMATE_PRESET_BOOST:
           out_data->quiet_mode = 0;
-          // Boost is not supported in Fan only mode
-          out_data->fast_mode = (this->mode != CLIMATE_MODE_FAN_ONLY) ? 1 : 0;
+          out_data->fast_mode = 1;
           out_data->sleep_mode = 0;
           break;
         case CLIMATE_PRESET_AWAY:
@@ -611,19 +600,13 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
     optional<ClimateFanMode> old_fan_mode = this->fan_mode;
     // remember the fan speed we last had for climate vs fan
     if (packet.control.ac_mode == (uint8_t) hon_protocol::ConditioningMode::FAN) {
-      if (packet.control.fan_mode != (uint8_t) hon_protocol::FanMode::FAN_AUTO)
-        this->fan_mode_speed_ = packet.control.fan_mode;
+      this->fan_mode_speed_ = packet.control.fan_mode;
     } else {
       this->other_modes_fan_speed_ = packet.control.fan_mode;
     }
     switch (packet.control.fan_mode) {
       case (uint8_t) hon_protocol::FanMode::FAN_AUTO:
-        if (packet.control.ac_mode != (uint8_t) hon_protocol::ConditioningMode::FAN)
-          this->fan_mode = CLIMATE_FAN_AUTO;
-          else {
-            // Shouldn't accept fan speed auto in fan-only mode even if AC reports it
-            ESP_LOGI(TAG, "Fan speed Auto is not supported in Fan only AC mode, ignoring");
-          }
+        this->fan_mode = CLIMATE_FAN_AUTO;
         break;
       case (uint8_t) hon_protocol::FanMode::FAN_MID:
         this->fan_mode = CLIMATE_FAN_MEDIUM;
@@ -708,7 +691,8 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
 #if (HAIER_LOG_LEVEL > 4)
     ESP_LOGV(TAG, "Publish delay: %lld ms",
              std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() -
-                _publish_start).count());
+                                                                   _publish_start)
+                 .count());
 #endif
     this->forced_publish_ = false;
   }
