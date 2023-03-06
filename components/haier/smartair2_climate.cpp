@@ -17,12 +17,10 @@ namespace haier {
 const char TAG[] = "haier.climate";
 
 Smartair2Climate::Smartair2Climate(UARTComponent *parent)
-    : HaierClimateBase(parent),
-      last_status_message_(new uint8_t[sizeof(smartair2_protocol::HaierPacketControl)]) {
-}
+    : HaierClimateBase(parent), last_status_message_(new uint8_t[sizeof(smartair2_protocol::HaierPacketControl)]) {}
 
 haier_protocol::HandlerError Smartair2Climate::status_handler_(uint8_t request_type, uint8_t message_type,
-                                                           const uint8_t *data, size_t data_size) {
+                                                               const uint8_t *data, size_t data_size) {
   haier_protocol::HandlerError result =
       this->answer_preprocess_(request_type, (uint8_t) smartair2_protocol::FrameType::CONTROL, message_type,
                                (uint8_t) smartair2_protocol::FrameType::STATUS, ProtocolPhases::UNKNOWN);
@@ -59,7 +57,7 @@ haier_protocol::HandlerError Smartair2Climate::status_handler_(uint8_t request_t
   }
 }
 
-void Smartair2Climate::set_answers_handlers_() {
+void Smartair2Climate::set_answers_handlers() {
   this->haier_protocol_.set_answer_handler(
       (uint8_t)(smartair2_protocol::FrameType::CONTROL),
       std::bind(&Smartair2Climate::status_handler_, this, std::placeholders::_1, std::placeholders::_2,
@@ -71,7 +69,7 @@ void Smartair2Climate::dump_config() {
   ESP_LOGCONFIG(TAG, "  Protocol version: smartAir2");
 }
 
-void Smartair2Climate::process_phase_(std::chrono::steady_clock::time_point now) {
+void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) {
   switch (this->protocol_phase_) {
     case ProtocolPhases::SENDING_INIT_1:
       this->set_phase_(ProtocolPhases::SENDING_FIRST_STATUS_REQUEST);
@@ -90,13 +88,21 @@ void Smartair2Climate::process_phase_(std::chrono::steady_clock::time_point now)
       this->set_phase_(ProtocolPhases::IDLE);
       break;
     case ProtocolPhases::SENDING_FIRST_STATUS_REQUEST:
-    case ProtocolPhases::SENDING_STATUS_REQUEST:
-      if (this->can_send_message() && this->is_message_interval_exceeded_(now)) {
-        static const haier_protocol::HaierMessage STATUS_REQUEST(
-            (uint8_t) smartair2_protocol::FrameType::CONTROL, 0x4D01);
+      if (this->can_send_message() && this->is_protocol_initialisation_interval_exceeded_(now)) {
+        static const haier_protocol::HaierMessage STATUS_REQUEST((uint8_t) smartair2_protocol::FrameType::CONTROL,
+                                                                 0x4D01);
         this->send_message_(STATUS_REQUEST, false);
         this->last_status_request_ = now;
-        this->set_phase_((ProtocolPhases)((uint8_t) this->protocol_phase_ + 1));
+        this->set_phase_(ProtocolPhases::WAITING_FIRST_STATUS_ANSWER);
+      }
+      break;
+    case ProtocolPhases::SENDING_STATUS_REQUEST:
+      if (this->can_send_message() && this->is_message_interval_exceeded_(now)) {
+        static const haier_protocol::HaierMessage STATUS_REQUEST((uint8_t) smartair2_protocol::FrameType::CONTROL,
+                                                                 0x4D01);
+        this->send_message_(STATUS_REQUEST, false);
+        this->last_status_request_ = now;
+        this->set_phase_(ProtocolPhases::WAITING_STATUS_ANSWER);
       }
       break;
     case ProtocolPhases::SENDING_CONTROL:
@@ -112,8 +118,10 @@ void Smartair2Climate::process_phase_(std::chrono::steady_clock::time_point now)
         this->forced_request_status_ = true;
         this->forced_publish_ = true;
         this->set_phase_(ProtocolPhases::IDLE);
-      } else if (this->can_send_message() && this->is_control_message_interval_exceeded_(now)) {  // Using CONTROL_MESSAGES_INTERVAL_MS to speedup requests
-        haier_protocol::HaierMessage control_message = this->get_control_message_();
+      } else if (this->can_send_message() && this->is_control_message_interval_exceeded_(
+                                                 now))  // Using CONTROL_MESSAGES_INTERVAL_MS to speedup requests
+      {
+        haier_protocol::HaierMessage control_message = get_control_message();
         this->send_message_(control_message, false);
         ESP_LOGI(TAG, "Control packet sent");
         this->set_phase_(ProtocolPhases::WAITING_CONTROL_ANSWER);
@@ -126,18 +134,18 @@ void Smartair2Climate::process_phase_(std::chrono::steady_clock::time_point now)
     case ProtocolPhases::IDLE: {
       if (this->forced_request_status_ || this->is_status_request_interval_exceeded_(now)) {
         this->set_phase_(ProtocolPhases::SENDING_STATUS_REQUEST);
-          this->forced_request_status_ = false;
-        }
+        this->forced_request_status_ = false;
+      }
     } break;
     default:
       // Shouldn't get here
-      ESP_LOGE(TAG, "Wrong protocol handler state: %d, resetting communication", (int)this->protocol_phase_);
+      ESP_LOGE(TAG, "Wrong protocol handler state: %d, resetting communication", (int) this->protocol_phase_);
       this->set_phase_(ProtocolPhases::SENDING_FIRST_STATUS_REQUEST);
       break;
   }
 }
 
-haier_protocol::HaierMessage Smartair2Climate::get_control_message_() {
+haier_protocol::HaierMessage Smartair2Climate::get_control_message() {
   uint8_t control_out_buffer[sizeof(smartair2_protocol::HaierPacketControl)];
   memcpy(control_out_buffer, this->last_status_message_.get(), sizeof(smartair2_protocol::HaierPacketControl));
   smartair2_protocol::HaierPacketControl *out_data = (smartair2_protocol::HaierPacketControl *) control_out_buffer;
@@ -146,88 +154,88 @@ haier_protocol::HaierMessage Smartair2Climate::get_control_message_() {
     climate_control = this->hvac_settings_;
     if (climate_control.mode.has_value()) {
       switch (climate_control.mode.value()) {
-		  case CLIMATE_MODE_OFF:
-		  	out_data->ac_power = 0;
-		  	break;
+        case CLIMATE_MODE_OFF:
+          out_data->ac_power = 0;
+          break;
 
-		  case CLIMATE_MODE_AUTO:
-		  	out_data->ac_power = 1;
-		  	out_data->ac_mode = (uint8_t) smartair2_protocol::ConditioningMode::AUTO;
-		  	out_data->fan_mode = this->other_modes_fan_speed_;
-		  	break;
+        case CLIMATE_MODE_AUTO:
+          out_data->ac_power = 1;
+          out_data->ac_mode = (uint8_t) smartair2_protocol::ConditioningMode::AUTO;
+          out_data->fan_mode = this->other_modes_fan_speed_;
+          break;
 
-		  case CLIMATE_MODE_HEAT:
-		  	out_data->ac_power = 1;
-		  	out_data->ac_mode = (uint8_t) smartair2_protocol::ConditioningMode::HEAT;
-		  	out_data->fan_mode = this->other_modes_fan_speed_;
-		  	break;
+        case CLIMATE_MODE_HEAT:
+          out_data->ac_power = 1;
+          out_data->ac_mode = (uint8_t) smartair2_protocol::ConditioningMode::HEAT;
+          out_data->fan_mode = this->other_modes_fan_speed_;
+          break;
 
-		  case CLIMATE_MODE_DRY:
-		  	out_data->ac_power = 1;
-		  	out_data->ac_mode = (uint8_t) smartair2_protocol::ConditioningMode::DRY;
-		  	out_data->fan_mode = this->other_modes_fan_speed_;
-		  	break;
+        case CLIMATE_MODE_DRY:
+          out_data->ac_power = 1;
+          out_data->ac_mode = (uint8_t) smartair2_protocol::ConditioningMode::DRY;
+          out_data->fan_mode = this->other_modes_fan_speed_;
+          break;
 
-		  case CLIMATE_MODE_FAN_ONLY:
-		  	out_data->ac_power = 1;
-		  	out_data->ac_mode = (uint8_t) smartair2_protocol::ConditioningMode::FAN;
-		  	out_data->fan_mode = this->fan_mode_speed_;    // Auto doesn't work in fan only mode
-		  	break;
+        case CLIMATE_MODE_FAN_ONLY:
+          out_data->ac_power = 1;
+          out_data->ac_mode = (uint8_t) smartair2_protocol::ConditioningMode::FAN;
+          out_data->fan_mode = this->fan_mode_speed_;  // Auto doesn't work in fan only mode
+          break;
 
-		  case CLIMATE_MODE_COOL:
-		  	out_data->ac_power = 1;
-		  	out_data->ac_mode = (uint8_t) smartair2_protocol::ConditioningMode::COOL;
-		  	out_data->fan_mode = this->other_modes_fan_speed_;
-		  	break;
-		  default:
-		  	ESP_LOGE("Control", "Unsupported climate mode");
-		  	break;
+        case CLIMATE_MODE_COOL:
+          out_data->ac_power = 1;
+          out_data->ac_mode = (uint8_t) smartair2_protocol::ConditioningMode::COOL;
+          out_data->fan_mode = this->other_modes_fan_speed_;
+          break;
+        default:
+          ESP_LOGE("Control", "Unsupported climate mode");
+          break;
       }
     }
-    //Set fan speed, if we are in fan mode, reject auto in fan mode
+    // Set fan speed, if we are in fan mode, reject auto in fan mode
     if (climate_control.fan_mode.has_value()) {
       switch (climate_control.fan_mode.value()) {
-		case CLIMATE_FAN_LOW:
-			out_data->fan_mode = (uint8_t) smartair2_protocol::FanMode::FAN_LOW;
-			break;
-		case CLIMATE_FAN_MEDIUM:
-			out_data->fan_mode = (uint8_t) smartair2_protocol::FanMode::FAN_MID;
-			break;
-		case CLIMATE_FAN_HIGH:
-			out_data->fan_mode = (uint8_t) smartair2_protocol::FanMode::FAN_HIGH;
-			break;
-		case CLIMATE_FAN_AUTO:
-			if (mode != CLIMATE_MODE_FAN_ONLY) //if we are not in fan only mode
-				out_data->fan_mode = (uint8_t) smartair2_protocol::FanMode::FAN_AUTO;
-			break;
-		default:
-			ESP_LOGE("Control", "Unsupported fan mode");
-			break;
+        case CLIMATE_FAN_LOW:
+          out_data->fan_mode = (uint8_t) smartair2_protocol::FanMode::FAN_LOW;
+          break;
+        case CLIMATE_FAN_MEDIUM:
+          out_data->fan_mode = (uint8_t) smartair2_protocol::FanMode::FAN_MID;
+          break;
+        case CLIMATE_FAN_HIGH:
+          out_data->fan_mode = (uint8_t) smartair2_protocol::FanMode::FAN_HIGH;
+          break;
+        case CLIMATE_FAN_AUTO:
+          if (mode != CLIMATE_MODE_FAN_ONLY)  // if we are not in fan only mode
+            out_data->fan_mode = (uint8_t) smartair2_protocol::FanMode::FAN_AUTO;
+          break;
+        default:
+          ESP_LOGE("Control", "Unsupported fan mode");
+          break;
       }
     }
-    //Set swing mode
+    // Set swing mode
     if (climate_control.swing_mode.has_value()) {
       switch (climate_control.swing_mode.value()) {
-		case CLIMATE_SWING_OFF:
-			out_data->use_swing_bits = 0;
-			out_data->swing_both = 0;
-			break;
-		case CLIMATE_SWING_VERTICAL:
-			out_data->swing_both = 0;
-			out_data->vertical_swing = 1;
-			out_data->horizontal_swing = 0;
-			break;
-		case CLIMATE_SWING_HORIZONTAL:
-			out_data->swing_both = 0;
-			out_data->vertical_swing = 0;
-			out_data->horizontal_swing = 1;
-			break;
-		case CLIMATE_SWING_BOTH:
-			out_data->swing_both = 1;
-			out_data->use_swing_bits = 0;
-			out_data->vertical_swing = 0;
-			out_data->horizontal_swing = 0;
-			break;
+        case CLIMATE_SWING_OFF:
+          out_data->use_swing_bits = 0;
+          out_data->swing_both = 0;
+          break;
+        case CLIMATE_SWING_VERTICAL:
+          out_data->swing_both = 0;
+          out_data->vertical_swing = 1;
+          out_data->horizontal_swing = 0;
+          break;
+        case CLIMATE_SWING_HORIZONTAL:
+          out_data->swing_both = 0;
+          out_data->vertical_swing = 0;
+          out_data->horizontal_swing = 1;
+          break;
+        case CLIMATE_SWING_BOTH:
+          out_data->swing_both = 1;
+          out_data->use_swing_bits = 0;
+          out_data->vertical_swing = 0;
+          out_data->horizontal_swing = 0;
+          break;
       }
     }
     if (climate_control.target_temperature.has_value()) {
@@ -235,9 +243,9 @@ haier_protocol::HaierMessage Smartair2Climate::get_control_message_() {
           climate_control.target_temperature.value() - 16;  // set the temperature at our offset, subtract 16.
     }
   }
-  out_data->display_status = this->display_status_ ? 0 : 1;
-  return haier_protocol::HaierMessage((uint8_t) smartair2_protocol::FrameType::CONTROL, 0x4D5F,
-                                      control_out_buffer, sizeof(smartair2_protocol::HaierPacketControl));
+  out_data->display_status = this->display_status_ ? 1 : 0;
+  return haier_protocol::HaierMessage((uint8_t) smartair2_protocol::FrameType::CONTROL, 0x4D5F, control_out_buffer,
+                                      sizeof(smartair2_protocol::HaierPacketControl));
 }
 
 haier_protocol::HandlerError Smartair2Climate::process_status_message_(const uint8_t *packet_buffer, uint8_t size) {
@@ -261,47 +269,48 @@ haier_protocol::HandlerError Smartair2Climate::process_status_message_(const uin
   {
     // Fan mode
     optional<ClimateFanMode> old_fan_mode = this->fan_mode;
-    //remember the fan speed we last had for climate vs fan
+    // remember the fan speed we last had for climate vs fan
     if (packet.control.ac_mode == (uint8_t) smartair2_protocol::ConditioningMode::FAN) {
-      if (packet.control.fan_mode != (uint8_t)smartair2_protocol::FanMode::FAN_AUTO)
+      if (packet.control.fan_mode != (uint8_t) smartair2_protocol::FanMode::FAN_AUTO)
         this->fan_mode_speed_ = packet.control.fan_mode;
     } else {
       this->other_modes_fan_speed_ = packet.control.fan_mode;
     }
     switch (packet.control.fan_mode) {
-    case (uint8_t)smartair2_protocol::FanMode::FAN_AUTO:
-      // Somtimes AC reports in fan only mode that fan speed is auto 
-      // but never accept this value back   
-      if (packet.control.ac_mode == (uint8_t) smartair2_protocol::ConditioningMode::FAN)
-        this->fan_mode = CLIMATE_FAN_AUTO;
-      else
-        should_publish = true;
-      break;
-    case (uint8_t)smartair2_protocol::FanMode::FAN_MID:
-      this->fan_mode = CLIMATE_FAN_MEDIUM;
-      break;
-    case (uint8_t)smartair2_protocol::FanMode::FAN_LOW:
-      this->fan_mode = CLIMATE_FAN_LOW;
-      break;
-    case (uint8_t)smartair2_protocol::FanMode::FAN_HIGH:
-      this->fan_mode = CLIMATE_FAN_HIGH;
-      break;
+      case (uint8_t) smartair2_protocol::FanMode::FAN_AUTO:
+        // Somtimes AC reports in fan only mode that fan speed is auto
+        // but never accept this value back
+        if (packet.control.ac_mode == (uint8_t) smartair2_protocol::ConditioningMode::FAN) {
+          this->fan_mode = CLIMATE_FAN_AUTO;
+        } else {
+          should_publish = true;
+        }
+        break;
+      case (uint8_t) smartair2_protocol::FanMode::FAN_MID:
+        this->fan_mode = CLIMATE_FAN_MEDIUM;
+        break;
+      case (uint8_t) smartair2_protocol::FanMode::FAN_LOW:
+        this->fan_mode = CLIMATE_FAN_LOW;
+        break;
+      case (uint8_t) smartair2_protocol::FanMode::FAN_HIGH:
+        this->fan_mode = CLIMATE_FAN_HIGH;
+        break;
     }
     should_publish = should_publish || (!old_fan_mode.has_value()) || (old_fan_mode.value() != fan_mode.value());
   }
   {
     // Display status
     // should be before "Climate mode" because it is changing this->mode
-    if (packet.control.ac_power != 0) { 
+    if (packet.control.ac_power != 0) {
       // if AC is off display status always ON so process it only when AC is on
       bool disp_status = packet.control.display_status != 0;
-      if (disp_status != this->display_status_) { 
+      if (disp_status != this->display_status_) {
         // Do something only if display status changed
         if (this->mode == CLIMATE_MODE_OFF) {
           // AC just turned on from remote need to turn off display
           this->force_send_control_ = true;
         } else {
-            this->display_status_ = disp_status;
+          this->display_status_ = disp_status;
         }
       }
     }
@@ -314,21 +323,21 @@ haier_protocol::HandlerError Smartair2Climate::process_status_message_(const uin
     } else {
       // Check current hvac mode
       switch (packet.control.ac_mode) {
-      case (uint8_t)smartair2_protocol::ConditioningMode::COOL:
-        this->mode = CLIMATE_MODE_COOL;
-        break;
-      case (uint8_t)smartair2_protocol::ConditioningMode::HEAT:
-        this->mode = CLIMATE_MODE_HEAT;
-        break;
-      case (uint8_t)smartair2_protocol::ConditioningMode::DRY:
-        this->mode = CLIMATE_MODE_DRY;
-        break;
-      case (uint8_t)smartair2_protocol::ConditioningMode::FAN:
-        this->mode = CLIMATE_MODE_FAN_ONLY;
-        break;
-      case (uint8_t)smartair2_protocol::ConditioningMode::AUTO:
-        this->mode = CLIMATE_MODE_AUTO;
-        break;
+        case (uint8_t) smartair2_protocol::ConditioningMode::COOL:
+          this->mode = CLIMATE_MODE_COOL;
+          break;
+        case (uint8_t) smartair2_protocol::ConditioningMode::HEAT:
+          this->mode = CLIMATE_MODE_HEAT;
+          break;
+        case (uint8_t) smartair2_protocol::ConditioningMode::DRY:
+          this->mode = CLIMATE_MODE_DRY;
+          break;
+        case (uint8_t) smartair2_protocol::ConditioningMode::FAN:
+          this->mode = CLIMATE_MODE_FAN_ONLY;
+          break;
+        case (uint8_t) smartair2_protocol::ConditioningMode::AUTO:
+          this->mode = CLIMATE_MODE_AUTO;
+          break;
       }
     }
     should_publish = should_publish || (old_mode != this->mode);
@@ -337,16 +346,16 @@ haier_protocol::HandlerError Smartair2Climate::process_status_message_(const uin
     // Swing mode
     ClimateSwingMode old_swing_mode = this->swing_mode;
     if (packet.control.swing_both == 0) {
-        if (packet.control.vertical_swing != 0) {
-            this->swing_mode = CLIMATE_SWING_VERTICAL;
-        } else if (packet.control.horizontal_swing != 0) {
-            this->swing_mode = CLIMATE_SWING_HORIZONTAL;
-        } else {
-            this->swing_mode = CLIMATE_SWING_OFF;
-		}
+      if (packet.control.vertical_swing != 0) {
+        this->swing_mode = CLIMATE_SWING_VERTICAL;
+      } else if (packet.control.horizontal_swing != 0) {
+        this->swing_mode = CLIMATE_SWING_HORIZONTAL;
+      } else {
+        this->swing_mode = CLIMATE_SWING_OFF;
+      }
     } else {
-        swing_mode = CLIMATE_SWING_BOTH;
-	}
+      swing_mode = CLIMATE_SWING_BOTH;
+    }
     should_publish = should_publish || (old_swing_mode != this->swing_mode);
   }
   this->last_valid_status_timestamp_ = std::chrono::steady_clock::now();
@@ -383,5 +392,5 @@ bool Smartair2Climate::is_message_invalid(uint8_t message_type) {
   return message_type == (uint8_t) smartair2_protocol::FrameType::INVALID;
 }
 
-} // namespace haier
-} // namespace esphome
+}  // namespace haier
+}  // namespace esphome

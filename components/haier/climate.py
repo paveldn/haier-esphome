@@ -15,7 +15,6 @@ from esphome.const import (
     CONF_PROTOCOL,
     CONF_SUPPORTED_MODES,
     CONF_SUPPORTED_SWING_MODES,
-    CONF_TEMPERATURE_STEP,
     CONF_UART_ID,
     CONF_VISUAL,
     CONF_WIFI,
@@ -43,13 +42,12 @@ CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
 CONF_VERTICAL_AIRFLOW = "vertical_airflow"
 CONF_HORIZONTAL_AIRFLOW = "horizontal_airflow"
 
-PROTOCOLS_SUPPORTED = [
-  "HON",
-  "SMARTAIR2",
-]
+PROTOCOLS_SUPPORTED = ["HON", "SMARTAIR2"]
 
 haier_ns = cg.esphome_ns.namespace("haier")
-HaierClimateBase = haier_ns.class_("HaierClimateBase", uart.UARTDevice, climate.Climate, cg.Component)
+HaierClimateBase = haier_ns.class_(
+    "HaierClimateBase", uart.UARTDevice, climate.Climate, cg.Component
+)
 HonClimate = haier_ns.class_("HonClimate", HaierClimateBase)
 Smartair2Climate = haier_ns.class_("Smartair2Climate", HaierClimateBase)
 
@@ -84,6 +82,7 @@ SUPPORTED_CLIMATE_MODES_OPTIONS = {
     "FAN_ONLY": ClimateMode.CLIMATE_MODE_FAN_ONLY,
 }
 
+
 def validate_visual(config):
     if CONF_VISUAL in config:
         visual_config = config[CONF_VISUAL]
@@ -103,40 +102,34 @@ def validate_visual(config):
                 )
         else:
             config[CONF_VISUAL][CONF_MAX_TEMPERATURE] = PROTOCOL_MAX_TEMPERATURE
-        if CONF_TEMPERATURE_STEP in visual_config:
-            temp_step = visual_config[CONF_TEMPERATURE_STEP]
-            if temp_step < PROTOCOL_TEMPERATURE_STEP:
-                raise cv.Invalid(
-                    f"Configured visual temperature step {temp_step} is too small, the minimum step allowed by Haier protocol is {PROTOCOL_TEMPERATURE_STEP}"
-                )
-            if temp_step % 1 != 0:
-                raise cv.Invalid(
-                    f"Configured visual temperature step {temp_step} should be integer"
-                )
-        else:
-            config[CONF_VISUAL][CONF_TEMPERATURE_STEP] = PROTOCOL_TEMPERATURE_STEP
     else:
         config[CONF_VISUAL][CONF_MAX_TEMPERATURE] = {
             CONF_MIN_TEMPERATURE: PROTOCOL_MIN_TEMPERATURE,
             CONF_MAX_TEMPERATURE: PROTOCOL_MAX_TEMPERATURE,
-            CONF_TEMPERATURE_STEP: PROTOCOL_TEMPERATURE_STEP,
-        }       
+        }
     return config
+
 
 def protocol_config_validation(config):
     ac_protocol = config[CONF_PROTOCOL]
-    if CONF_WIFI_SIGNAL in config :
+    if CONF_WIFI_SIGNAL in config:
         if ac_protocol == "SMARTAIR2":
-            raise cv.Invalid("WiFi signal transmission is not supported by SmartAir2 protocol")
+            raise cv.Invalid(
+                "WiFi signal transmission is not supported by SmartAir2 protocol"
+            )
     elif ac_protocol == "HON":
         config[CONF_WIFI_SIGNAL] = True
-    if CONF_BEEPER in config :
+    if CONF_BEEPER in config:
         if ac_protocol == "SMARTAIR2":
-            raise cv.Invalid("Beeper enable/disable is not supported by SmartAir2 protocol implementation")
+            raise cv.Invalid(
+                "Beeper enable/disable is not supported by SmartAir2 protocol implementation"
+            )
     elif ac_protocol == "HON":
         config[CONF_BEEPER] = True
     if (CONF_OUTDOOR_TEMPERATURE in config) and (ac_protocol == "SMARTAIR2"):
-        raise cv.Invalid("Outdoor temperature sensor is not supported by SmartAir2 protocol")
+        raise cv.Invalid(
+            "Outdoor temperature sensor is not supported by SmartAir2 protocol"
+        )
     return config
 
 
@@ -145,9 +138,15 @@ CONFIG_SCHEMA = cv.All(
         {
             cv.GenerateID(): cv.declare_id(HaierClimateBase),
             cv.Required(CONF_PROTOCOL): cv.one_of(*PROTOCOLS_SUPPORTED, upper=True),
-            cv.Optional(CONF_WIFI_SIGNAL): cv.boolean,  # Default: True for hOn protocol, False for smartAir2 protocol
-            cv.Optional(CONF_SUPPORTED_MODES): cv.ensure_list(cv.enum(SUPPORTED_CLIMATE_MODES_OPTIONS, upper=True)),
-            cv.Optional(CONF_BEEPER): cv.boolean, # Default: True for hOn protocol, not supported for smartAir2 protocol
+            cv.Optional(
+                CONF_WIFI_SIGNAL
+            ): cv.boolean,  # Default: True for hOn protocol, False for smartAir2 protocol
+            cv.Optional(
+                CONF_BEEPER
+            ): cv.boolean,  # Default: True for hOn protocol, not supported for smartAir2 protocol
+            cv.Optional(CONF_SUPPORTED_MODES): cv.ensure_list(
+                cv.enum(SUPPORTED_CLIMATE_MODES_OPTIONS, upper=True)
+            ),
             cv.Optional(
                 CONF_SUPPORTED_SWING_MODES,
                 default=[
@@ -173,13 +172,6 @@ CONFIG_SCHEMA = cv.All(
     cv.require_esphome_version(2022, 1, 0),
 )
 
-def validate_action_for_protocols(action_id, protocols_allowed):
-    global ac_protocol
-    if ac_protocol:
-        if ac_protocol not in protocols_allowed:
-            raise cv.Invalid(f"Action \"{action_id}\" is not supported for protocol {ac_protocol}")
-    else:
-        raise cv.Invalid(f"Can't validate action \"{action_id}\", curent protocol is unknown!")
 
 # Actions
 DisplayOnAction = haier_ns.class_("DisplayOnAction", automation.Action)
@@ -195,20 +187,35 @@ HAIER_BASE_ACTION_SCHEMA = automation.maybe_simple_id(
     }
 )
 
-@automation.register_action("climate.haier.display_on", DisplayOnAction, HAIER_BASE_ACTION_SCHEMA)
-@automation.register_action("climate.haier.display_off", DisplayOffAction, HAIER_BASE_ACTION_SCHEMA)
+
+@automation.register_action(
+    "climate.haier.display_on", DisplayOnAction, HAIER_BASE_ACTION_SCHEMA
+)
+@automation.register_action(
+    "climate.haier.display_off", DisplayOffAction, HAIER_BASE_ACTION_SCHEMA
+)
 async def display_action_to_code(config, action_id, template_arg, args):
     paren = await cg.get_variable(config[CONF_ID])
     var = cg.new_Pvariable(action_id, template_arg, paren)
     return var
 
-@automation.register_action("climate.haier.beeper_on", BeeperOnAction, HAIER_BASE_ACTION_SCHEMA)
-@automation.register_action("climate.haier.beeper_off", BeeperOffAction, HAIER_BASE_ACTION_SCHEMA)
+
+@automation.register_action(
+    "climate.haier.beeper_on", BeeperOnAction, HAIER_BASE_ACTION_SCHEMA
+)
+@automation.register_action(
+    "climate.haier.beeper_off", BeeperOffAction, HAIER_BASE_ACTION_SCHEMA
+)
 async def beeper_action_to_code(config, action_id, template_arg, args):
-    validate_action_for_protocols(action_id, ["HON"])
-    paren = await cg.get_variable(config[CONF_ID])
+    fullid, paren = await cg.get_variable_with_full_id(config[CONF_ID])
+    climate_type = fullid.type.__str__()
+    if climate_type != HonClimate.__str__():
+        raise cv.Invalid(
+            f'Action "{action_id}" is not supported for type {climate_type}'
+        )
     var = cg.new_Pvariable(action_id, template_arg, paren)
     return var
+
 
 # Set vertical airflow direction action
 @automation.register_action(
@@ -219,19 +226,24 @@ async def beeper_action_to_code(config, action_id, template_arg, args):
             cv.Required(CONF_ID): cv.use_id(HaierClimateBase),
             cv.Required(CONF_VERTICAL_AIRFLOW): cv.templatable(
                 cv.enum(AIRFLOW_VERTICAL_DIRECTION_OPTIONS, upper=True)
-            ), 
+            ),
         }
     ),
 )
 async def haier_set_vertical_airflow_to_code(config, action_id, template_arg, args):
-    validate_action_for_protocols(action_id, ["HON"])
-    paren = await cg.get_variable(config[CONF_ID])
+    fullid, paren = await cg.get_variable_with_full_id(config[CONF_ID])
+    climate_type = fullid.type.__str__()
+    if climate_type != HonClimate.__str__():
+        raise cv.Invalid(
+            f'Action "{action_id}" is not supported for type {climate_type}'
+        )
     var = cg.new_Pvariable(action_id, template_arg, paren)
     template_ = await cg.templatable(
         config[CONF_VERTICAL_AIRFLOW], args, AirflowVerticalDirection
     )
     cg.add(var.set_direction(template_))
     return var
+
 
 # Set horizontal airflow direction action
 @automation.register_action(
@@ -242,13 +254,17 @@ async def haier_set_vertical_airflow_to_code(config, action_id, template_arg, ar
             cv.Required(CONF_ID): cv.use_id(HaierClimateBase),
             cv.Required(CONF_HORIZONTAL_AIRFLOW): cv.templatable(
                 cv.enum(AIRFLOW_HORIZONTAL_DIRECTION_OPTIONS, upper=True)
-            ), 
+            ),
         }
     ),
 )
 async def haier_set_horizontal_airflow_to_code(config, action_id, template_arg, args):
-    validate_action_for_protocols(action_id, ["HON"])
-    paren = await cg.get_variable(config[CONF_ID])
+    fullid, paren = await cg.get_variable_with_full_id(config[CONF_ID])
+    climate_type = fullid.type.__str__()
+    if climate_type != HonClimate.__str__():
+        raise cv.Invalid(
+            f'Action "{action_id}" is not supported for type {climate_type}'
+        )
     var = cg.new_Pvariable(action_id, template_arg, paren)
     template_ = await cg.templatable(
         config[CONF_HORIZONTAL_AIRFLOW], args, AirflowHorizontalDirection
@@ -277,7 +293,11 @@ def _final_validate(config):
             "No logger component found, logging for Haier protocol is disabled"
         )
         cg.add_build_flag("-DHAIER_LOG_LEVEL=0")
-    if (CONF_WIFI_SIGNAL in config) and (config[CONF_WIFI_SIGNAL]) and CONF_WIFI not in full_config:
+    if (
+        (CONF_WIFI_SIGNAL in config)
+        and (config[CONF_WIFI_SIGNAL])
+        and CONF_WIFI not in full_config
+    ):
         raise cv.Invalid(
             f"No WiFi configured, if you want to use haier climate without WiFi add {CONF_WIFI_SIGNAL}: false to climate configuration"
         )
@@ -286,8 +306,8 @@ def _final_validate(config):
 
 FINAL_VALIDATE_SCHEMA = _final_validate
 
+
 async def to_code(config):
-    global ac_protocol
     cg.add(haier_ns.init_haier_protocol_logging())
     uart_component = await cg.get_variable(config[CONF_UART_ID])
     ac_protocol = config[CONF_PROTOCOL]
@@ -316,4 +336,3 @@ async def to_code(config):
         cg.add(var.set_supported_swing_modes(config[CONF_SUPPORTED_SWING_MODES]))
     # https://github.com/paveldn/HaierProtocol
     cg.add_library("pavlodn/HaierProtocol", "0.9.18")
- 

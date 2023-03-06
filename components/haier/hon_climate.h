@@ -36,9 +36,9 @@ class HonClimate : public HaierClimateBase {
   void set_horizontal_airflow(AirflowHorizontalDirection direction);
 
  protected:
-  void set_answers_handlers_() override;
-  void process_phase_(std::chrono::steady_clock::time_point now) override;
-  haier_protocol::HaierMessage get_control_message_() override;
+  void set_answers_handlers() override;
+  void process_phase(std::chrono::steady_clock::time_point now) override;
+  haier_protocol::HaierMessage get_control_message() override;
   bool is_message_invalid(uint8_t message_type) override;
 
   // Answers handlers
@@ -73,7 +73,6 @@ class HonClimate : public HaierClimateBase {
 #ifdef HAIER_REPORT_WIFI_SIGNAL
   std::chrono::steady_clock::time_point last_signal_request_;  // To send WiFI signal level
 #endif
-
 };
 
 }  // namespace haier

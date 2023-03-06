@@ -17,6 +17,7 @@ namespace haier {
 const char TAG[] = "haier.climate";
 constexpr size_t COMMUNICATION_TIMEOUT_MS = 60000;
 constexpr size_t STATUS_REQUEST_INTERVAL_MS = 5000;
+constexpr size_t PROTOCOL_INITIALIZATION_INTERVAL = 10000;
 constexpr size_t DEFAULT_MESSAGES_INTERVAL_MS = 2000;
 constexpr size_t CONTROL_MESSAGES_INTERVAL_MS = 400;
 constexpr size_t CONTROL_TIMEOUT_MS = 7000;
@@ -52,7 +53,6 @@ const char *HaierClimateBase::phase_to_string_(ProtocolPhases phase) {
 }
 #endif
 
-
 HaierClimateBase::HaierClimateBase(UARTComponent *parent)
     : UARTDevice(parent),
       haier_protocol_(*this),
@@ -86,7 +86,8 @@ void HaierClimateBase::set_phase_(ProtocolPhases phase) {
   }
 }
 
-bool HaierClimateBase::check_timout_(std::chrono::steady_clock::time_point now, std::chrono::steady_clock::time_point tpoint, size_t timeout) {
+bool HaierClimateBase::check_timout_(std::chrono::steady_clock::time_point now,
+                                     std::chrono::steady_clock::time_point tpoint, size_t timeout) {
   return std::chrono::duration_cast<std::chrono::milliseconds>(now - tpoint).count() > timeout;
 }
 
@@ -104,6 +105,10 @@ bool HaierClimateBase::is_control_message_timeout_exceeded_(std::chrono::steady_
 
 bool HaierClimateBase::is_control_message_interval_exceeded_(std::chrono::steady_clock::time_point now) {
   return this->check_timout_(now, this->last_request_timestamp_, CONTROL_MESSAGES_INTERVAL_MS);
+}
+
+bool HaierClimateBase::is_protocol_initialisation_interval_exceeded_(std::chrono::steady_clock::time_point now) {
+  return this->check_timout_(now, this->last_request_timestamp_, PROTOCOL_INITIALIZATION_INTERVAL);
 }
 
 bool HaierClimateBase::get_display_state() const { return this->display_status_; }
@@ -128,16 +133,14 @@ void HaierClimateBase::set_supported_modes(const std::set<climate::ClimateMode> 
 }
 
 haier_protocol::HandlerError HaierClimateBase::answer_preprocess_(uint8_t request_message_type,
-                                                              uint8_t expected_request_message_type,
-                                                              uint8_t answer_message_type,
-                                                              uint8_t expected_answer_message_type,
-                                                              ProtocolPhases expected_phase) {
+                                                                  uint8_t expected_request_message_type,
+                                                                  uint8_t answer_message_type,
+                                                                  uint8_t expected_answer_message_type,
+                                                                  ProtocolPhases expected_phase) {
   haier_protocol::HandlerError result = haier_protocol::HandlerError::HANDLER_OK;
-  if ((expected_request_message_type != NO_COMMAND) &&
-      (request_message_type != expected_request_message_type))
+  if ((expected_request_message_type != NO_COMMAND) && (request_message_type != expected_request_message_type))
     result = haier_protocol::HandlerError::UNSUPORTED_MESSAGE;
-  if ((expected_answer_message_type != NO_COMMAND) &&
-      (answer_message_type != expected_answer_message_type))
+  if ((expected_answer_message_type != NO_COMMAND) && (answer_message_type != expected_answer_message_type))
     result = haier_protocol::HandlerError::UNSUPORTED_MESSAGE;
   if ((expected_phase != ProtocolPhases::UNKNOWN) && (expected_phase != this->protocol_phase_))
     result = haier_protocol::HandlerError::UNEXPECTED_MESSAGE;
@@ -165,22 +168,22 @@ void HaierClimateBase::setup() {
   // Set timestamp here to give AC time to boot
   this->last_request_timestamp_ = std::chrono::steady_clock::now();
   this->set_phase_(ProtocolPhases::SENDING_INIT_1);
-  this->set_answers_handlers_();
+  this->set_answers_handlers();
   this->haier_protocol_.set_default_timeout_handler(
       std::bind(&esphome::haier::HaierClimateBase::timeout_default_handler_, this, std::placeholders::_1));
 }
 
 void HaierClimateBase::dump_config() {
   LOG_CLIMATE("", "Haier Climate", this);
-  ESP_LOGCONFIG(TAG, "  Device communication status: %s", (this->protocol_phase_ >= ProtocolPhases::IDLE) ?  "established" : "none");
+  ESP_LOGCONFIG(TAG, "  Device communication status: %s",
+                (this->protocol_phase_ >= ProtocolPhases::IDLE) ? "established" : "none");
 }
-
 
 void HaierClimateBase::loop() {
   std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
   if (std::chrono::duration_cast<std::chrono::milliseconds>(now - this->last_valid_status_timestamp_).count() >
       COMMUNICATION_TIMEOUT_MS) {
-    if (this->protocol_phase_ > ProtocolPhases::IDLE) {
+    if (this->protocol_phase_ >= ProtocolPhases::IDLE) {
       // No status too long, reseting protocol
       ESP_LOGW(TAG, "Communication timeout, reseting protocol");
       this->last_valid_status_timestamp_ = now;
@@ -206,7 +209,7 @@ void HaierClimateBase::loop() {
       this->set_phase_(ProtocolPhases::SENDING_CONTROL);
     }
   }
-  this->process_phase_(now);
+  this->process_phase(now);
   this->haier_protocol_.loop();
 }
 
@@ -237,7 +240,6 @@ void HaierClimateBase::control(const ClimateCall &call) {
   this->control_called_ = true;
 }
 
-
 void HaierClimateBase::HvacSettings::reset() {
   this->valid = false;
   this->mode.reset();
@@ -251,7 +253,6 @@ void HaierClimateBase::send_message_(const haier_protocol::HaierMessage &command
   this->haier_protocol_.send_message(command, use_crc);
   this->last_request_timestamp_ = std::chrono::steady_clock::now();
 }
-
 
 }  // namespace haier
 }  // namespace esphome

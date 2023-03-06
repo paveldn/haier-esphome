@@ -11,9 +11,9 @@ namespace esphome {
 namespace haier {
 
 class HaierClimateBase : public esphome::Component,
-                     public esphome::climate::Climate,
-                     public esphome::uart::UARTDevice,
-                     public haier_protocol::ProtocolStream {
+                         public esphome::climate::Climate,
+                         public esphome::uart::UARTDevice,
+                         public haier_protocol::ProtocolStream {
  public:
   HaierClimateBase() = delete;
   HaierClimateBase(const HaierClimateBase &) = delete;
@@ -66,9 +66,9 @@ class HaierClimateBase : public esphome::Component,
 #if (HAIER_LOG_LEVEL > 4)
   const char *phase_to_string_(ProtocolPhases phase);
 #endif
-  virtual void set_answers_handlers_() = 0;
-  virtual void process_phase_(std::chrono::steady_clock::time_point now) = 0;
-  virtual haier_protocol::HaierMessage get_control_message_() = 0;
+  virtual void set_answers_handlers() = 0;
+  virtual void process_phase(std::chrono::steady_clock::time_point now) = 0;
+  virtual haier_protocol::HaierMessage get_control_message() = 0;
   virtual bool is_message_invalid(uint8_t message_type) = 0;
   esphome::climate::ClimateTraits traits() override;
   // Answers handlers
@@ -80,11 +80,13 @@ class HaierClimateBase : public esphome::Component,
   // Helper functions
   void send_message_(const haier_protocol::HaierMessage &command, bool use_crc);
   void set_phase_(ProtocolPhases phase);
-  bool check_timout_(std::chrono::steady_clock::time_point now, std::chrono::steady_clock::time_point tpoint, size_t timeout);
+  bool check_timout_(std::chrono::steady_clock::time_point now, std::chrono::steady_clock::time_point tpoint,
+                     size_t timeout);
   bool is_message_interval_exceeded_(std::chrono::steady_clock::time_point now);
   bool is_status_request_interval_exceeded_(std::chrono::steady_clock::time_point now);
   bool is_control_message_timeout_exceeded_(std::chrono::steady_clock::time_point now);
   bool is_control_message_interval_exceeded_(std::chrono::steady_clock::time_point now);
+  bool is_protocol_initialisation_interval_exceeded_(std::chrono::steady_clock::time_point now);
 
   struct HvacSettings {
     esphome::optional<esphome::climate::ClimateMode> mode;
@@ -110,7 +112,7 @@ class HaierClimateBase : public esphome::Component,
   std::chrono::steady_clock::time_point last_request_timestamp_;       // For interval between messages
   std::chrono::steady_clock::time_point last_valid_status_timestamp_;  // For protocol timeout
   std::chrono::steady_clock::time_point last_status_request_;          // To request AC status
-  std::chrono::steady_clock::time_point control_request_timestamp_;  // To send control message
+  std::chrono::steady_clock::time_point control_request_timestamp_;    // To send control message
 };
 
 }  // namespace haier
