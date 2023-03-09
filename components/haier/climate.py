@@ -208,8 +208,8 @@ async def display_action_to_code(config, action_id, template_arg, args):
 )
 async def beeper_action_to_code(config, action_id, template_arg, args):
     fullid, paren = await cg.get_variable_with_full_id(config[CONF_ID])
-    climate_type = fullid.type.__str__()
-    if climate_type != HonClimate.__str__():
+    climate_type = str(fullid.type)
+    if climate_type != str(HonClimate):
         raise cv.Invalid(
             f'Action "{action_id}" is not supported for type {climate_type}'
         )
@@ -232,8 +232,8 @@ async def beeper_action_to_code(config, action_id, template_arg, args):
 )
 async def haier_set_vertical_airflow_to_code(config, action_id, template_arg, args):
     fullid, paren = await cg.get_variable_with_full_id(config[CONF_ID])
-    climate_type = fullid.type.__str__()
-    if climate_type != HonClimate.__str__():
+    climate_type = str(fullid.type)
+    if climate_type != str(HonClimate):
         raise cv.Invalid(
             f'Action "{action_id}" is not supported for type {climate_type}'
         )
@@ -260,8 +260,8 @@ async def haier_set_vertical_airflow_to_code(config, action_id, template_arg, ar
 )
 async def haier_set_horizontal_airflow_to_code(config, action_id, template_arg, args):
     fullid, paren = await cg.get_variable_with_full_id(config[CONF_ID])
-    climate_type = fullid.type.__str__()
-    if climate_type != HonClimate.__str__():
+    climate_type = str(fullid.type)
+    if climate_type != str(HonClimate):
         raise cv.Invalid(
             f'Action "{action_id}" is not supported for type {climate_type}'
         )
