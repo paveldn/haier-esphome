@@ -274,7 +274,7 @@ haier_protocol::HaierMessage Smartair2Climate::get_control_message() {
     }    
   }
   out_data->display_status = this->display_status_ ? 0 : 1;
-  out_data->health_mode = ((out_data->ac_power != 0) && this->health_mode_) ? 1 : 0;
+  out_data->health_mode = this->health_mode_ ? 1 : 0;
   return haier_protocol::HaierMessage((uint8_t) smartair2_protocol::FrameType::CONTROL, 0x4D5F, control_out_buffer,
                                       sizeof(smartair2_protocol::HaierPacketControl));
 }
@@ -384,6 +384,12 @@ haier_protocol::HandlerError Smartair2Climate::process_status_message_(const uin
       }
     }
     should_publish = should_publish || (old_mode != this->mode);
+  }
+  // Health mode 
+  {
+    bool old_health_mode = this->health_mode_;
+    this->health_mode_ =  packet.control.health_mode == 1;
+    should_publish = should_publish || (old_health_mode != this->health_mode_);
   }
   {
     // Swing mode
