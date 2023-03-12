@@ -180,6 +180,8 @@ BeeperOnAction = haier_ns.class_("BeeperOnAction", automation.Action)
 BeeperOffAction = haier_ns.class_("BeeperOffAction", automation.Action)
 VerticalAirflowAction = haier_ns.class_("VerticalAirflowAction", automation.Action)
 HorizontalAirflowAction = haier_ns.class_("HorizontalAirflowAction", automation.Action)
+HealthOnAction =  haier_ns.class_("HealthOnAction", automation.Action)
+HealthOffAction = haier_ns.class_("HealthOffAction", automation.Action)
 
 HAIER_BASE_ACTION_SCHEMA = automation.maybe_simple_id(
     {
@@ -270,6 +272,23 @@ async def haier_set_horizontal_airflow_to_code(config, action_id, template_arg, 
         config[CONF_HORIZONTAL_AIRFLOW], args, AirflowHorizontalDirection
     )
     cg.add(var.set_direction(template_))
+    return var
+
+
+@automation.register_action(
+    "climate.haier.health_on", HealthOnAction, HAIER_BASE_ACTION_SCHEMA
+)
+@automation.register_action(
+    "climate.haier.health_off", HealthOffAction, HAIER_BASE_ACTION_SCHEMA
+)
+async def health_action_to_code(config, action_id, template_arg, args):
+    fullid, paren = await cg.get_variable_with_full_id(config[CONF_ID])
+    climate_type = str(fullid.type)
+    if climate_type != str(Smartair2Climate):
+        raise cv.Invalid(
+            f'Action "{action_id}" is not supported for type {climate_type}'
+        )
+    var = cg.new_Pvariable(action_id, template_arg, paren)
     return var
 
 
