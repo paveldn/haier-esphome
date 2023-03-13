@@ -78,6 +78,7 @@ class HaierClimateBase : public esphome::Component,
   // Timeout handler
   haier_protocol::HandlerError timeout_default_handler_(uint8_t request_type);
   // Helper functions
+  void set_force_send_control_(bool status);
   void send_message_(const haier_protocol::HaierMessage &command, bool use_crc);
   void set_phase_(ProtocolPhases phase);
   bool check_timout_(std::chrono::steady_clock::time_point now, std::chrono::steady_clock::time_point tpoint,
@@ -86,7 +87,8 @@ class HaierClimateBase : public esphome::Component,
   bool is_status_request_interval_exceeded_(std::chrono::steady_clock::time_point now);
   bool is_control_message_timeout_exceeded_(std::chrono::steady_clock::time_point now);
   bool is_control_message_interval_exceeded_(std::chrono::steady_clock::time_point now);
-  bool is_protocol_initialisation_interval_exceeded_(std::chrono::steady_clock::time_point now);
+  bool is_protocol_initialisation_interval_exceded_(std::chrono::steady_clock::time_point now);
+
 
   struct HvacSettings {
     esphome::optional<esphome::climate::ClimateMode> mode;
@@ -106,7 +108,7 @@ class HaierClimateBase : public esphome::Component,
   bool force_send_control_;
   bool forced_publish_;
   bool forced_request_status_;
-  bool control_called_;
+  bool first_control_attempt_;
   esphome::climate::ClimateTraits traits_;
   HvacSettings hvac_settings_;
   std::chrono::steady_clock::time_point last_request_timestamp_;       // For interval between messages

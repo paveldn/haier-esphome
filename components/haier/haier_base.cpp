@@ -61,7 +61,7 @@ HaierClimateBase::HaierClimateBase(UARTComponent *parent)
       force_send_control_(false),
       forced_publish_(false),
       forced_request_status_(false),
-      control_called_(false) {
+      first_control_attempt_(false) {
   this->traits_ = climate::ClimateTraits();
   this->traits_.set_supported_modes({climate::CLIMATE_MODE_OFF, climate::CLIMATE_MODE_COOL, climate::CLIMATE_MODE_HEAT,
                                      climate::CLIMATE_MODE_FAN_ONLY, climate::CLIMATE_MODE_DRY,
@@ -107,7 +107,7 @@ bool HaierClimateBase::is_control_message_interval_exceeded_(std::chrono::steady
   return this->check_timout_(now, this->last_request_timestamp_, CONTROL_MESSAGES_INTERVAL_MS);
 }
 
-bool HaierClimateBase::is_protocol_initialisation_interval_exceeded_(std::chrono::steady_clock::time_point now) {
+bool HaierClimateBase::is_protocol_initialisation_interval_exceded_(std::chrono::steady_clock::time_point now) {
   return this->check_timout_(now, this->last_request_timestamp_, PROTOCOL_INITIALIZATION_INTERVAL);
 }
 
@@ -116,7 +116,7 @@ bool HaierClimateBase::get_display_state() const { return this->display_status_;
 void HaierClimateBase::set_display_state(bool state) {
   if (this->display_status_ != state) {
     this->display_status_ = state;
-    this->force_send_control_ = true;
+    this->set_force_send_control_(true);
   }
 }
 
@@ -187,7 +187,7 @@ void HaierClimateBase::loop() {
       // No status too long, reseting protocol
       ESP_LOGW(TAG, "Communication timeout, reseting protocol");
       this->last_valid_status_timestamp_ = now;
-      this->force_send_control_ = false;
+      this->set_force_send_control_(false);
       if (this->hvac_settings_.valid)
         this->hvac_settings_.reset();
       this->set_phase_(ProtocolPhases::SENDING_INIT_1);
@@ -205,7 +205,6 @@ void HaierClimateBase::loop() {
         (this->protocol_phase_ == ProtocolPhases::SENDING_UPDATE_SIGNAL_REQUEST) ||
         (this->protocol_phase_ == ProtocolPhases::SENDING_SIGNAL_LEVEL)) {
       ESP_LOGV(TAG, "Control packet is pending...");
-      this->control_request_timestamp_ = now;
       this->set_phase_(ProtocolPhases::SENDING_CONTROL);
     }
   }
@@ -237,7 +236,7 @@ void HaierClimateBase::control(const ClimateCall &call) {
       this->hvac_settings_.preset = call.get_preset();
     this->hvac_settings_.valid = true;
   }
-  this->control_called_ = true;
+  this->first_control_attempt_ = true;
 }
 
 void HaierClimateBase::HvacSettings::reset() {
@@ -247,6 +246,13 @@ void HaierClimateBase::HvacSettings::reset() {
   this->swing_mode.reset();
   this->target_temperature.reset();
   this->preset.reset();
+}
+
+void HaierClimateBase::set_force_send_control_(bool status) {
+  this->force_send_control_ = status;
+  if(status) {
+    this->first_control_attempt_ = true;
+  } 
 }
 
 void HaierClimateBase::send_message_(const haier_protocol::HaierMessage &command, bool use_crc) {

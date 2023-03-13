@@ -44,7 +44,7 @@ haier_protocol::HandlerError Smartair2Climate::status_handler_(uint8_t request_t
         this->set_phase_(ProtocolPhases::IDLE);
       } else if (this->protocol_phase_ == ProtocolPhases::WAITING_CONTROL_ANSWER) {
         this->set_phase_(ProtocolPhases::IDLE);
-        this->force_send_control_ = false;
+        this->set_force_send_control_(false);
         if (this->hvac_settings_.valid)
           this->hvac_settings_.reset();
       }
@@ -88,7 +88,7 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
       this->set_phase_(ProtocolPhases::IDLE);
       break;
     case ProtocolPhases::SENDING_FIRST_STATUS_REQUEST:
-      if (this->can_send_message() && this->is_protocol_initialisation_interval_exceeded_(now)) {
+      if (this->can_send_message() && this->is_protocol_initialisation_interval_exceded_(now)) {
         static const haier_protocol::HaierMessage STATUS_REQUEST((uint8_t) smartair2_protocol::FrameType::CONTROL,
                                                                  0x4D01);
         this->send_message_(STATUS_REQUEST, false);
@@ -106,13 +106,13 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
       }
       break;
     case ProtocolPhases::SENDING_CONTROL:
-      if (this->control_called_) {
+      if (this->first_control_attempt_) {
         this->control_request_timestamp_ = now;
-        this->control_called_ = false;
+        this->first_control_attempt_ = false;
       }
       if (this->is_control_message_timeout_exceeded_(now)) {
         ESP_LOGW(TAG, "Sending control packet timeout!");
-        this->force_send_control_ = false;
+        this->set_force_send_control_(false);
         if (this->hvac_settings_.valid)
           this->hvac_settings_.reset();
         this->forced_request_status_ = true;
@@ -309,7 +309,7 @@ haier_protocol::HandlerError Smartair2Climate::process_status_message_(const uin
         // Do something only if display status changed
         if (this->mode == CLIMATE_MODE_OFF) {
           // AC just turned on from remote need to turn off display
-          this->force_send_control_ = true;
+          this->set_force_send_control_(true);
         } else {
           this->display_status_ = disp_status;
         }
