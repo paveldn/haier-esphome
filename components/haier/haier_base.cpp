@@ -80,7 +80,7 @@ void HaierClimateBase::set_phase_(ProtocolPhases phase) {
 #if (HAIER_LOG_LEVEL > 4)
     ESP_LOGV(TAG, "Phase transition: %s => %s", phase_to_string_(this->protocol_phase_), phase_to_string_(phase));
 #else
-    ESP_LOGV(TAG, "Phase transition: %d => %d", this->protocol_phase_, phase);
+    ESP_LOGV(TAG, "Phase transition: %d => %d", (int) this->protocol_phase_, (int) phase);
 #endif
     this->protocol_phase_ = phase;
   }
@@ -153,7 +153,7 @@ haier_protocol::HandlerError HaierClimateBase::timeout_default_handler_(uint8_t 
 #if (HAIER_LOG_LEVEL > 4)
   ESP_LOGW(TAG, "Answer timeout for command %02X, phase %s", request_type, phase_to_string_(this->protocol_phase_));
 #else
-  ESP_LOGW(TAG, "Answer timeout for command %02X, phase %d", request_type, this->protocol_phase_);
+  ESP_LOGW(TAG, "Answer timeout for command %02X, phase %d", request_type, (int) this->protocol_phase_);
 #endif
   if (this->protocol_phase_ > ProtocolPhases::IDLE) {
     this->set_phase_(ProtocolPhases::IDLE);
