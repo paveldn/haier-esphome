@@ -14,8 +14,11 @@ class Smartair2Climate : public HaierClimateBase {
   Smartair2Climate(esphome::uart::UARTComponent *parent);
   ~Smartair2Climate();
   void dump_config() override;
+  void set_health_mode(bool state);
+  bool get_health_mode() const;
 
  protected:
+  bool health_mode_;
   void set_answers_handlers() override;
   void process_phase(std::chrono::steady_clock::time_point now) override;
   haier_protocol::HaierMessage get_control_message() override;

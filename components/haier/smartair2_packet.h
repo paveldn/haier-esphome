@@ -59,7 +59,7 @@ struct HaierPacketControl {
   // 29
   uint8_t use_swing_bits : 1;    // Indicate if horizontal_swing and vertical_swing should be used
   uint8_t turbo_mode : 1;        // Turbo mode
-  uint8_t disable_beeper : 1;    // Silent mode
+  uint8_t sleep_mode : 1;    // Sleep mode
   uint8_t horizontal_swing : 1;  // Horizontal swing (if swing_both == 0)
   uint8_t vertical_swing : 1;    // Vertical swing (if swing_both == 0) if vertical_swing and horizontal_swing both 0 =>
                                  // swing off

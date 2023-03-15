@@ -47,5 +47,16 @@ switch:
       climate.haier.display_on: ${device_id}
     turn_off_action:
       climate.haier.display_off: ${device_id}
+  - platform: template
+    id: ${device_id}_health_mode
+    name: ${device_name} beeper
+    icon: mdi:leaf
+    restore_state: yes
+    lambda: |-
+      return id(${device_id}).get_health_mode();
+    turn_on_action:
+      climate.haier.health_on: ${device_id}
+    turn_off_action:
+      climate.haier.health_off: ${device_id}
   - platform: restart
     name: ${device_name} restart

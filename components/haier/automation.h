@@ -3,6 +3,7 @@
 #include "esphome/core/automation.h"
 #include "haier_base.h"
 #include "hon_climate.h"
+#include "smartair2_climate.h"
 
 namespace esphome {
 namespace haier {
@@ -62,6 +63,25 @@ template<typename... Ts> class HorizontalAirflowAction : public Action<Ts...> {
  protected:
   HonClimate *parent_;
 };
+
+template<typename... Ts> class HealthOnAction : public Action<Ts...> {
+ public:
+  HealthOnAction(Smartair2Climate *parent) : parent_(parent) {}
+  void play(Ts... x) { this->parent_->set_health_mode(true); }
+
+ protected:
+  Smartair2Climate *parent_;
+};
+
+template<typename... Ts> class HealthOffAction : public Action<Ts...> {
+ public:
+  HealthOffAction(Smartair2Climate *parent) : parent_(parent) {}
+  void play(Ts... x) { this->parent_->set_health_mode(false); }
+
+ protected:
+  Smartair2Climate *parent_;
+};
+
 
 }  // namespace haier
 }  // namespace esphome
