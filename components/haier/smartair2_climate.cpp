@@ -206,7 +206,7 @@ haier_protocol::HaierMessage Smartair2Climate::get_control_message() {
           out_data->fan_mode = (uint8_t) smartair2_protocol::FanMode::FAN_HIGH;
           break;
         case CLIMATE_FAN_AUTO:
-          if (mode != CLIMATE_MODE_FAN_ONLY)  // if we are not in fan only mode
+          if (this->mode != CLIMATE_MODE_FAN_ONLY)  // if we are not in fan only mode
             out_data->fan_mode = (uint8_t) smartair2_protocol::FanMode::FAN_AUTO;
           break;
         default:
@@ -282,7 +282,7 @@ haier_protocol::HandlerError Smartair2Climate::process_status_message_(const uin
       case (uint8_t) smartair2_protocol::FanMode::FAN_AUTO:
         // Somtimes AC reports in fan only mode that fan speed is auto
         // but never accept this value back
-        if (packet.control.ac_mode == (uint8_t) smartair2_protocol::ConditioningMode::FAN) {
+        if (packet.control.ac_mode != (uint8_t) smartair2_protocol::ConditioningMode::FAN) {
           this->fan_mode = CLIMATE_FAN_AUTO;
         } else {
           should_publish = true;
@@ -344,8 +344,8 @@ haier_protocol::HandlerError Smartair2Climate::process_status_message_(const uin
     }
     should_publish = should_publish || (old_mode != this->mode);
   }
-  // Health mode 
   {
+    // Health mode
     bool old_health_mode = this->health_mode_;
     this->health_mode_ =  packet.control.health_mode == 1;
     should_publish = should_publish || (old_health_mode != this->health_mode_);

@@ -49,7 +49,7 @@ switch:
       climate.haier.display_off: ${device_id}
   - platform: template
     id: ${device_id}_health_mode
-    name: ${device_name} beeper
+    name: ${device_name} health mode
     icon: mdi:leaf
     restore_state: yes
     lambda: |-
