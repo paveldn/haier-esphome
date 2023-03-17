@@ -2,10 +2,6 @@
   source:
     type: local
     path: ./components    
-
-wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
     
 api:
 
@@ -17,7 +13,7 @@ climate:
     protocol: hOn
     name: ${device_name} 
     uart_id: ${uart_id}
-    wifi_signal: true           # Optional, default true, enables WiFI signal transmission from ESP to AC
+    wifi_signal: ${send_wifi}   # Optional, default true, enables WiFI signal transmission from ESP to AC
     beeper: true                # Optional, default true, disables beep on commands from ESP
     outdoor_temperature:        # Optional, outdoor temperature sensor
       name: ${device_name} outdoor temperature
