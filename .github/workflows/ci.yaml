@@ -1,0 +1,34 @@
+# Build component for different platforms
+name: build CI test
+
+on:
+  push:
+  pull_request:
+    branches: [ "master", "dev" ]
+
+jobs:
+  tests:
+    name: Building ${{ matrix.file }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        file:
+          - tests/esp32-arduino-hon-ethernet.yaml
+          - tests/esp32-arduino-hon-wifi.yaml
+          - tests/esp32-arduino-smartair2-ethernet.yaml
+          - tests/esp32-arduino-smartair2-wifi.yaml
+          - tests/esp32-idf-hon-ethernet.yaml
+          - tests/esp32-idf-hon-wifi.yaml
+          - tests/esp32-idf-smartair2-ethernet.yaml
+          - tests/esp32-idf-smartair2-wifi.yaml
+          - tests/esp8266-hon-wifi.yaml
+          - tests/esp8266-smartair2-wifi.yaml
+          - tests/pipcow-hon-wifi.yaml
+          - tests/pipcow-smartair2-wifi.yaml
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Build ESPHome config
+      uses: esphome/build-action@v1.8.0
+      with:
+        yaml_file: ${{ matrix.file }}
