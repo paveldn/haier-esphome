@@ -269,6 +269,8 @@ haier_protocol::HaierMessage Smartair2Climate::get_control_message() {
           break;
         default:
           ESP_LOGE("Control", "Unsupported preset");
+          out_data->turbo_mode = 0;
+          out_data->sleep_mode = 0;
           break;
       }
     }    
