@@ -18,6 +18,7 @@ jobs:
           - tests/esp32-arduino-smartair2-ethernet.yaml
           - tests/esp32-arduino-smartair2-wifi.yaml
           - tests/esp32-idf-hon-wifi.yaml
+          - tests/esp32-idf-smartair2-wifi.yaml
           - tests/esp8266-hon-wifi.yaml
           - tests/esp8266-smartair2-wifi.yaml
           - tests/pipcow-hon-wifi.yaml
