@@ -181,11 +181,16 @@ void HaierClimateBase::dump_config() {
 
 void HaierClimateBase::loop() {
   std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
-  if (std::chrono::duration_cast<std::chrono::milliseconds>(now - this->last_valid_status_timestamp_).count() >
-      COMMUNICATION_TIMEOUT_MS) {
+  if ((std::chrono::duration_cast<std::chrono::milliseconds>(now - this->last_valid_status_timestamp_).count() >
+      COMMUNICATION_TIMEOUT_MS) || (this->reset_protocol_request_)) {
     if (this->protocol_phase_ >= ProtocolPhases::IDLE) {
       // No status too long, reseting protocol
-      ESP_LOGW(TAG, "Communication timeout, reseting protocol");
+      if (this->reset_protocol_request_) {
+        this->reset_protocol_request_ = false;
+        ESP_LOGW(TAG, "Protocol reset requested");
+      } else {
+        ESP_LOGW(TAG, "Communication timeout, reseting protocol");
+      }
       this->last_valid_status_timestamp_ = now;
       this->set_force_send_control_(false);
       if (this->hvac_settings_.valid)

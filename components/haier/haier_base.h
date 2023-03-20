@@ -28,6 +28,7 @@ class HaierClimateBase : public esphome::Component,
   void set_fahrenheit(bool fahrenheit);
   void set_display_state(bool state);
   bool get_display_state() const;
+  void reset_protocol() { this->reset_protocol_request_ = true; }; 
   void set_supported_modes(const std::set<esphome::climate::ClimateMode> &modes);
   void set_supported_swing_modes(const std::set<esphome::climate::ClimateSwingMode> &modes);
   size_t available() noexcept override { return esphome::uart::UARTDevice::available(); };
@@ -109,6 +110,7 @@ class HaierClimateBase : public esphome::Component,
   bool forced_publish_;
   bool forced_request_status_;
   bool first_control_attempt_;
+  bool reset_protocol_request_;
   esphome::climate::ClimateTraits traits_;
   HvacSettings hvac_settings_;
   std::chrono::steady_clock::time_point last_request_timestamp_;       // For interval between messages
