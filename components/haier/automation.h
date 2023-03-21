@@ -82,6 +82,14 @@ template<typename... Ts> class HealthOffAction : public Action<Ts...> {
   HaierClimateBase *parent_;
 };
 
+template<typename... Ts> class StartSelfCleaningAction : public Action<Ts...> {
+ public:
+  StartSelfCleaningAction(HonClimate *parent) : parent_(parent) {}
+  void play(Ts... x) { this->parent_->start_self_cleaning(); }
+
+ protected:
+  HonClimate *parent_;
+};
 
 }  // namespace haier
 }  // namespace esphome

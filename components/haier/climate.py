@@ -178,6 +178,7 @@ DisplayOnAction = haier_ns.class_("DisplayOnAction", automation.Action)
 DisplayOffAction = haier_ns.class_("DisplayOffAction", automation.Action)
 BeeperOnAction = haier_ns.class_("BeeperOnAction", automation.Action)
 BeeperOffAction = haier_ns.class_("BeeperOffAction", automation.Action)
+StartSelfCleaningAction = haier_ns.class_("StartSelfCleaningAction", automation.Action)
 VerticalAirflowAction = haier_ns.class_("VerticalAirflowAction", automation.Action)
 HorizontalAirflowAction = haier_ns.class_("HorizontalAirflowAction", automation.Action)
 HealthOnAction =  haier_ns.class_("HealthOnAction", automation.Action)
@@ -209,6 +210,21 @@ async def display_action_to_code(config, action_id, template_arg, args):
     "climate.haier.beeper_off", BeeperOffAction, HAIER_BASE_ACTION_SCHEMA
 )
 async def beeper_action_to_code(config, action_id, template_arg, args):
+    fullid, paren = await cg.get_variable_with_full_id(config[CONF_ID])
+    climate_type = str(fullid.type)
+    if climate_type != str(HonClimate):
+        raise cv.Invalid(
+            f'Action "{action_id}" is not supported for type {climate_type}'
+        )
+    var = cg.new_Pvariable(action_id, template_arg, paren)
+    return var
+
+
+# Start self cleaning action action
+@automation.register_action(
+    "climate.haier.start_self_cleaning", StartSelfCleaningAction, HAIER_BASE_ACTION_SCHEMA
+)
+async def start_self_cleaning_to_code(config, action_id, template_arg, args):
     fullid, paren = await cg.get_variable_with_full_id(config[CONF_ID])
     climate_type = str(fullid.type)
     if climate_type != str(HonClimate):

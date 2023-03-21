@@ -126,4 +126,4 @@ button:
     name: ${device_name} start self cleaning
     icon: mdi:spray-bottle
     on_press:
-      - lambda: id(${device_id}).start_self_cleaning();
+      - climate.haier.start_self_cleaning: ${device_id}
