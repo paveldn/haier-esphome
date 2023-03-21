@@ -114,3 +114,16 @@ select:
            id: ${device_id}
            horizontal_airflow: !lambda |-
              return esphome::haier::AirflowHorizontalDirection(i);
+
+binary_sensor:
+  - platform: template
+    name: ${device_name} self cleaning
+    icon: mdi:spray-bottle
+    lambda: return id(${device_id}).get_self_cleaning_status();
+
+button:
+  - platform: template
+    name: ${device_name} start self cleaning
+    icon: mdi:spray-bottle
+    on_press:
+      - lambda: id(${device_id}).start_self_cleaning();

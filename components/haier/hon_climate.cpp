@@ -49,6 +49,8 @@ hon_protocol::HorizontalSwingMode get_horizontal_swing_mode(AirflowHorizontalDir
 HonClimate::HonClimate(UARTComponent *parent)
     : HaierClimateBase(parent),
       last_status_message_(new uint8_t[sizeof(hon_protocol::HaierPacketControl)]),
+      self_cleaning_status_(false),
+      self_cleaning_start_request_(false),
       got_valid_outdoor_temp_(false),
       hvac_hardware_info_available_(false),
       hvac_functions_{false, false, false, false, false},
@@ -93,6 +95,19 @@ void HonClimate::set_horizontal_airflow(AirflowHorizontalDirection direction) {
     this->horizontal_direction_ = direction;
   }
   this->set_force_send_control_(true);
+}
+
+bool HonClimate::get_self_cleaning_status() const{
+  return this->self_cleaning_status_;
+}
+
+void HonClimate::start_self_cleaning() {
+  if (!this->self_cleaning_status_ && !this->self_cleaning_start_request_) {
+    ESP_LOGI(TAG, "Sending self cleaning start request");
+    this->self_cleaning_start_request_ = true;
+    this->set_force_send_control_(true);
+  }
+
 }
 
 haier_protocol::HandlerError HonClimate::get_device_version_answer_handler_(uint8_t request_type, uint8_t message_type,
@@ -554,6 +569,10 @@ haier_protocol::HaierMessage HonClimate::get_control_message() {
   control_out_buffer[4] = 0;  // This byte should be cleared before setting values
   out_data->display_status = this->display_status_ ? 1 : 0;
   out_data->health_mode = this->health_mode_ ? 1 : 0;
+  if (this->self_cleaning_start_request_) {
+    out_data->self_cleaning_status = 1;
+    this->self_cleaning_start_request_ = false;
+  }
   return haier_protocol::HaierMessage((uint8_t) hon_protocol::FrameType::CONTROL,
                                       (uint16_t) hon_protocol::SubcomandsControl::SET_GROUP_PARAMETERS,
                                       control_out_buffer, sizeof(hon_protocol::HaierPacketControl));
@@ -655,6 +674,10 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
     bool old_health_mode = this->health_mode_;
     this->health_mode_ =  packet.control.health_mode == 1;
     should_publish = should_publish || (old_health_mode != this->health_mode_);
+  }
+  {
+    // Self-cleaning
+    this->self_cleaning_status_ = packet.control.self_cleaning_status == 1;
   }
   {
     // Climate mode
