@@ -58,10 +58,12 @@ HaierClimateBase::HaierClimateBase(UARTComponent *parent)
       haier_protocol_(*this),
       protocol_phase_(ProtocolPhases::SENDING_INIT_1),
       display_status_(true),
+      health_mode_(false),
       force_send_control_(false),
       forced_publish_(false),
       forced_request_status_(false),
-      first_control_attempt_(false) {
+      first_control_attempt_(false),
+      reset_protocol_request_(false) {
   this->traits_ = climate::ClimateTraits();
   this->traits_.set_supported_modes({climate::CLIMATE_MODE_OFF, climate::CLIMATE_MODE_COOL, climate::CLIMATE_MODE_HEAT,
                                      climate::CLIMATE_MODE_FAN_ONLY, climate::CLIMATE_MODE_DRY,
@@ -116,6 +118,15 @@ bool HaierClimateBase::get_display_state() const { return this->display_status_;
 void HaierClimateBase::set_display_state(bool state) {
   if (this->display_status_ != state) {
     this->display_status_ = state;
+    this->set_force_send_control_(true);
+  }
+}
+
+bool HaierClimateBase::get_health_mode() const { return this->health_mode_; }
+
+void HaierClimateBase::set_health_mode(bool state) {
+  if (this->health_mode_ != state) {
+    this->health_mode_ = state;
     this->set_force_send_control_(true);
   }
 }

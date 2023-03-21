@@ -282,12 +282,7 @@ async def haier_set_horizontal_airflow_to_code(config, action_id, template_arg, 
     "climate.haier.health_off", HealthOffAction, HAIER_BASE_ACTION_SCHEMA
 )
 async def health_action_to_code(config, action_id, template_arg, args):
-    fullid, paren = await cg.get_variable_with_full_id(config[CONF_ID])
-    climate_type = str(fullid.type)
-    if climate_type != str(Smartair2Climate):
-        raise cv.Invalid(
-            f'Action "{action_id}" is not supported for type {climate_type}'
-        )
+    paren = await cg.get_variable(config[CONF_ID])
     var = cg.new_Pvariable(action_id, template_arg, paren)
     return var
 

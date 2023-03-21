@@ -553,6 +553,7 @@ haier_protocol::HaierMessage HonClimate::get_control_message() {
   out_data->beeper_status = ((!this->beeper_status_) || (!has_hvac_settings)) ? 1 : 0;
   control_out_buffer[4] = 0;  // This byte should be cleared before setting values
   out_data->display_status = this->display_status_ ? 1 : 0;
+  out_data->health_mode = this->health_mode_ ? 1 : 0;
   return haier_protocol::HaierMessage((uint8_t) hon_protocol::FrameType::CONTROL,
                                       (uint16_t) hon_protocol::SubcomandsControl::SET_GROUP_PARAMETERS,
                                       control_out_buffer, sizeof(hon_protocol::HaierPacketControl));
@@ -648,6 +649,12 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
         }
       }
     }
+  }
+  {
+    // Health mode 
+    bool old_health_mode = this->health_mode_;
+    this->health_mode_ =  packet.control.health_mode == 1;
+    should_publish = should_publish || (old_health_mode != this->health_mode_);
   }
   {
     // Climate mode

@@ -66,20 +66,20 @@ template<typename... Ts> class HorizontalAirflowAction : public Action<Ts...> {
 
 template<typename... Ts> class HealthOnAction : public Action<Ts...> {
  public:
-  HealthOnAction(Smartair2Climate *parent) : parent_(parent) {}
+  HealthOnAction(HaierClimateBase *parent) : parent_(parent) {}
   void play(Ts... x) { this->parent_->set_health_mode(true); }
 
  protected:
-  Smartair2Climate *parent_;
+  HaierClimateBase *parent_;
 };
 
 template<typename... Ts> class HealthOffAction : public Action<Ts...> {
  public:
-  HealthOffAction(Smartair2Climate *parent) : parent_(parent) {}
+  HealthOffAction(HaierClimateBase *parent) : parent_(parent) {}
   void play(Ts... x) { this->parent_->set_health_mode(false); }
 
  protected:
-  Smartair2Climate *parent_;
+  HaierClimateBase *parent_;
 };
 
 

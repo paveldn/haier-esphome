@@ -28,6 +28,8 @@ class HaierClimateBase : public esphome::Component,
   void set_fahrenheit(bool fahrenheit);
   void set_display_state(bool state);
   bool get_display_state() const;
+  void set_health_mode(bool state);
+  bool get_health_mode() const;
   void reset_protocol() { this->reset_protocol_request_ = true; }; 
   void set_supported_modes(const std::set<esphome::climate::ClimateMode> &modes);
   void set_supported_swing_modes(const std::set<esphome::climate::ClimateSwingMode> &modes);
@@ -106,6 +108,7 @@ class HaierClimateBase : public esphome::Component,
   uint8_t fan_mode_speed_;
   uint8_t other_modes_fan_speed_;
   bool display_status_;
+  bool health_mode_;
   bool force_send_control_;
   bool forced_publish_;
   bool forced_request_status_;
