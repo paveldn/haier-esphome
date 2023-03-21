@@ -14,8 +14,6 @@ class Smartair2Climate : public HaierClimateBase {
   Smartair2Climate(esphome::uart::UARTComponent *parent);
   ~Smartair2Climate();
   void dump_config() override;
-  void set_health_mode(bool state);
-  bool get_health_mode() const;
 
  protected:
   bool health_mode_;
