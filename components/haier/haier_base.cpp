@@ -193,7 +193,8 @@ void HaierClimateBase::dump_config() {
 void HaierClimateBase::loop() {
   std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
   if ((std::chrono::duration_cast<std::chrono::milliseconds>(now - this->last_valid_status_timestamp_).count() >
-      COMMUNICATION_TIMEOUT_MS) || (this->reset_protocol_request_)) {
+       COMMUNICATION_TIMEOUT_MS) ||
+      (this->reset_protocol_request_)) {
     if (this->protocol_phase_ >= ProtocolPhases::IDLE) {
       // No status too long, reseting protocol
       if (this->reset_protocol_request_) {

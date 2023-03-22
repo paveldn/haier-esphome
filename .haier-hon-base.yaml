@@ -115,11 +115,11 @@ select:
            horizontal_airflow: !lambda |-
              return esphome::haier::AirflowHorizontalDirection(i);
 
-binary_sensor:
+text_sensor:
   - platform: template
-    name: ${device_name} self cleaning
+    name: ${device_name} cleaning status
     icon: mdi:spray-bottle
-    lambda: return id(${device_id}).get_self_cleaning_status();
+    lambda: return id(${device_id}).get_cleaning_status_text();
 
 button:
   - platform: template
@@ -127,3 +127,8 @@ button:
     icon: mdi:spray-bottle
     on_press:
       - climate.haier.start_self_cleaning: ${device_id}
+  - platform: template
+    name: ${device_name} start 56°C steri-cleaning
+    icon: mdi:spray-bottle
+    on_press:
+      - lambda: id(${device_id}).start_steri_cleaning();

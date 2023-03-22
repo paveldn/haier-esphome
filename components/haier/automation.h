@@ -3,7 +3,6 @@
 #include "esphome/core/automation.h"
 #include "haier_base.h"
 #include "hon_climate.h"
-#include "smartair2_climate.h"
 
 namespace esphome {
 namespace haier {

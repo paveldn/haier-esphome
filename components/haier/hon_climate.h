@@ -19,6 +19,12 @@ enum class AirflowHorizontalDirection : uint8_t {
   RIGHT = 2,
 };
 
+enum class CleaningState : uint8_t {
+  NO_CLEANING = 0,
+  SELF_CLEAN = 1,
+  STERI_CLEAN = 2,
+};
+
 class HonClimate : public HaierClimateBase {
  public:
   HonClimate() = delete;
@@ -34,8 +40,10 @@ class HonClimate : public HaierClimateBase {
   void set_vertical_airflow(AirflowVerticalDirection direction);
   AirflowHorizontalDirection get_horizontal_airflow() const;
   void set_horizontal_airflow(AirflowHorizontalDirection direction);
-  bool get_self_cleaning_status() const;
+  std::string get_cleaning_status_text() const;
+  CleaningState get_cleaning_status() const;
   void start_self_cleaning();
+  void start_steri_cleaning();
 
  protected:
   void set_answers_handlers() override;
@@ -60,8 +68,8 @@ class HonClimate : public HaierClimateBase {
   haier_protocol::HandlerError process_status_message_(const uint8_t *packet, uint8_t size);
   std::unique_ptr<uint8_t[]> last_status_message_;
   bool beeper_status_;
-  bool self_cleaning_status_;
-  bool self_cleaning_start_request_;
+  CleaningState cleaning_status_;
+  CleaningState cleaning_start_request_;
   bool got_valid_outdoor_temp_;
   AirflowVerticalDirection vertical_direction_;
   AirflowHorizontalDirection horizontal_direction_;

@@ -49,8 +49,8 @@ hon_protocol::HorizontalSwingMode get_horizontal_swing_mode(AirflowHorizontalDir
 HonClimate::HonClimate(UARTComponent *parent)
     : HaierClimateBase(parent),
       last_status_message_(new uint8_t[sizeof(hon_protocol::HaierPacketControl)]),
-      self_cleaning_status_(false),
-      self_cleaning_start_request_(false),
+      cleaning_status_(CleaningState::NO_CLEANING),
+      cleaning_start_request_(CleaningState::NO_CLEANING),
       got_valid_outdoor_temp_(false),
       hvac_hardware_info_available_(false),
       hvac_functions_{false, false, false, false, false},
@@ -97,17 +97,33 @@ void HonClimate::set_horizontal_airflow(AirflowHorizontalDirection direction) {
   this->set_force_send_control_(true);
 }
 
-bool HonClimate::get_self_cleaning_status() const{
-  return this->self_cleaning_status_;
+std::string HonClimate::get_cleaning_status_text() const {
+  switch (this->cleaning_status_) {
+    case CleaningState::SELF_CLEAN:
+      return "Self clean";
+    case CleaningState::STERI_CLEAN:
+      return "56°C Steri-Clean";
+    default:
+      return "No cleaning";
+  }
 }
 
+CleaningState HonClimate::get_cleaning_status() const { return this->cleaning_status_; }
+
 void HonClimate::start_self_cleaning() {
-  if (!this->self_cleaning_status_ && !this->self_cleaning_start_request_) {
+  if (this->cleaning_status_ == CleaningState::NO_CLEANING) {
     ESP_LOGI(TAG, "Sending self cleaning start request");
-    this->self_cleaning_start_request_ = true;
+    this->cleaning_start_request_ = CleaningState::SELF_CLEAN;
     this->set_force_send_control_(true);
   }
+}
 
+void HonClimate::start_steri_cleaning() {
+  if (this->cleaning_status_ == CleaningState::NO_CLEANING) {
+    ESP_LOGI(TAG, "Sending steri cleaning start request");
+    this->cleaning_start_request_ = CleaningState::STERI_CLEAN;
+    this->set_force_send_control_(true);
+  }
 }
 
 haier_protocol::HandlerError HonClimate::get_device_version_answer_handler_(uint8_t request_type, uint8_t message_type,
@@ -569,9 +585,20 @@ haier_protocol::HaierMessage HonClimate::get_control_message() {
   control_out_buffer[4] = 0;  // This byte should be cleared before setting values
   out_data->display_status = this->display_status_ ? 1 : 0;
   out_data->health_mode = this->health_mode_ ? 1 : 0;
-  if (this->self_cleaning_start_request_) {
-    out_data->self_cleaning_status = 1;
-    this->self_cleaning_start_request_ = false;
+  switch (this->cleaning_start_request_) {
+    case CleaningState::SELF_CLEAN:
+      this->cleaning_start_request_ = CleaningState::NO_CLEANING;
+      out_data->self_cleaning_status = 1;
+      out_data->steri_clean = 0;  
+      break;
+    case CleaningState::STERI_CLEAN:
+      this->cleaning_start_request_ = CleaningState::NO_CLEANING;
+      out_data->self_cleaning_status = 0;
+      out_data->steri_clean = 1;
+      break;
+    case CleaningState::NO_CLEANING:
+      // No change
+      break;
   }
   return haier_protocol::HaierMessage((uint8_t) hon_protocol::FrameType::CONTROL,
                                       (uint16_t) hon_protocol::SubcomandsControl::SET_GROUP_PARAMETERS,
@@ -676,8 +703,16 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
     should_publish = should_publish || (old_health_mode != this->health_mode_);
   }
   {
-    // Self-cleaning
-    this->self_cleaning_status_ = packet.control.self_cleaning_status == 1;
+    if (packet.control.steri_clean == 1) {
+      // Steri-cleaning
+      this->cleaning_status_ = CleaningState::STERI_CLEAN;
+    } else if (packet.control.self_cleaning_status == 1) {
+      // Self-cleaning
+      this->cleaning_status_ = CleaningState::SELF_CLEAN;
+    } else {
+      // No cleaning
+      this->cleaning_status_ = CleaningState::NO_CLEANING;
+    }
   }
   {
     // Climate mode
