@@ -11,6 +11,7 @@ jobs:
     name: Building ${{ matrix.file }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         file:
           - tests/esp32-arduino-hon-ethernet.yaml

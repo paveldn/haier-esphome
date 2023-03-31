@@ -29,4 +29,4 @@ uart:
 logger:
   level: DEBUG
 
-<<: !include .haier-base.yaml
+<<: !include .haier-hon-base.yaml
