@@ -18,7 +18,7 @@ but also you can use any other ESP32 or ESP8266 board.
 `rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)`
 The only way to recover this board is to flash it with the original image. So before starting your experiments make a backup image: [How to backup original image and flash ESPHome to the ESP32 Haier module](#how-to-backup-original-image-and-flash-esphome-to-the-esp32-haier-module)
 
-# Configuration example
+## Configuration example
 
 ```  
 uart:
@@ -71,11 +71,11 @@ climate:
 - **supported_swing_modes (Optional, list):** Can be used to disable some swing modes if your AC does not support it. Possible values: OFF (use quotes in opposite case ESPHome will convert it to False), VERTICAL, HORIZONTAL, BOTH
 - All other options from [Climate](https://esphome.io/components/climate/index.html#config-climate).
 
-# Automations
+## Automations
 
 Haier climate support some actiuons:
 
-# climate.haier.display_on Action
+### climate.haier.display_on Action
 
 This action turns the AC display on
 
@@ -85,7 +85,7 @@ on_...:
     climate.haier.display_on: device_id
 ```
 
-# climate.haier.display_off Action
+### climate.haier.display_off Action
 
 This action turns the AC display off
 
@@ -95,7 +95,7 @@ on_...:
     climate.haier.display_off: device_id
 ```
 
-# climate.haier.beeper_on Action
+### climate.haier.beeper_on Action
 
 (supported only by hOn)  This action enables beep feedback on every command sent to AC
 
@@ -105,7 +105,7 @@ on_...:
     climate.haier.beeper_on: device_id
 ```
 
-# climate.haier.beeper_off Action
+### climate.haier.beeper_off Action
 
 (supported only by hOn) This action disables beep feedback on every command sent to AC (keep in mind that this will not work for IR remote commands)
 
@@ -115,7 +115,7 @@ on_...:
     climate.haier.beeper_off: device_id
 ```
 
-# climate.haier.set_vertical_airflow Action
+### climate.haier.set_vertical_airflow Action
 
 (supported only by hOn) Set direction for vertical airflow if the vertical swing is disabled. Possible values: Up, Center, Down.
 
@@ -127,7 +127,7 @@ on_value:
       vertical_airflow: Up
 ```
 
-# climate.haier.set_horizontal_airflow Action
+### climate.haier.set_horizontal_airflow Action
 
 (supported only by hOn) Set direction for horizontal airflow if the horizontal swing is disabled. Possible values: Left, Center, Right.
 
@@ -139,7 +139,7 @@ on_value:
       vertical_airflow: Right
 ```
 
-# How to backup original image and flash ESPHome to the ESP32 Haier module
+## How to backup original image and flash ESPHome to the ESP32 Haier module
 
 **It is strongly recommended to make a backup of the original flash content before flashing ESPHome!**
 
