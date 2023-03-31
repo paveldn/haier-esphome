@@ -1,6 +1,6 @@
 # ESPHome Haier component
 
-This implementation of the ESPHoime component to control HVAC on the base of the hOn Haier protocol (AC that is controlled by the hOn application). Keep in mind that the smartAir2 HVAC protocol is not currently supported.
+This implementation of the ESPHoime component to control HVAC on the base of the SmartAir2 and hOn Haier protocols (AC that is controlled by the hOn or SmartAir2 application).
 
 You can use this component together with a native Haier ESP32 device: 
 
@@ -29,7 +29,8 @@ uart:
 
 climate:
   - platform: haier
-    id: ac_port
+    id: haier_ac
+    protocol: hOn
     name: Haier AC 
     uart_id: ac_port
     wifi_signal: true           # Optional, default true, enables WiFI signal transmission from ESP to AC
@@ -58,10 +59,11 @@ climate:
 
 - **id (Optional, [ID](https://esphome.io/guides/configuration-types.html#config-id)):** Manually specify the ID used for code generation
 - **uart_id (Optional, [ID](https://esphome.io/guides/configuration-types.html#config-id)):** ID of the UART port to communicate with AC
+- **protocol (Required, string):** Defines protocol of communication with AC. Possible values: hon or smartair2
 - **name (Required, string):** The name of the climate device
 - **wifi_signal (Optional, boolean):** If true - send wifi signal level to AC
-- **beeper (Optional, boolean):** Can be used to disable beeping on commands from AC
-- **outdoor_temperature (Optional):** Temperature sensor for outdoor temperature
+- **beeper (Optional, boolean):** (supported only by hOn) Can be used to disable beeping on commands from AC
+- **outdoor_temperature (Optional):** (supported only by hOn) Temperature sensor for outdoor temperature
   - **name (Required, string):** The name of the sensor.
   - **id (Optional, [ID](https://esphome.io/guides/configuration-types.html#config-id)):** ID of the sensor, can be used for code generation
   - All other options from Sensor.
@@ -95,7 +97,7 @@ on_...:
 
 # climate.haier.beeper_on Action
 
-This action enables beep feedback on every command sent to AC
+(supported only by hOn)  This action enables beep feedback on every command sent to AC
 
 ```
 on_...:
@@ -105,7 +107,7 @@ on_...:
 
 # climate.haier.beeper_off Action
 
-This action disables beep feedback on every command sent to AC (keep in mind that this will not work for IR remote commands)
+(supported only by hOn) This action disables beep feedback on every command sent to AC (keep in mind that this will not work for IR remote commands)
 
 ```
 on_...:
@@ -115,7 +117,7 @@ on_...:
 
 # climate.haier.set_vertical_airflow Action
 
-Set direction for vertical airflow if the vertical swing is disabled. Possible values: Up, Center, Down.
+(supported only by hOn) Set direction for vertical airflow if the vertical swing is disabled. Possible values: Up, Center, Down.
 
 ```
 on_value:
@@ -127,7 +129,7 @@ on_value:
 
 # climate.haier.set_horizontal_airflow Action
 
-Set direction for horizontal airflow if the horizontal swing is disabled. Possible values: Left, Center, Right.
+(supported only by hOn) Set direction for horizontal airflow if the horizontal swing is disabled. Possible values: Left, Center, Right.
 
 ```
 on_value:

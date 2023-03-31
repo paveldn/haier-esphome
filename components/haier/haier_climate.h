@@ -11,6 +11,7 @@
 namespace esphome {
 namespace haier {
 
+<<<<<<< HEAD:components/haier/haier_climate.h
 enum class AirflowVerticalDirection : uint8_t {
   UP = 0,
   CENTER = 1,
@@ -27,6 +28,12 @@ class HaierClimate : public esphome::Component,
                      public esphome::climate::Climate,
                      public esphome::uart::UARTDevice,
                      public haier_protocol::ProtocolStream {
+=======
+class HaierClimateBase : public esphome::Component,
+                         public esphome::climate::Climate,
+                         public esphome::uart::UARTDevice,
+                         public haier_protocol::ProtocolStream {
+>>>>>>> dev:components/haier/haier_base.h
  public:
   HaierClimate() = delete;
   HaierClimate(const HaierClimate &) = delete;
@@ -44,10 +51,16 @@ class HaierClimate : public esphome::Component,
   void set_outdoor_temperature_sensor(esphome::sensor::Sensor *sensor);
   void set_display_state(bool state);
   bool get_display_state() const;
+<<<<<<< HEAD:components/haier/haier_climate.h
   AirflowVerticalDirection get_vertical_airflow() const;
   void set_vertical_airflow(AirflowVerticalDirection direction);
   AirflowHorizontalDirection get_horizontal_airflow() const;
   void set_horizontal_airflow(AirflowHorizontalDirection direction);
+=======
+  void set_health_mode(bool state);
+  bool get_health_mode() const;
+  void reset_protocol() { this->reset_protocol_request_ = true; }; 
+>>>>>>> dev:components/haier/haier_base.h
   void set_supported_modes(const std::set<esphome::climate::ClimateMode> &modes);
   void set_supported_swing_modes(const std::set<esphome::climate::ClimateSwingMode> &modes);
   virtual size_t available() noexcept { return esphome::uart::UARTDevice::available(); };
@@ -86,6 +99,13 @@ class HaierClimate : public esphome::Component,
 #if (HAIER_LOG_LEVEL > 4)
   const char *phase_to_string_(ProtocolPhases phase);
 #endif
+<<<<<<< HEAD:components/haier/haier_climate.h
+=======
+  virtual void set_answers_handlers() = 0;
+  virtual void process_phase(std::chrono::steady_clock::time_point now) = 0;
+  virtual haier_protocol::HaierMessage get_control_message() = 0;
+  virtual bool is_message_invalid(uint8_t message_type) = 0;
+>>>>>>> dev:components/haier/haier_base.h
   esphome::climate::ClimateTraits traits() override;
   // Answers handlers
   haier_protocol::HandlerError answer_preprocess_(uint8_t requestMessageType, uint8_t expectedRequestMessageType,
@@ -106,10 +126,23 @@ class HaierClimate : public esphome::Component,
   // Timeout handler
   haier_protocol::HandlerError timeout_default_handler_(uint8_t requestType);
   // Helper functions
+<<<<<<< HEAD:components/haier/haier_climate.h
   haier_protocol::HandlerError process_status_message_(const uint8_t *packet, uint8_t size);
   void send_message_(const haier_protocol::HaierMessage &command);
   haier_protocol::HaierMessage get_control_message_();
   void set_phase_(ProtocolPhases phase);
+=======
+  void set_force_send_control_(bool status);
+  void send_message_(const haier_protocol::HaierMessage &command, bool use_crc);
+  void set_phase_(ProtocolPhases phase);
+  bool check_timout_(std::chrono::steady_clock::time_point now, std::chrono::steady_clock::time_point tpoint,
+                     size_t timeout);
+  bool is_message_interval_exceeded_(std::chrono::steady_clock::time_point now);
+  bool is_status_request_interval_exceeded_(std::chrono::steady_clock::time_point now);
+  bool is_control_message_timeout_exceeded_(std::chrono::steady_clock::time_point now);
+  bool is_control_message_interval_exceeded_(std::chrono::steady_clock::time_point now);
+  bool is_protocol_initialisation_interval_exceded_(std::chrono::steady_clock::time_point now);
+>>>>>>> dev:components/haier/haier_base.h
 
   struct HvacSettings {
     esphome::optional<esphome::climate::ClimateMode> mode;
@@ -128,9 +161,11 @@ class HaierClimate : public esphome::Component,
   uint8_t other_modes_fan_speed_;
   bool beeper_status_;
   bool display_status_;
+  bool health_mode_;
   bool force_send_control_;
   bool forced_publish_;
   bool forced_request_status_;
+<<<<<<< HEAD:components/haier/haier_climate.h
   bool control_called_;
   bool got_valid_outdoor_temp_;
   AirflowVerticalDirection vertical_direction_;
@@ -144,11 +179,16 @@ class HaierClimate : public esphome::Component,
   bool &use_crc_;
   uint8_t active_alarms_[8];
   esphome::sensor::Sensor *outdoor_sensor_;
+=======
+  bool first_control_attempt_;
+  bool reset_protocol_request_;
+>>>>>>> dev:components/haier/haier_base.h
   esphome::climate::ClimateTraits traits_;
   HvacSettings hvac_settings_;
   std::chrono::steady_clock::time_point last_request_timestamp_;       // For interval between messages
   std::chrono::steady_clock::time_point last_valid_status_timestamp_;  // For protocol timeout
   std::chrono::steady_clock::time_point last_status_request_;          // To request AC status
+<<<<<<< HEAD:components/haier/haier_climate.h
 #ifdef HAIER_REPORT_WIFI_SIGNAL
   std::chrono::steady_clock::time_point last_signal_request_;  // To send WiFI signal level
 #endif
@@ -157,3 +197,10 @@ class HaierClimate : public esphome::Component,
 
 } // namespace haier
 } // namespace esphome
+=======
+  std::chrono::steady_clock::time_point control_request_timestamp_;    // To send control message
+};
+
+}  // namespace haier
+}  // namespace esphome
+>>>>>>> dev:components/haier/haier_base.h

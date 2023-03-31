@@ -5,19 +5,12 @@ substitutions:
   send_wifi: "true"
 
 esphome:
-  name: haier
-  name_add_mac_suffix: true
+  name: esp32-idf-hon-wifi
 
 esp32:
   board: esp32dev
   framework:
     type: esp-idf
-    sdkconfig_options:
-      CONFIG_FREERTOS_UNICORE: y
-
-wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
 
 uart:
   baud_rate: 9600
@@ -28,4 +21,11 @@ uart:
 logger:
   level: DEBUG
 
-<<: !include .haier-base.yaml
+external_components:
+  source:
+    type: local
+    path: ../components
+
+<<: !include ./.wifi-base.yaml
+
+<<: !include ../.haier-hon-base.yaml

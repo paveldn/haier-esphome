@@ -1,0 +1,36 @@
+substitutions:
+  device_name: Haier AC
+  device_id: haier_climate
+  uart_id: ac_port 
+  send_wifi: "false"
+
+esphome:
+  name: esp32-idf-smartair2-ethernet
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+uart:
+  baud_rate: 9600
+  tx_pin: 17
+  rx_pin: 16
+  id: ${uart_id}  
+
+logger:
+  level: DEBUG
+
+external_components:
+  source:
+    type: local
+    path: ../components
+
+ethernet:
+  type: LAN8720
+  mdc_pin: GPIO23
+  mdio_pin: GPIO18
+  clk_mode: GPIO0_IN
+  phy_addr: 0
+
+<<: !include ../.haier-smartair2-base.yaml
