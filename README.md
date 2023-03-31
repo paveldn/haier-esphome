@@ -14,9 +14,9 @@ You can use this component together with a native Haier ESP32 device:
 
 but also you can use any other ESP32 or ESP8266 board.
 
-**Warning!** New generation of ESP32-Haier devices have encription enabled so they can only be flashed with firmwares that signed with private key. THere is no way to make them work with ESPHome so if you will try board will get in to a bootloop with error 
+**Warning!** New generation of ESP32-Haier devices have encryption enabled so they can only be flashed with firmware that is signed with the private key. There is no way to make them work with ESPHome so if you will try board will get into a boot loop with error 
 `rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)`
-The only way to recover this board is to flash with original image. So before starting your experiments make backup image: #how-to-backup-original-image-and-flash-esphome-to-the-esp32-haier-module
+The only way to recover this board is to flash it with the original image. So before starting your experiments make a backup image: [How to backup original image and flash ESPHome to the ESP32 Haier module](#how-to-backup-original-image-and-flash-esphome-to-the-esp32-haier-module)
 
 # Configuration example
 
@@ -139,16 +139,16 @@ on_value:
 
 # How to backup original image and flash ESPHome to the ESP32 Haier module
 
-**It is strongly recommended to make a backup of original flash content before flashing ESPHome!**
+**It is strongly recommended to make a backup of the original flash content before flashing ESPHome!**
 
-To make backup and to flash the new firmware you will need to use a USB to TTL converter and solder wires to access UART0 on board (or use something like this: [Pogo Pin Probe Clip 2x5p 2.54 mm]( https://www.tinytronics.nl/shop/en/tools-and-mounting/measuring/accessories/test-probe-with-clamp-pogo-pin-2x5p))
+To make a backup and to flash the new firmware you will need to use a USB to TTL converter and solder wires to access UART0 on board (or use something like this: [Pogo Pin Probe Clip 2x5p 2.54 mm]( https://www.tinytronics.nl/shop/en/tools-and-mounting/measuring/accessories/test-probe-with-clamp-pogo-pin-2x5p))
 
 **UART0 pinout:**
 <p><a href="https://github.com/paveldn/ESP32-S0WD-Haier/blob/master/img/ESP32_Haier_UAR0_pinout.jpg?raw=true"><img src="https://github.com/paveldn/ESP32-S0WD-Haier/blob/master/img/ESP32_Haier_UAR0_pinout.jpg?raw=true" height="50%" width="50%"></a></p>
 
 To put the device in the flash mode you will need to shortcut GPIO0 to the ground before powering the device.
 
-Once the device is in flash mode you can make a full backup of the original firmware in case you would like to return the module to its factory state. To make a backup you can use [esptool](https://github.com/espressif/esptool). Command to make a full flash backup: 
+Once the device is in the flash mode you can make a full backup of the original firmware in case you would like to return the module to its factory state. To make a backup you can use [esptool](https://github.com/espressif/esptool). Command to make a full flash backup: 
 
 **python esptool.py -b 115200 --port <port_name> read_flash 0x00000 0x400000 flash_4M.bin**
 
