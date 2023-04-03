@@ -10,7 +10,7 @@ You can use this component together with a native Haier ESP32 device:
 
 **Back:**
 
-<a href="https://github.com/paveldn/ESP32-S0WD-Haier/blob/master/img/ESP32_front.jpg?raw=true"><img src="https://github.com/paveldn/ESP32-S0WD-Haier/blob/master/img/ESP32_back.jpg?raw=true" height="50%" width="50%"></a>
+<a href="https://github.com/paveldn/ESP32-S0WD-Haier/blob/master/img/ESP32_back.jpg?raw=true"><img src="https://github.com/paveldn/ESP32-S0WD-Haier/blob/master/img/ESP32_back.jpg?raw=true" height="50%" width="50%"></a>
 
 but also you can use any other ESP32 or ESP8266 board.
 
