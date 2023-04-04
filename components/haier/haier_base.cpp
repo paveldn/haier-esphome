@@ -264,7 +264,7 @@ void HaierClimateBase::process_pending_action_() {
       // shouldn't get here, do nothing
       break;
     default:
-      ESP_LOGW(TAG, "Unsupported action: %d", this->action_request_);
+      ESP_LOGW(TAG, "Unsupported action: %d", (uint8_t) this->action_request_);
       break;
   }
   this->action_request_ = ActionRequest::NO_ACTION;

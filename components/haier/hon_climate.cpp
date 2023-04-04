@@ -742,7 +742,7 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
       new_cleaning = CleaningState::NO_CLEANING;
     }
     if (new_cleaning != this->cleaning_status_) {
-      ESP_LOGD(TAG, "Cleaning status change: %d => %d", this->cleaning_status_, new_cleaning);
+      ESP_LOGD(TAG, "Cleaning status change: %d => %d", (uint8_t) this->cleaning_status_, (uint8_t) new_cleaning);
       if (new_cleaning == CleaningState::NO_CLEANING) {
         // Turnuin AC off after cleaning
         this->action_request_ = ActionRequest::TURN_POWER_OFF;
