@@ -589,12 +589,24 @@ haier_protocol::HaierMessage HonClimate::get_control_message() {
     case CleaningState::SELF_CLEAN:
       this->cleaning_start_request_ = CleaningState::NO_CLEANING;
       out_data->self_cleaning_status = 1;
-      out_data->steri_clean = 0;  
+      out_data->steri_clean = 0;
+      out_data->set_point = 0x06;
+      out_data->vertical_swing_mode = (uint8_t) hon_protocol::VerticalSwingMode::CENTER;
+      out_data->horizontal_swing_mode = (uint8_t) hon_protocol::HorizontalSwingMode::CENTER;
+      out_data->ac_power = 1;
+      out_data->ac_mode = (uint8_t) hon_protocol::ConditioningMode::DRY;
+      out_data->light_status = 0;
       break;
     case CleaningState::STERI_CLEAN:
       this->cleaning_start_request_ = CleaningState::NO_CLEANING;
       out_data->self_cleaning_status = 0;
       out_data->steri_clean = 1;
+      out_data->set_point = 0x06;
+      out_data->vertical_swing_mode = (uint8_t) hon_protocol::VerticalSwingMode::CENTER;
+      out_data->horizontal_swing_mode = (uint8_t) hon_protocol::HorizontalSwingMode::CENTER;
+      out_data->ac_power = 1;
+      out_data->ac_mode = (uint8_t) hon_protocol::ConditioningMode::DRY;
+      out_data->light_status = 0;
       break;
     case CleaningState::NO_CLEANING:
       // No change
