@@ -183,6 +183,9 @@ VerticalAirflowAction = haier_ns.class_("VerticalAirflowAction", automation.Acti
 HorizontalAirflowAction = haier_ns.class_("HorizontalAirflowAction", automation.Action)
 HealthOnAction =  haier_ns.class_("HealthOnAction", automation.Action)
 HealthOffAction = haier_ns.class_("HealthOffAction", automation.Action)
+PowerOnAction = haier_ns.class_("PowerOnAction", automation.Action)
+PowerOffAction = haier_ns.class_("PowerOffAction", automation.Action)
+PowerToggleAction = haier_ns.class_("PowerToggleAction", automation.Action)
 
 HAIER_BASE_ACTION_SCHEMA = automation.maybe_simple_id(
     {
@@ -304,6 +307,20 @@ async def health_action_to_code(config, action_id, template_arg, args):
     var = cg.new_Pvariable(action_id, template_arg, paren)
     return var
 
+
+@automation.register_action(
+    "climate.haier.power_on", PowerOnAction, HAIER_BASE_ACTION_SCHEMA
+)
+@automation.register_action(
+    "climate.haier.power_off", PowerOffAction, HAIER_BASE_ACTION_SCHEMA
+)
+@automation.register_action(
+    "climate.haier.power_toggle", PowerToggleAction, HAIER_BASE_ACTION_SCHEMA
+)
+async def health_action_to_code(config, action_id, template_arg, args):
+    paren = await cg.get_variable(config[CONF_ID])
+    var = cg.new_Pvariable(action_id, template_arg, paren)
+    return var
 
 def _final_validate(config):
     full_config = fv.full_config.get()

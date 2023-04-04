@@ -4,6 +4,13 @@
     path: ./components    
     
 api:
+  services:
+    - service: turn_on
+      then:
+      - climate.haier.power_on: ${device_id}
+    - service: turn_off
+      then:
+      - climate.haier.power_off: ${device_id}
 
 ota:
 
