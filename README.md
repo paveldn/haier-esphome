@@ -235,7 +235,7 @@ on_...:
 (supported only by hOn) Set direction for vertical airflow if the vertical swing is disabled. Possible values: Up, Center, Down.
 
 ```
-on_value:
+on_...:
   then:
     - climate.haier.set_vertical_airflow:
       id: device_id
@@ -247,15 +247,32 @@ on_value:
 (supported only by hOn) Set direction for horizontal airflow if the horizontal swing is disabled. Possible values: Left, Center, Right.
 
 ```
-on_value:
+on_...:
   then:
     - climate.haier.set_horizontal_airflow:
       id: device_id
       vertical_airflow: Right
 ```
 
+### climate.haier.start_self_cleaning Action
 
+(supported only by hOn) Start [self-cleaning](https://www.haier.com/in/blogs/beat-the-summer-heat-with-haier-self-cleaning-ac.shtml) 
 
+```
+on_...:
+  then:
+    - climate.haier.start_self_cleaning: device_id
+```
+
+### climate.haier.start_steri_cleaning Action
+
+(supported only by hOn) 56°C steri-cleaning
+
+```
+on_...:
+  then:
+    - climate.haier.start_steri_cleaning: device_id
+```
 
 ## How to backup the original image and flash ESPHome to the ESP32 Haier module
 
@@ -264,7 +281,7 @@ on_value:
 To make a backup and to flash the new firmware you will need to use a USB to TTL converter and solder wires to access UART0 on board (or use something like this: [Pogo Pin Probe Clip 2x5p 2.54 mm]( https://www.tinytronics.nl/shop/en/tools-and-mounting/measuring/accessories/test-probe-with-clamp-pogo-pin-2x5p))
 
 **UART0 pinout:**
-<p><a href="https://github.com/paveldn/ESP32-S0WD-Haier/blob/master/img/ESP32_Haier_UAR0_pinout.jpg?raw=true"><img src="https://github.com/paveldn/ESP32-S0WD-Haier/blob/master/img/ESP32_Haier_UAR0_pinout.jpg?raw=true" height="50%" width="50%"></a></p>
+<p><a href="./img/ESP32_Haier_UAR0_pinout.jpg?raw=true"><img src="./img/ESP32_Haier_UAR0_pinout.jpg?raw=true" height="50%" width="50%"></a></p>
 
 To put the device in the flash mode you will need to shortcut GPIO0 to the ground before powering the device.
 

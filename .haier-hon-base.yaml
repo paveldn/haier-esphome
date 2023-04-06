@@ -138,4 +138,4 @@ button:
     name: ${device_name} start 56°C steri-cleaning
     icon: mdi:spray-bottle
     on_press:
-      - lambda: id(${device_id}).start_steri_cleaning();
+      -  climate.haier.start_steri_cleaning: ${device_id}

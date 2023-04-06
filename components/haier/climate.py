@@ -179,6 +179,7 @@ DisplayOffAction = haier_ns.class_("DisplayOffAction", automation.Action)
 BeeperOnAction = haier_ns.class_("BeeperOnAction", automation.Action)
 BeeperOffAction = haier_ns.class_("BeeperOffAction", automation.Action)
 StartSelfCleaningAction = haier_ns.class_("StartSelfCleaningAction", automation.Action)
+StartSteriCleaningAction = haier_ns.class_("StartSteriCleaningAction", automation.Action)
 VerticalAirflowAction = haier_ns.class_("VerticalAirflowAction", automation.Action)
 HorizontalAirflowAction = haier_ns.class_("HorizontalAirflowAction", automation.Action)
 HealthOnAction =  haier_ns.class_("HealthOnAction", automation.Action)
@@ -223,13 +224,18 @@ async def beeper_action_to_code(config, action_id, template_arg, args):
     return var
 
 
-# Start self cleaning action action
+# Start self cleaning or steri-cleaning action action
 @automation.register_action(
     "climate.haier.start_self_cleaning",
     StartSelfCleaningAction,
     HAIER_BASE_ACTION_SCHEMA,
 )
-async def start_self_cleaning_to_code(config, action_id, template_arg, args):
+@automation.register_action(
+    "climate.haier.start_steri_cleaning",
+    StartSteriCleaningAction,
+    HAIER_BASE_ACTION_SCHEMA,
+)
+async def start_cleaning_to_code(config, action_id, template_arg, args):
     fullid, paren = await cg.get_variable_with_full_id(config[CONF_ID])
     climate_type = str(fullid.type)
     if climate_type != str(HonClimate):

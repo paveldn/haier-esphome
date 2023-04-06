@@ -90,6 +90,16 @@ template<typename... Ts> class StartSelfCleaningAction : public Action<Ts...> {
   HonClimate *parent_;
 };
 
+template<typename... Ts> class StartSteriCleaningAction : public Action<Ts...> {
+ public:
+  StartSteriCleaningAction(HonClimate *parent) : parent_(parent) {}
+  void play(Ts... x) { this->parent_->start_steri_cleaning(); }
+
+ protected:
+  HonClimate *parent_;
+};
+
+
 template<typename... Ts> class PowerOnAction : public Action<Ts...> {
  public:
   PowerOnAction(HaierClimateBase *parent) : parent_(parent) {}
