@@ -2,23 +2,55 @@
 
 This implementation of the ESPHoime component to control HVAC on the base of the SmartAir2 and hOn Haier protocols (AC that is controlled by the hOn or SmartAir2 application).
 
+## Short description
+
+There are two versions of the Haier protocol. The older one is using an application called SmartAir2 and the newer one application - called hOn. Both protocols are compatible on the transport level but have different commands to control appliances.
+
+### SmartAir2
+
+Older Haier models controlled by the SmartAir2 application is using the KZW-W002 module that looks like this:
+
+<p><a href="./img/KZW-W002.jpg?raw=true"><img src="./img/KZW-W002.jpg?raw=true" height="50%" width="50%"></a></p>
+
+This module can't be reused and you need to replace it with an ESP (RPI pico w) module. USB port on a board doesn't support USB protocol it is a UART port that just uses a USB connector. To connect the ESP board to your AC you can cut a USB type A cable and connect wires to the climate connector.
+
+**Haier UART pinout:**
+| Board | USB | Wire color | ESP module |
+| --- | --- | --- | --- |
+| 5V | VCC | red | 5V |
+| GND | GND | black | GND |
+| TX | DATA+ | green | RX |
+| RX | DATA- | white | TX |
+
+
+<p><a href="./img/usb_pinout.png?raw=true"><img src="./img/usb_pinout.png?raw=true" height="50%" width="50%"></a></p>
+
+### hOn 
+
 You can use this component together with a native Haier ESP32 device: 
+Newer Haier models using a module called ESP32-for-Haier. It is ESP32 single-core board with ESP32-S0WD chip. The module board looks like this: 
 
 **Front:**
 
-<p><a href="https://github.com/paveldn/ESP32-S0WD-Haier/blob/master/img/ESP32_front.jpg?raw=true"><img src="https://github.com/paveldn/ESP32-S0WD-Haier/blob/master/img/ESP32_front.jpg?raw=true" height="50%" width="50%"></a></p>
+<p><a href="./img/ESP32_front.jpg?raw=true"><img src="./img/ESP32_front.jpg?raw=true" height="50%" width="50%"></a></p>
 
 **Back:**
 
-<a href="https://github.com/paveldn/ESP32-S0WD-Haier/blob/master/img/ESP32_back.jpg?raw=true"><img src="https://github.com/paveldn/ESP32-S0WD-Haier/blob/master/img/ESP32_back.jpg?raw=true" height="50%" width="50%"></a>
+<a href="./img/ESP32_back.jpg?raw=true"><img src="./img/ESP32_back.jpg?raw=true" height="50%" width="50%"></a>
 
-but also you can use any other ESP32 or ESP8266 board.
+In some cases, you can refuse this module and flash it with ESPHome but some new modules don't support this. They look the same but have encryption enabled.
 
-**Warning!** New generation of ESP32-Haier devices have encryption enabled so they can only be flashed with firmware that is signed with the private key. There is no way to make them work with ESPHome so if you will try board will get into a boot loop with error 
+**Warning!** The new generation of ESP32-Haier devices has encryption enabled so they can only be flashed with firmware that is signed with the private key. There is no way to make them work with ESPHome so if you will try board will get into a boot loop with error 
 `rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)`
-The only way to recover this board is to flash it with the original image. So before starting your experiments make a backup image: [How to backup original image and flash ESPHome to the ESP32 Haier module](#how-to-backup-original-image-and-flash-esphome-to-the-esp32-haier-module)
+The only way to recover this board is to flash it with the original image. So before starting your experiments make a backup image: [How to backup the original image and flash ESPHome to the ESP32 Haier module](#how-to-backup-the-original-image-and-flash-esphome-to-the-esp32-haier-module)
 
-## Configuration example
+Also, you can use any other ESP32, ESP8266 or RPI pico W board. In this case, you will need to cut the original wire or make a connector yourself (board uses JST SM04B-GHS-TB connector)
+
+## Configuration
+
+The configuration will be a little bit different for different protocols, for example, the SmartAir2 protocol doesn't support cleaning, setting air direction (just swing on/off) etc.
+
+### hOn configuration example
 
 ```  
 uart:
@@ -37,6 +69,39 @@ climate:
     beeper: true                # Optional, default true, disables beep on commands from ESP
     outdoor_temperature:        # Optional, outdoor temperature sensor
       name: Haier AC outdoor temperature
+    visual:                     # Optional, you can use it to limit min and max temperatures in UI (not working for remote!)
+      min_temperature: 16 °C
+      max_temperature: 30 °C
+      temperature_step: 1 °C
+    supported_modes:            # Optional, can be used to disable some modes if you don't need them
+    - 'OFF'
+    - AUTO
+    - COOL
+    - HEAT
+    - DRY
+    - FAN_ONLY
+    supported_swing_modes:      # Optional, can be used to disable some swing modes if your AC does not support it
+    - 'OFF'
+    - VERTICAL
+    - HORIZONTAL
+    - BOTH
+```
+
+### SmartAir2 configuration example
+
+```  
+uart:
+  baud_rate: 9600
+  tx_pin: 1
+  rx_pin: 3
+  id: ac_port  
+
+climate:
+  - platform: haier
+    id: haier_ac
+    protocol: smartAir2
+    name: Haier AC 
+    uart_id: ac_port
     visual:                     # Optional, you can use it to limit min and max temperatures in UI (not working for remote!)
       min_temperature: 16 °C
       max_temperature: 30 °C
@@ -139,7 +204,7 @@ on_value:
       vertical_airflow: Right
 ```
 
-## How to backup original image and flash ESPHome to the ESP32 Haier module
+## How to backup the original image and flash ESPHome to the ESP32 Haier module
 
 **It is strongly recommended to make a backup of the original flash content before flashing ESPHome!**
 
@@ -150,7 +215,7 @@ To make a backup and to flash the new firmware you will need to use a USB to TTL
 
 To put the device in the flash mode you will need to shortcut GPIO0 to the ground before powering the device.
 
-Once the device is in the flash mode you can make a full backup of the original firmware in case you would like to return the module to its factory state. To make a backup you can use [esptool](https://github.com/espressif/esptool). Command to make a full flash backup: 
+Once the device is in flash mode you can make a full backup of the original firmware in case you would like to return the module to its factory state. To make a backup you can use [esptool](https://github.com/espressif/esptool). Command to make a full flash backup: 
 
 **python esptool.py -b 115200 --port <port_name> read_flash 0x00000 0x400000 flash_4M.bin**
 
