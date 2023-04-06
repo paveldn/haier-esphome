@@ -120,7 +120,7 @@ climate:
     - BOTH
 ```
 
-**Configuration variables**
+### Configuration variables
 
 - **id (Optional, [ID](https://esphome.io/guides/configuration-types.html#config-id)):** Manually specify the ID used for code generation
 - **uart_id (Optional, [ID](https://esphome.io/guides/configuration-types.html#config-id)):** ID of the UART port to communicate with AC
@@ -140,6 +140,36 @@ climate:
 
 Haier climate support some actiuons:
 
+### climate.haier.power_on Action
+
+This action turns AC power on
+
+```
+on_...:
+  then:
+    climate.haier.power_on: device_id
+```
+
+### climate.haier.power_off Action
+
+This action turns AC power off
+
+```
+on_...:
+  then:
+    climate.haier.power_off: device_id
+```
+
+### climate.haier.power_toggle Action
+
+This action toggles AC power
+
+```
+on_...:
+  then:
+    climate.haier.power_toggle: device_id
+```
+
 ### climate.haier.display_on Action
 
 This action turns the AC display on
@@ -158,6 +188,26 @@ This action turns the AC display off
 on_...:
   then:
     climate.haier.display_off: device_id
+```
+
+### climate.haier.health_on Action
+
+Turn on health mode ([UV light sterilization](https://www.haierhvac.eu/en/node/1809))
+
+```
+on_...:
+  then:
+    climate.haier.health_on: device_id
+```
+
+### climate.haier.health_off Action
+
+Turn off health mode
+
+```
+on_...:
+  then:
+    climate.haier.health_off: device_id
 ```
 
 ### climate.haier.beeper_on Action
@@ -203,6 +253,9 @@ on_value:
       id: device_id
       vertical_airflow: Right
 ```
+
+
+
 
 ## How to backup the original image and flash ESPHome to the ESP32 Haier module
 
