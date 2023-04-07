@@ -137,7 +137,7 @@ CONFIG_SCHEMA = cv.All(
     climate.CLIMATE_SCHEMA.extend(
         {
             cv.GenerateID(): cv.declare_id(HaierClimateBase),
-            cv.Required(CONF_PROTOCOL): cv.one_of(*PROTOCOLS_SUPPORTED, upper=True),
+            cv.Optional(CONF_PROTOCOL, default="SMARTAIR2"): cv.one_of(*PROTOCOLS_SUPPORTED, upper=True),
             cv.Optional(
                 CONF_WIFI_SIGNAL
             ): cv.boolean,  # Default: True for hOn protocol, False for smartAir2 protocol
