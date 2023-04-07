@@ -209,9 +209,9 @@ haier_protocol::HandlerError HonClimate::status_handler_(uint8_t request_type, u
       if (this->protocol_phase_ == ProtocolPhases::WAITING_FIRST_STATUS_ANSWER) {
         ESP_LOGI(TAG, "First HVAC status received");
         this->set_phase_(ProtocolPhases::SENDING_ALARM_STATUS_REQUEST);
-      } else if ( (this->protocol_phase_ == ProtocolPhases::WAITING_STATUS_ANSWER) ||
-                  (this->protocol_phase_ == ProtocolPhases::WAITING_POWER_ON_ANSWER) ||
-                  (this->protocol_phase_ == ProtocolPhases::WAITING_POWER_OFF_ANSWER)) {
+      } else if ((this->protocol_phase_ == ProtocolPhases::WAITING_STATUS_ANSWER) ||
+                 (this->protocol_phase_ == ProtocolPhases::WAITING_POWER_ON_ANSWER) ||
+                 (this->protocol_phase_ == ProtocolPhases::WAITING_POWER_OFF_ANSWER)) {
         this->set_phase_(ProtocolPhases::IDLE);
       } else if (this->protocol_phase_ == ProtocolPhases::WAITING_CONTROL_ANSWER) {
         this->set_phase_(ProtocolPhases::IDLE);
@@ -280,27 +280,27 @@ haier_protocol::HandlerError HonClimate::get_alarm_status_answer_handler_(uint8_
 void HonClimate::set_answers_handlers() {
   // Set handlers
   this->haier_protocol_.set_answer_handler(
-      (uint8_t)(hon_protocol::FrameType::GET_DEVICE_VERSION),
+      (uint8_t) (hon_protocol::FrameType::GET_DEVICE_VERSION),
       std::bind(&HonClimate::get_device_version_answer_handler_, this, std::placeholders::_1, std::placeholders::_2,
                 std::placeholders::_3, std::placeholders::_4));
   this->haier_protocol_.set_answer_handler(
-      (uint8_t)(hon_protocol::FrameType::GET_DEVICE_ID),
+      (uint8_t) (hon_protocol::FrameType::GET_DEVICE_ID),
       std::bind(&HonClimate::get_device_id_answer_handler_, this, std::placeholders::_1, std::placeholders::_2,
                 std::placeholders::_3, std::placeholders::_4));
   this->haier_protocol_.set_answer_handler(
-      (uint8_t)(hon_protocol::FrameType::CONTROL),
+      (uint8_t) (hon_protocol::FrameType::CONTROL),
       std::bind(&HonClimate::status_handler_, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
                 std::placeholders::_4));
   this->haier_protocol_.set_answer_handler(
-      (uint8_t)(hon_protocol::FrameType::GET_MANAGEMENT_INFORMATION),
+      (uint8_t) (hon_protocol::FrameType::GET_MANAGEMENT_INFORMATION),
       std::bind(&HonClimate::get_management_information_answer_handler_, this, std::placeholders::_1,
                 std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
   this->haier_protocol_.set_answer_handler(
-      (uint8_t)(hon_protocol::FrameType::GET_ALARM_STATUS),
+      (uint8_t) (hon_protocol::FrameType::GET_ALARM_STATUS),
       std::bind(&HonClimate::get_alarm_status_answer_handler_, this, std::placeholders::_1, std::placeholders::_2,
                 std::placeholders::_3, std::placeholders::_4));
   this->haier_protocol_.set_answer_handler(
-      (uint8_t)(hon_protocol::FrameType::REPORT_NETWORK_STATUS),
+      (uint8_t) (hon_protocol::FrameType::REPORT_NETWORK_STATUS),
       std::bind(&HonClimate::report_network_status_answer_handler_, this, std::placeholders::_1, std::placeholders::_2,
                 std::placeholders::_3, std::placeholders::_4));
 }
@@ -352,7 +352,7 @@ void HonClimate::process_phase(std::chrono::steady_clock::time_point now) {
             (uint8_t) hon_protocol::FrameType::CONTROL, (uint16_t) hon_protocol::SubcomandsControl::GET_USER_DATA);
         this->send_message_(STATUS_REQUEST, this->use_crc_);
         this->last_status_request_ = now;
-        this->set_phase_((ProtocolPhases)((uint8_t) this->protocol_phase_ + 1));
+        this->set_phase_((ProtocolPhases) ((uint8_t) this->protocol_phase_ + 1));
       }
       break;
 #ifdef HAIER_REPORT_WIFI_SIGNAL
@@ -429,9 +429,13 @@ void HonClimate::process_phase(std::chrono::steady_clock::time_point now) {
         uint8_t pwr_cmd_buf[2] = {0x00, 0x00};
         if (this->protocol_phase_ == ProtocolPhases::SENDING_POWER_ON_COMMAND)
           pwr_cmd_buf[1] = 0x01;
-        haier_protocol::HaierMessage power_cmd((uint8_t) hon_protocol::FrameType::CONTROL, ((uint16_t) hon_protocol::SubcomandsControl::SET_SINGLE_PARAMETER) + 1, pwr_cmd_buf, sizeof(pwr_cmd_buf));
+        haier_protocol::HaierMessage power_cmd((uint8_t) hon_protocol::FrameType::CONTROL,
+                                               ((uint16_t) hon_protocol::SubcomandsControl::SET_SINGLE_PARAMETER) + 1,
+                                               pwr_cmd_buf, sizeof(pwr_cmd_buf));
         this->send_message_(power_cmd, this->use_crc_);
-        this->set_phase_(this->protocol_phase_ == ProtocolPhases::SENDING_POWER_ON_COMMAND ? ProtocolPhases::WAITING_POWER_ON_ANSWER : ProtocolPhases::WAITING_POWER_OFF_ANSWER);
+        this->set_phase_(this->protocol_phase_ == ProtocolPhases::SENDING_POWER_ON_COMMAND
+                             ? ProtocolPhases::WAITING_POWER_ON_ANSWER
+                             : ProtocolPhases::WAITING_POWER_OFF_ANSWER);
       }
       break;
 
@@ -611,7 +615,7 @@ haier_protocol::HaierMessage HonClimate::get_control_message() {
   out_data->display_status = this->display_status_ ? 1 : 0;
   out_data->health_mode = this->health_mode_ ? 1 : 0;
   switch (this->action_request_) {
-    case ActionRequest::START_SELF_CLEAN :
+    case ActionRequest::START_SELF_CLEAN:
       this->action_request_ = ActionRequest::NO_ACTION;
       out_data->self_cleaning_status = 1;
       out_data->steri_clean = 0;
@@ -734,16 +738,16 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
     }
   }
   {
-    // Health mode 
+    // Health mode
     bool old_health_mode = this->health_mode_;
-    this->health_mode_ =  packet.control.health_mode == 1;
+    this->health_mode_ = packet.control.health_mode == 1;
     should_publish = should_publish || (old_health_mode != this->health_mode_);
   }
   {
     CleaningState new_cleaning;
     if (packet.control.steri_clean == 1) {
       // Steri-cleaning
-      new_cleaning= CleaningState::STERI_CLEAN;
+      new_cleaning = CleaningState::STERI_CLEAN;
     } else if (packet.control.self_cleaning_status == 1) {
       // Self-cleaning
       new_cleaning = CleaningState::SELF_CLEAN;
@@ -757,7 +761,7 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
         // Turnuin AC off after cleaning
         this->action_request_ = ActionRequest::TURN_POWER_OFF;
       }
-      this->cleaning_status_ = new_cleaning; 
+      this->cleaning_status_ = new_cleaning;
     }
   }
   {
@@ -839,7 +843,7 @@ bool HonClimate::is_message_invalid(uint8_t message_type) {
   return message_type == (uint8_t) hon_protocol::FrameType::INVALID;
 }
 
-void HonClimate::process_pending_action_() {
+void HonClimate::process_pending_action() {
   switch (this->action_request_) {
     case ActionRequest::START_SELF_CLEAN:
     case ActionRequest::START_STERI_CLEAN:
@@ -847,7 +851,7 @@ void HonClimate::process_pending_action_() {
       this->set_phase_(ProtocolPhases::SENDING_CONTROL);
       break;
     default:
-      HaierClimateBase::process_pending_action_();
+      HaierClimateBase::process_pending_action();
       break;
   }
 }
