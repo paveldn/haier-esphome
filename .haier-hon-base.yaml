@@ -5,12 +5,8 @@
     
 api:
   services:
-    - service: turn_on
-      then:
-      - climate.haier.power_on: ${device_id}
-    - service: turn_off
-      then:
-      - climate.haier.power_off: ${device_id}
+    - <<: !include configs/api/service.turn_on.yaml
+    - <<: !include configs/api/service.turn_off.yaml
 
 ota:
 
@@ -41,106 +37,23 @@ climate:
     - HORIZONTAL
     - BOTH
 
-switch:
-  - platform: template
-    id: ${device_id}_display_switch
-    name: ${device_name} display
-    icon: mdi:led-on
-    entity_category: config
-    restore_state: yes
-    lambda: |-
-      return id(${device_id}).get_display_state();
-    turn_on_action:
-      climate.haier.display_on: ${device_id}
-    turn_off_action:
-      climate.haier.display_off: ${device_id}
-  - platform: template
-    id: ${device_id}_beeper_switch
-    entity_category: config
-    name: ${device_name} beeper
-    icon: mdi:volume-high
-    restore_state: yes
-    lambda: |-
-      return id(${device_id}).get_beeper_state();
-    turn_on_action:
-      climate.haier.beeper_on: ${device_id}
-    turn_off_action:
-      climate.haier.beeper_off: ${device_id}
-  - platform: template
-    id: ${device_id}_health_mode
-    name: ${device_name} health mode
-    icon: mdi:leaf
-    restore_state: yes
-    lambda: |-
-      return id(${device_id}).get_health_mode();
-    turn_on_action:
-      climate.haier.health_on: ${device_id}
-    turn_off_action:
-      climate.haier.health_off: ${device_id}
-  - platform: restart
-    name: ${device_name} restart
-
 select:
-    # Vertical airflow direction setting. Works only if the vertical swing is off
-    # You can remove this control if you don't need it
-  - platform: template
-    id: ${device_id}_vertical_direction
-    name: ${device_name} airflow vertical
-    entity_category: config
-    icon: mdi:arrow-expand-vertical
-    optimistic: true
-    restore_value: true
-    initial_option: Center 
-    options:
-      - Health Up
-      - Max Up
-      - Up
-      - Center
-      - Down
-      - Health Down
-    on_value:
-      then:
-        - climate.haier.set_vertical_airflow:
-           id: ${device_id}
-           vertical_airflow: !lambda |-
-             return esphome::haier::AirflowVerticalDirection(i);
-    # Horizontal airflow direction setting. Works only if the horizontal swing is off
-    # You can remove this control if you don't need it
-  - platform: template
-    id: ${device_id}_horizontal_direction
-    name: ${device_name} airflow horizontal
-    entity_category: config
-    icon: mdi:arrow-expand-horizontal
-    optimistic: true
-    restore_value: true
-    initial_option: Center 
-    options:
-      - Max Left
-      - Left
-      - Center
-      - Right
-      - Max Right
-    on_value:
-      then:
-        - climate.haier.set_horizontal_airflow:
-           id: ${device_id}
-           horizontal_airflow: !lambda |-
-             return esphome::haier::AirflowHorizontalDirection(i);
+  # Vertical airflow direction setting. Works only if the vertical swing is off
+  # You can remove this control if you don't need it
+  - <<: !include configs/select/airflow_vertical.yaml
+  # Horizontal airflow direction setting. Works only if the horizontal swing is off
+  # You can remove this control if you don't need it
+  - <<: !include configs/select/airflow_horizontal.yaml
+
+switch:
+  - <<: !include configs/switch/display.yaml
+  - <<: !include configs/switch/beeper.yaml
+  - <<: !include configs/switch/health_mode.yaml
+  - <<: !include configs/switch/restart.yaml
 
 text_sensor:
-  - platform: template
-    name: ${device_name} cleaning status
-    icon: mdi:spray-bottle
-    lambda: return id(${device_id}).get_cleaning_status_text();
+  - <<: !include configs/text_sensor/cleaning_status.yaml
 
 button:
-  - platform: template
-    name: ${device_name} start self cleaning
-    icon: mdi:spray-bottle
-    on_press:
-      - climate.haier.start_self_cleaning: ${device_id}
-  - platform: template
-    name: ${device_name} start 56°C steri-cleaning
-    icon: mdi:spray-bottle
-    on_press:
-      -  climate.haier.start_steri_cleaning: ${device_id}
+  - <<: !include configs/button/self_cleaning.yaml
+  - <<: !include configs/button/steri_cleaning.yaml

@@ -1,0 +1,4 @@
+  - platform: template
+    name: ${device_name} cleaning status
+    icon: mdi:spray-bottle
+    lambda: return id(${device_id}).get_cleaning_status_text();

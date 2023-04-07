@@ -5,12 +5,8 @@ external_components:
     
 api:
   services:
-    - service: turn_on
-      then:
-      - climate.haier.power_on: ${device_id}
-    - service: turn_off
-      then:
-      - climate.haier.power_off: ${device_id}
+    - <<: !include configs/api/service.turn_on.yaml
+    - <<: !include configs/api/service.turn_off.yaml
 
 ota:
 
@@ -38,28 +34,6 @@ climate:
     - BOTH
 
 switch:
-  - platform: template
-    id: ${device_id}_display_switch
-    name: ${device_name} display
-    icon: mdi:led-on
-    entity_category: config
-    restore_state: yes
-    lambda: |-
-      return id(${device_id}).get_display_state();
-    turn_on_action:
-      climate.haier.display_on: ${device_id}
-    turn_off_action:
-      climate.haier.display_off: ${device_id}
-  - platform: template
-    id: ${device_id}_health_mode
-    name: ${device_name} health mode
-    icon: mdi:leaf
-    restore_state: yes
-    lambda: |-
-      return id(${device_id}).get_health_mode();
-    turn_on_action:
-      climate.haier.health_on: ${device_id}
-    turn_off_action:
-      climate.haier.health_off: ${device_id}
-  - platform: restart
-    name: ${device_name} restart
+  - <<: !include configs/switch/display.yaml
+  - <<: !include configs/switch/health_mode.yaml
+  - <<: !include configs/switch/restart.yaml

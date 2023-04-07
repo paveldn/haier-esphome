@@ -1,0 +1,9 @@
+  - platform: template
+    id: warnings_counter_sensor
+    name: "Warnings counter"
+    accuracy_decimals: 0
+    state_class: total_increasing
+    entity_category: diagnostic
+    lambda: |-
+        return id(${warnings_counter});
+    update_interval: 15s

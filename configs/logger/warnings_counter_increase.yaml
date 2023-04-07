@@ -1,0 +1,8 @@
+    - level: WARN
+      then:
+        - globals.set:
+            id: ${warnings_counter}
+            value: !lambda |-
+              if ((strcmp(tag, "haier.protocol") == 0) || (strcmp(tag, "haier.climate") == 0))
+                return id(${warnings_counter}) + 1;
+              return id(${warnings_counter});

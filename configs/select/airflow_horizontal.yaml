@@ -1,0 +1,20 @@
+  - platform: template
+    id: ${device_id}_horizontal_direction
+    name: ${device_name} airflow horizontal
+    entity_category: config
+    icon: mdi:arrow-expand-horizontal
+    optimistic: true
+    restore_value: true
+    initial_option: Center 
+    options:
+      - Max Left
+      - Left
+      - Center
+      - Right
+      - Max Right
+    on_value:
+      then:
+        - climate.haier.set_horizontal_airflow:
+           id: ${device_id}
+           horizontal_airflow: !lambda |-
+             return esphome::haier::AirflowHorizontalDirection(i);

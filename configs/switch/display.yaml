@@ -1,0 +1,12 @@
+  - platform: template
+    id: ${device_id}_display_switch
+    name: ${device_name} display
+    icon: mdi:led-on
+    entity_category: config
+    restore_state: yes
+    lambda: |-
+      return id(${device_id}).get_display_state();
+    turn_on_action:
+      climate.haier.display_on: ${device_id}
+    turn_off_action:
+      climate.haier.display_off: ${device_id}

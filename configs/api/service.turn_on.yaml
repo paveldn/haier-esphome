@@ -1,0 +1,3 @@
+    - service: turn_on
+      then:
+      - climate.haier.power_on: ${device_id}

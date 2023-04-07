@@ -1,0 +1,21 @@
+  - platform: template
+    id: ${device_id}_vertical_direction
+    name: ${device_name} airflow vertical
+    entity_category: config
+    icon: mdi:arrow-expand-vertical
+    optimistic: true
+    restore_value: true
+    initial_option: Center 
+    options:
+      - Health Up
+      - Max Up
+      - Up
+      - Center
+      - Down
+      - Health Down
+    on_value:
+      then:
+        - climate.haier.set_vertical_airflow:
+           id: ${device_id}
+           vertical_airflow: !lambda |-
+             return esphome::haier::AirflowVerticalDirection(i);

@@ -1,0 +1,9 @@
+  - platform: template
+    id: errors_counter_sensor
+    name: "Errors counter"
+    accuracy_decimals: 0
+    state_class: total_increasing
+    entity_category: diagnostic
+    lambda: |-
+        return id(${errors_counter});
+    update_interval: 15s
