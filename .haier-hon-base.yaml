@@ -92,9 +92,12 @@ select:
     restore_value: true
     initial_option: Center 
     options:
+      - Health Up
+      - Max Up
       - Up
       - Center
       - Down
+      - Health Down
     on_value:
       then:
         - climate.haier.set_vertical_airflow:
@@ -112,9 +115,11 @@ select:
     restore_value: true
     initial_option: Center 
     options:
+      - Max Left
       - Left
       - Center
       - Right
+      - Max Right
     on_value:
       then:
         - climate.haier.set_horizontal_airflow:

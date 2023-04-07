@@ -8,15 +8,20 @@ namespace esphome {
 namespace haier {
 
 enum class AirflowVerticalDirection : uint8_t {
-  UP = 0,
-  CENTER = 1,
-  DOWN = 2,
+  HEALTH_UP = 0,
+  MAX_UP = 1,
+  UP = 2,
+  CENTER = 3,
+  DOWN = 4,
+  HEALTH_DOWN = 5,
 };
 
 enum class AirflowHorizontalDirection : uint8_t {
-  LEFT = 0,
-  CENTER = 1,
-  RIGHT = 2,
+  MAX_LEFT = 0,
+  LEFT = 1,
+  CENTER = 2,
+  RIGHT = 3,
+  MAX_RIGHT = 4,
 };
 
 enum class CleaningState : uint8_t {

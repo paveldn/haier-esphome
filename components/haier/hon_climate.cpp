@@ -26,10 +26,16 @@ constexpr int PROTOCOL_OUTDOOR_TEMPERATURE_OFFSET = -64;
 
 hon_protocol::VerticalSwingMode get_vertical_swing_mode(AirflowVerticalDirection direction) {
   switch (direction) {
+    case AirflowVerticalDirection::HEALTH_UP:
+      return hon_protocol::VerticalSwingMode::HEALTH_UP;
+    case AirflowVerticalDirection::MAX_UP:
+      return hon_protocol::VerticalSwingMode::MAX_UP;
     case AirflowVerticalDirection::UP:
       return hon_protocol::VerticalSwingMode::UP;
     case AirflowVerticalDirection::DOWN:
       return hon_protocol::VerticalSwingMode::DOWN;
+    case AirflowVerticalDirection::HEALTH_DOWN:
+      return hon_protocol::VerticalSwingMode::HEALTH_DOWN;
     default:
       return hon_protocol::VerticalSwingMode::CENTER;
   }
@@ -37,10 +43,14 @@ hon_protocol::VerticalSwingMode get_vertical_swing_mode(AirflowVerticalDirection
 
 hon_protocol::HorizontalSwingMode get_horizontal_swing_mode(AirflowHorizontalDirection direction) {
   switch (direction) {
+    case AirflowHorizontalDirection::MAX_LEFT:
+      return hon_protocol::HorizontalSwingMode::MAX_LEFT;
     case AirflowHorizontalDirection::LEFT:
       return hon_protocol::HorizontalSwingMode::LEFT;
     case AirflowHorizontalDirection::RIGHT:
       return hon_protocol::HorizontalSwingMode::RIGHT;
+    case AirflowHorizontalDirection::MAX_RIGHT:
+      return hon_protocol::HorizontalSwingMode::MAX_RIGHT;
     default:
       return hon_protocol::HorizontalSwingMode::CENTER;
   }
