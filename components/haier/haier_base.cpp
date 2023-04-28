@@ -57,9 +57,8 @@ const char *HaierClimateBase::phase_to_string_(ProtocolPhases phase) {
 }
 #endif
 
-HaierClimateBase::HaierClimateBase(UARTComponent *parent)
-    : UARTDevice(parent),
-      haier_protocol_(*this),
+HaierClimateBase::HaierClimateBase()
+    : haier_protocol_(*this),
       protocol_phase_(ProtocolPhases::SENDING_INIT_1),
       action_request_(ActionRequest::NO_ACTION),
       display_status_(true),

@@ -56,9 +56,8 @@ hon_protocol::HorizontalSwingMode get_horizontal_swing_mode(AirflowHorizontalDir
   }
 }
 
-HonClimate::HonClimate(UARTComponent *parent)
-    : HaierClimateBase(parent),
-      last_status_message_(new uint8_t[sizeof(hon_protocol::HaierPacketControl)]),
+HonClimate::HonClimate()
+    : last_status_message_(new uint8_t[sizeof(hon_protocol::HaierPacketControl)]),
       cleaning_status_(CleaningState::NO_CLEANING),
       got_valid_outdoor_temp_(false),
       hvac_hardware_info_available_(false),
