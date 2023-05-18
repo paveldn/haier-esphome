@@ -1,0 +1,8 @@
+    - level: ERROR
+      then:
+        - globals.set:
+            id: ${errors_counter}
+            value: !lambda |-
+              if ((strcmp(tag, "haier.protocol") == 0) || (strcmp(tag, "haier.climate") == 0))
+                return id(${errors_counter}) + 1;
+              return id(${errors_counter});

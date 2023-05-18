@@ -10,15 +10,23 @@
 namespace esphome {
 namespace haier {
 
+enum class ActionRequest : uint8_t {
+  NO_ACTION = 0,
+  TURN_POWER_ON = 1,
+  TURN_POWER_OFF = 2,
+  TOGGLE_POWER = 3,
+  START_SELF_CLEAN = 4,   // only hOn
+  START_STERI_CLEAN = 5,  // only hOn
+};
+
 class HaierClimateBase : public esphome::Component,
                          public esphome::climate::Climate,
                          public esphome::uart::UARTDevice,
                          public haier_protocol::ProtocolStream {
  public:
-  HaierClimateBase() = delete;
+  HaierClimateBase();
   HaierClimateBase(const HaierClimateBase &) = delete;
   HaierClimateBase &operator=(const HaierClimateBase &) = delete;
-  HaierClimateBase(esphome::uart::UARTComponent *parent);
   ~HaierClimateBase();
   void setup() override;
   void loop() override;
@@ -30,7 +38,10 @@ class HaierClimateBase : public esphome::Component,
   bool get_display_state() const;
   void set_health_mode(bool state);
   bool get_health_mode() const;
-  void reset_protocol() { this->reset_protocol_request_ = true; }; 
+  void send_power_on_command();
+  void send_power_off_command();
+  void toggle_power();
+  void reset_protocol() { this->reset_protocol_request_ = true; };
   void set_supported_modes(const std::set<esphome::climate::ClimateMode> &modes);
   void set_supported_swing_modes(const std::set<esphome::climate::ClimateSwingMode> &modes);
   size_t available() noexcept override { return esphome::uart::UARTDevice::available(); };
@@ -64,6 +75,10 @@ class HaierClimateBase : public esphome::Component,
     WAITING_SIGNAL_LEVEL_ANSWER = 14,
     SENDING_CONTROL = 15,
     WAITING_CONTROL_ANSWER = 16,
+    SENDING_POWER_ON_COMMAND = 17,
+    WAITING_POWER_ON_ANSWER = 18,
+    SENDING_POWER_OFF_COMMAND = 19,
+    WAITING_POWER_OFF_ANSWER = 20,
     NUM_PROTOCOL_PHASES
   };
 #if (HAIER_LOG_LEVEL > 4)
@@ -73,6 +88,7 @@ class HaierClimateBase : public esphome::Component,
   virtual void process_phase(std::chrono::steady_clock::time_point now) = 0;
   virtual haier_protocol::HaierMessage get_control_message() = 0;
   virtual bool is_message_invalid(uint8_t message_type) = 0;
+  virtual void process_pending_action();
   esphome::climate::ClimateTraits traits() override;
   // Answers handlers
   haier_protocol::HandlerError answer_preprocess_(uint8_t request_message_type, uint8_t expected_request_message_type,
@@ -84,8 +100,8 @@ class HaierClimateBase : public esphome::Component,
   void set_force_send_control_(bool status);
   void send_message_(const haier_protocol::HaierMessage &command, bool use_crc);
   void set_phase_(ProtocolPhases phase);
-  bool check_timout_(std::chrono::steady_clock::time_point now, std::chrono::steady_clock::time_point tpoint,
-                     size_t timeout);
+  bool check_timeout_(std::chrono::steady_clock::time_point now, std::chrono::steady_clock::time_point tpoint,
+                      size_t timeout);
   bool is_message_interval_exceeded_(std::chrono::steady_clock::time_point now);
   bool is_status_request_interval_exceeded_(std::chrono::steady_clock::time_point now);
   bool is_control_message_timeout_exceeded_(std::chrono::steady_clock::time_point now);
@@ -104,6 +120,7 @@ class HaierClimateBase : public esphome::Component,
   };
   haier_protocol::ProtocolHandler haier_protocol_;
   ProtocolPhases protocol_phase_;
+  ActionRequest action_request_;
   uint8_t fan_mode_speed_;
   uint8_t other_modes_fan_speed_;
   bool display_status_;

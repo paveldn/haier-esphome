@@ -1,0 +1,12 @@
+  - platform: template
+    id: ${device_id}_beeper_switch
+    entity_category: config
+    name: ${device_name} beeper
+    icon: mdi:volume-high
+    restore_state: yes
+    lambda: |-
+      return id(${device_id}).get_beeper_state();
+    turn_on_action:
+      climate.haier.beeper_on: ${device_id}
+    turn_off_action:
+      climate.haier.beeper_off: ${device_id}

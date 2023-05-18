@@ -8,15 +8,20 @@ namespace esphome {
 namespace haier {
 
 enum class AirflowVerticalDirection : uint8_t {
-  UP = 0,
-  CENTER = 1,
-  DOWN = 2,
+  HEALTH_UP = 0,
+  MAX_UP = 1,
+  UP = 2,
+  CENTER = 3,
+  DOWN = 4,
+  HEALTH_DOWN = 5,
 };
 
 enum class AirflowHorizontalDirection : uint8_t {
-  LEFT = 0,
-  CENTER = 1,
-  RIGHT = 2,
+  MAX_LEFT = 0,
+  LEFT = 1,
+  CENTER = 2,
+  RIGHT = 3,
+  MAX_RIGHT = 4,
 };
 
 enum class CleaningState : uint8_t {
@@ -27,10 +32,9 @@ enum class CleaningState : uint8_t {
 
 class HonClimate : public HaierClimateBase {
  public:
-  HonClimate() = delete;
+  HonClimate();
   HonClimate(const HonClimate &) = delete;
   HonClimate &operator=(const HonClimate &) = delete;
-  HonClimate(esphome::uart::UARTComponent *parent);
   ~HonClimate();
   void dump_config() override;
   void set_beeper_state(bool state);
@@ -44,12 +48,14 @@ class HonClimate : public HaierClimateBase {
   CleaningState get_cleaning_status() const;
   void start_self_cleaning();
   void start_steri_cleaning();
+  void set_send_wifi(bool send_wifi);
 
  protected:
   void set_answers_handlers() override;
   void process_phase(std::chrono::steady_clock::time_point now) override;
   haier_protocol::HaierMessage get_control_message() override;
   bool is_message_invalid(uint8_t message_type) override;
+  void process_pending_action() override;
 
   // Answers handlers
   haier_protocol::HandlerError get_device_version_answer_handler_(uint8_t request_type, uint8_t message_type,
@@ -69,7 +75,6 @@ class HonClimate : public HaierClimateBase {
   std::unique_ptr<uint8_t[]> last_status_message_;
   bool beeper_status_;
   CleaningState cleaning_status_;
-  CleaningState cleaning_start_request_;
   bool got_valid_outdoor_temp_;
   AirflowVerticalDirection vertical_direction_;
   AirflowHorizontalDirection horizontal_direction_;
@@ -82,9 +87,8 @@ class HonClimate : public HaierClimateBase {
   bool &use_crc_;
   uint8_t active_alarms_[8];
   esphome::sensor::Sensor *outdoor_sensor_;
-#ifdef HAIER_REPORT_WIFI_SIGNAL
+  bool send_wifi_signal_;
   std::chrono::steady_clock::time_point last_signal_request_;  // To send WiFI signal level
-#endif
 };
 
 }  // namespace haier

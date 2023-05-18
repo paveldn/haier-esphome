@@ -8,15 +8,13 @@ namespace haier {
 
 class Smartair2Climate : public HaierClimateBase {
  public:
-  Smartair2Climate() = delete;
+  Smartair2Climate();
   Smartair2Climate(const Smartair2Climate &) = delete;
   Smartair2Climate &operator=(const Smartair2Climate &) = delete;
-  Smartair2Climate(esphome::uart::UARTComponent *parent);
   ~Smartair2Climate();
   void dump_config() override;
 
  protected:
-  bool health_mode_;
   void set_answers_handlers() override;
   void process_phase(std::chrono::steady_clock::time_point now) override;
   haier_protocol::HaierMessage get_control_message() override;

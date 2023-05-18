@@ -1,0 +1,9 @@
+  - platform: template
+    id: reboots_counter_sensor
+    name: "Reboots counter"
+    accuracy_decimals: 0
+    state_class: total_increasing
+    entity_category: diagnostic
+    lambda: |-
+        return id(${reboots_counter});
+    update_interval: 15s
