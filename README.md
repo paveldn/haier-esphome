@@ -27,31 +27,6 @@ This module can't be reused, and you need to replace it with an ESP (RPI pico w)
 
 ### hOn 
 
-## Short description
-
-There are two versions of the Haier protocol. The older one is using an application called SmartAir2 and the newer one application - called hOn. Both protocols are compatible on the transport level but have different commands to control appliances.
-
-### SmartAir2
-
-Older Haier models controlled by the SmartAir2 application is using the KZW-W002 module that looks like this:
-
-<p><a href="./img/KZW-W002.jpg?raw=true"><img src="./img/KZW-W002.jpg?raw=true" height="50%" width="50%"></a></p>
-
-This module can't be reused and you need to replace it with an ESP (RPI pico w) module. USB port on a board doesn't support USB protocol it is a UART port that just uses a USB connector. To connect the ESP board to your AC you can cut a USB type A cable and connect wires to the climate connector.
-
-**Haier UART pinout:**
-| Board | USB | Wire color | ESP module |
-| --- | --- | --- | --- |
-| 5V | VCC | red | 5V |
-| GND | GND | black | GND |
-| TX | DATA+ | green | RX |
-| RX | DATA- | white | TX |
-
-
-<p><a href="./img/usb_pinout.png?raw=true"><img src="./img/usb_pinout.png?raw=true" height="50%" width="50%"></a></p>
-
-### hOn 
-
 You can use this component together with a native Haier ESP32 device: 
 Newer Haier models using a module called ESP32-for-Haier. It is an ESP32 single-core board with an ESP32-S0WD chip. The module board looks like this: 
 
