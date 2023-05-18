@@ -7,10 +7,6 @@
 using namespace esphome::climate;
 using namespace esphome::uart;
 
-#ifndef ESPHOME_LOG_LEVEL
-#warning "No ESPHOME_LOG_LEVEL defined!"
-#endif
-
 namespace esphome {
 namespace haier {
 
@@ -92,29 +88,29 @@ void HaierClimateBase::set_phase_(ProtocolPhases phase) {
   }
 }
 
-bool HaierClimateBase::check_timout_(std::chrono::steady_clock::time_point now,
-                                     std::chrono::steady_clock::time_point tpoint, size_t timeout) {
+bool HaierClimateBase::check_timeout_(std::chrono::steady_clock::time_point now,
+                                      std::chrono::steady_clock::time_point tpoint, size_t timeout) {
   return std::chrono::duration_cast<std::chrono::milliseconds>(now - tpoint).count() > timeout;
 }
 
 bool HaierClimateBase::is_message_interval_exceeded_(std::chrono::steady_clock::time_point now) {
-  return this->check_timout_(now, this->last_request_timestamp_, DEFAULT_MESSAGES_INTERVAL_MS);
+  return this->check_timeout_(now, this->last_request_timestamp_, DEFAULT_MESSAGES_INTERVAL_MS);
 }
 
 bool HaierClimateBase::is_status_request_interval_exceeded_(std::chrono::steady_clock::time_point now) {
-  return this->check_timout_(now, this->last_status_request_, STATUS_REQUEST_INTERVAL_MS);
+  return this->check_timeout_(now, this->last_status_request_, STATUS_REQUEST_INTERVAL_MS);
 }
 
 bool HaierClimateBase::is_control_message_timeout_exceeded_(std::chrono::steady_clock::time_point now) {
-  return this->check_timout_(now, this->control_request_timestamp_, CONTROL_TIMEOUT_MS);
+  return this->check_timeout_(now, this->control_request_timestamp_, CONTROL_TIMEOUT_MS);
 }
 
 bool HaierClimateBase::is_control_message_interval_exceeded_(std::chrono::steady_clock::time_point now) {
-  return this->check_timout_(now, this->last_request_timestamp_, CONTROL_MESSAGES_INTERVAL_MS);
+  return this->check_timeout_(now, this->last_request_timestamp_, CONTROL_MESSAGES_INTERVAL_MS);
 }
 
 bool HaierClimateBase::is_protocol_initialisation_interval_exceded_(std::chrono::steady_clock::time_point now) {
-  return this->check_timout_(now, this->last_request_timestamp_, PROTOCOL_INITIALIZATION_INTERVAL);
+  return this->check_timeout_(now, this->last_request_timestamp_, PROTOCOL_INITIALIZATION_INTERVAL);
 }
 
 bool HaierClimateBase::get_display_state() const { return this->display_status_; }
