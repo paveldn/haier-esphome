@@ -31,7 +31,6 @@ _LOGGER = logging.getLogger(__name__)
 
 PROTOCOL_MIN_TEMPERATURE = 16.0
 PROTOCOL_MAX_TEMPERATURE = 30.0
-PROTOCOL_TEMPERATURE_STEP = 1.0
 
 CODEOWNERS = ["@paveldn"]
 AUTO_LOAD = ["sensor"]
@@ -40,6 +39,7 @@ CONF_WIFI_SIGNAL = "wifi_signal"
 CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
 CONF_VERTICAL_AIRFLOW = "vertical_airflow"
 CONF_HORIZONTAL_AIRFLOW = "horizontal_airflow"
+CONF_ANSWER_TIMEOUT = "answer_timeout"
 
 
 PROTOCOL_HON = "HON"
@@ -127,6 +127,9 @@ BASE_CONFIG_SCHEMA = (
                     "BOTH",
                 ],
             ): cv.ensure_list(cv.enum(SUPPORTED_SWING_MODES_OPTIONS, upper=True)),
+            cv.Optional(
+                CONF_ANSWER_TIMEOUT,
+            ): cv.positive_time_period_milliseconds,
         }
     )
     .extend(uart.UART_DEVICE_SCHEMA)
@@ -360,5 +363,7 @@ async def to_code(config):
         cg.add(var.set_supported_modes(config[CONF_SUPPORTED_MODES]))
     if CONF_SUPPORTED_SWING_MODES in config:
         cg.add(var.set_supported_swing_modes(config[CONF_SUPPORTED_SWING_MODES]))
+    if CONF_ANSWER_TIMEOUT in config:
+        cg.add(var.set_answer_timeout(config[CONF_ANSWER_TIMEOUT]))
     # https://github.com/paveldn/HaierProtocol
-    cg.add_library("pavlodn/HaierProtocol", "0.9.18")
+    cg.add_library("pavlodn/HaierProtocol", "0.9.19")

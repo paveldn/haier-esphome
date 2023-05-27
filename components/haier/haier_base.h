@@ -52,6 +52,7 @@ class HaierClimateBase : public esphome::Component,
     esphome::uart::UARTDevice::write_array(data, len);
   };
   bool can_send_message() const { return haier_protocol_.get_outgoing_queue_size() == 0; };
+  void set_answer_timeout(uint32_t timeout);
 
  protected:
   enum class ProtocolPhases {
@@ -136,6 +137,7 @@ class HaierClimateBase : public esphome::Component,
   std::chrono::steady_clock::time_point last_valid_status_timestamp_;  // For protocol timeout
   std::chrono::steady_clock::time_point last_status_request_;          // To request AC status
   std::chrono::steady_clock::time_point control_request_timestamp_;    // To send control message
+  optional<std::chrono::milliseconds> answer_timeout_;                 // Message answer timeout
 };
 
 }  // namespace haier
