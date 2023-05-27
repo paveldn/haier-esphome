@@ -142,6 +142,10 @@ void HaierClimateBase::set_supported_swing_modes(const std::set<climate::Climate
   this->traits_.add_supported_swing_mode(climate::CLIMATE_SWING_VERTICAL);  // Always available
 }
 
+void HaierClimateBase::set_answer_timeout(uint32_t timeout) {
+  this->answer_timeout_ = std::chrono::milliseconds(timeout);
+}
+
 void HaierClimateBase::set_supported_modes(const std::set<climate::ClimateMode> &modes) {
   this->traits_.set_supported_modes(modes);
   this->traits_.add_supported_mode(climate::CLIMATE_MODE_OFF);   // Always available
@@ -303,7 +307,10 @@ void HaierClimateBase::set_force_send_control_(bool status) {
 }
 
 void HaierClimateBase::send_message_(const haier_protocol::HaierMessage &command, bool use_crc) {
-  this->haier_protocol_.send_message(command, use_crc);
+  if (this->answer_timeout_.has_value())
+    this->haier_protocol_.send_message(command, use_crc, this->answer_timeout_.value());
+  else 
+    this->haier_protocol_.send_message(command, use_crc);
   this->last_request_timestamp_ = std::chrono::steady_clock::now();
 }
 
