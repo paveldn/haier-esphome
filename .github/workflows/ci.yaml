@@ -28,8 +28,8 @@ jobs:
           - tests/rpipicow-smartair2-wifi.yaml
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v3.5.2
+    - name: Install esphome
+      run: pip3 install esphome
     - name: Build ESPHome config
-      uses: esphome/build-action@v1.8.0
-      with:
-        yaml_file: ${{ matrix.file }}
+      run: esphome compile ${{ matrix.file }}
