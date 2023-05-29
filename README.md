@@ -12,7 +12,7 @@ Older Haier models controlled by the SmartAir2 application are using the KZW-W00
 
 <p><a href="./img/KZW-W002.jpg?raw=true"><img src="./img/KZW-W002.jpg?raw=true" height="50%" width="50%"></a></p>
 
-This module can't be reused, and you need to replace it with an ESP (RPI pico w) module. The USB connector on a board doesn't support the USB protocol. It is a UART port that just uses a USB connector. To connect the ESP board to your AC you can cut a USB type A cable and connect wires to the climate connector.
+This module can't be reused, and you need to replace it with an ESP (RPI pico w) module. The USB connector on a board doesn't support the USB protocol. It is a UART port that just uses a normal USB connector, so no USB UART cable. To connect the ESP board to your AC you can cut a USB type A cable and connect wires to the climate connector.
 
 **Haier UART pinout:**
 | Board | USB | Wire color | ESP module |
@@ -22,8 +22,21 @@ This module can't be reused, and you need to replace it with an ESP (RPI pico w)
 | TX | DATA+ | green | RX |
 | RX | DATA- | white | TX |
 
-
 <p><a href="./img/usb_pinout.png?raw=true"><img src="./img/usb_pinout.png?raw=true" height="50%" width="50%"></a></p>
+<p><a href="./img/USB_uart.jpg?raw=true"><img src="./img/USB_uart.jpg?raw=true" height="50%" width="50%"></a></p>
+
+### UART debugging
+
+```yaml
+uart:
+  debug:
+    direction: BOTH
+    dummy_receiver: false
+    after:
+      delimiter: "\n"
+    sequence:
+      - lambda: UARTDebug::log_string(direction, bytes);
+```
 
 ### hOn 
 
