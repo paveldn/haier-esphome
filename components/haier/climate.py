@@ -115,6 +115,7 @@ def validate_visual(config):
 BASE_CONFIG_SCHEMA = (
     climate.CLIMATE_SCHEMA.extend(
         {
+            cv.Optional(CONF_WIFI_SIGNAL, default=True): cv.boolean,
             cv.Optional(CONF_SUPPORTED_MODES): cv.ensure_list(
                 cv.enum(SUPPORTED_CLIMATE_MODES_OPTIONS, upper=True)
             ),
@@ -147,7 +148,6 @@ CONFIG_SCHEMA = cv.All(
             PROTOCOL_HON: BASE_CONFIG_SCHEMA.extend(
                 {
                     cv.GenerateID(): cv.declare_id(HonClimate),
-                    cv.Optional(CONF_WIFI_SIGNAL, default=True): cv.boolean,
                     cv.Optional(CONF_BEEPER, default=True): cv.boolean,
                     cv.Optional(CONF_OUTDOOR_TEMPERATURE): sensor.sensor_schema(
                         unit_of_measurement=UNIT_CELSIUS,
@@ -366,4 +366,4 @@ async def to_code(config):
     if CONF_ANSWER_TIMEOUT in config:
         cg.add(var.set_answer_timeout(config[CONF_ANSWER_TIMEOUT]))
     # https://github.com/paveldn/HaierProtocol
-    cg.add_library("pavlodn/HaierProtocol", "0.9.19")
+    cg.add_library("pavlodn/HaierProtocol", "0.9.20")
