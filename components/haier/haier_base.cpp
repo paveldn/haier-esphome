@@ -333,7 +333,7 @@ void HaierClimateBase::set_force_send_control_(bool status) {
 void HaierClimateBase::send_message_(const haier_protocol::HaierMessage &command, bool use_crc) {
   if (this->answer_timeout_.has_value())
     this->haier_protocol_.send_message(command, use_crc, this->answer_timeout_.value());
-  else 
+  else
     this->haier_protocol_.send_message(command, use_crc);
   this->last_request_timestamp_ = std::chrono::steady_clock::now();
 }

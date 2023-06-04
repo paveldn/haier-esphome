@@ -1,8 +1,8 @@
 ﻿external_components:
   source:
     type: local
-    path: ./components    
-    
+    path: ./components
+
 api:
   services:
     - <<: !include configs/api/service.turn_on.yaml
@@ -14,7 +14,7 @@ climate:
   - platform: haier
     id: ${device_id}
     protocol: hOn
-    name: ${device_name} 
+    name: ${device_name}
     uart_id: ${uart_id}
     wifi_signal: ${send_wifi}   # Optional, default true, enables WiFI signal transmission from ESP to AC
     beeper: true                # Optional, default true, disables beep on commands from ESP
@@ -25,24 +25,24 @@ climate:
       max_temperature: 30 °C
       temperature_step: 1 °C
     supported_modes:            # Optional, can be used to disable some modes if you don't need them
-    - 'OFF'                     # always available
-    - AUTO                      # always available
-    - COOL
-    - HEAT
-    - DRY
-    - FAN_ONLY
+      - 'OFF'                     # always available
+      - AUTO                      # always available
+      - COOL
+      - HEAT
+      - DRY
+      - FAN_ONLY
     supported_swing_modes:      # Optional, can be used to disable some swing modes if your AC does not support it
-    - 'OFF'                     # always available
-    - VERTICAL                  # always available
-    - HORIZONTAL
-    - BOTH
+      - 'OFF'                     # always available
+      - VERTICAL                  # always available
+      - HORIZONTAL
+      - BOTH
 
 select:
-  # Vertical airflow direction setting. Works only if the vertical swing is off
-  # You can remove this control if you don't need it
+  # Vertical airflow direction setting. Works only if the vertical swing is
+  # off. You can remove this control if you don't need it
   - <<: !include configs/select/airflow_vertical.yaml
-  # Horizontal airflow direction setting. Works only if the horizontal swing is off
-  # You can remove this control if you don't need it
+  # Horizontal airflow direction setting. Works only if the horizontal swing
+  # is off. You can remove this control if you don't need it
   - <<: !include configs/select/airflow_horizontal.yaml
 
 switch:
