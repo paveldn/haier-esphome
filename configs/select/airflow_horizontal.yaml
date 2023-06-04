@@ -5,7 +5,7 @@
     icon: mdi:arrow-expand-horizontal
     optimistic: true
     restore_value: true
-    initial_option: Center 
+    initial_option: Center
     options:
       - Max Left
       - Left

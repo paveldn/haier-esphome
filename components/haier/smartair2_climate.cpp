@@ -90,7 +90,7 @@ haier_protocol::HandlerError Smartair2Climate::initial_messages_timeout_handler_
   ESP_LOGI(TAG, "Answer timeout for command %02X, phase %d, timeout counter %d", message_type, (int) this->protocol_phase_, this->timeouts_counter_);
   if (this->timeouts_counter_ >= 3) {
     ProtocolPhases new_phase = (ProtocolPhases)((int) this->protocol_phase_ + 1);
-    if (new_phase >= ProtocolPhases::SENDING_ALARM_STATUS_REQUEST) 
+    if (new_phase >= ProtocolPhases::SENDING_ALARM_STATUS_REQUEST)
       new_phase = ProtocolPhases::SENDING_INIT_1;
     this->set_phase_(new_phase);
   } else {
@@ -128,7 +128,7 @@ void Smartair2Climate::set_handlers_() {
       std::bind(&Smartair2Climate::initial_messages_timeout_handler_, this, std::placeholders::_1));
   this->haier_protocol_.set_timeout_handler(
       (uint8_t) (smartair2_protocol::FrameType::CONTROL),
-      std::bind(&Smartair2Climate::initial_messages_timeout_handler_, this, std::placeholders::_1));  
+      std::bind(&Smartair2Climate::initial_messages_timeout_handler_, this, std::placeholders::_1));
 }
 
 void Smartair2Climate::dump_config() {
@@ -140,7 +140,8 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
   #define IGNORE_PHASE(PHASE, JUMP_TO) case PHASE: this->set_phase_(JUMP_TO); break;
   switch (this->protocol_phase_) {
     case ProtocolPhases::SENDING_INIT_1:
-      if (this->can_send_message() && this->is_protocol_initialisation_interval_exceeded_(now)) {
+      if (this->can_send_message() && (((this->timeouts_counter_ == 0) && (this->is_protocol_initialisation_interval_exceeded_(now))) ||
+          ((this->timeouts_counter_ > 0) && (this->is_message_interval_exceeded_(now))))) {
         // Indicate device capabilities:
         // bit 0 - if 1 module support interactive mode
         // bit 1 - if 1 module support controller-device mode
@@ -155,21 +156,21 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
       }
       break;
     case ProtocolPhases::SENDING_INIT_2:
-      if (this->can_send_message() && this->is_protocol_initialisation_interval_exceeded_(now)) {
+      if (this->can_send_message() && this->is_message_interval_exceeded_(now)) {
         static const haier_protocol::HaierMessage DEVICEID_REQUEST((uint8_t) smartair2_protocol::FrameType::GET_DEVICE_ID);
         this->send_message_(DEVICEID_REQUEST, false);
         this->set_phase_(ProtocolPhases::WAITING_INIT_2_ANSWER);
       }
       break;
     case ProtocolPhases::SENDING_FIRST_STATUS_REQUEST:
-      if (this->can_send_message() && this->is_protocol_initialisation_interval_exceeded_(now)) {
+      if (this->can_send_message() && this->is_message_interval_exceeded_(now)) {
         static const haier_protocol::HaierMessage STATUS_REQUEST((uint8_t) smartair2_protocol::FrameType::CONTROL,
                                                                  0x4D01);
         this->send_message_(STATUS_REQUEST, false);
         this->last_status_request_ = now;
         this->set_phase_((ProtocolPhases) ((uint8_t) this->protocol_phase_ + 1));
       }
-      break;    
+      break;
     case ProtocolPhases::SENDING_STATUS_REQUEST:
       if (this->can_send_message() && this->is_message_interval_exceeded_(now)) {
         static const haier_protocol::HaierMessage STATUS_REQUEST((uint8_t) smartair2_protocol::FrameType::CONTROL,
@@ -190,7 +191,7 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
       break;
 #else
     IGNORE_PHASE(ProtocolPhases::SENDING_SIGNAL_LEVEL, ProtocolPhases::IDLE);
-    IGNORE_PHASE(ProtocolPhases::WAITING_SIGNAL_LEVEL_ANSWER, ProtocolPhases::IDLE);    
+    IGNORE_PHASE(ProtocolPhases::WAITING_SIGNAL_LEVEL_ANSWER, ProtocolPhases::IDLE);
 #endif
     IGNORE_PHASE(ProtocolPhases::SENDING_UPDATE_SIGNAL_REQUEST, ProtocolPhases::SENDING_SIGNAL_LEVEL);
     IGNORE_PHASE(ProtocolPhases::WAITING_UPDATE_SIGNAL_ANSWER, ProtocolPhases::SENDING_SIGNAL_LEVEL);
@@ -261,6 +262,7 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
       this->set_phase_(ProtocolPhases::SENDING_INIT_1);
       break;
   }
+#undef IGNORE_PHASE
 }
 
 haier_protocol::HaierMessage Smartair2Climate::get_control_message() {

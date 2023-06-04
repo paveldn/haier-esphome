@@ -17,7 +17,7 @@ logger:
 
 uart:
   baud_rate: 9600
-  id: ${uart_id}  
+  id: ${uart_id}
   tx_pin: GPIO0
   rx_pin: GPIO1
 

@@ -16,7 +16,7 @@ uart:
   baud_rate: 9600
   tx_pin: 17
   rx_pin: 16
-  id: ${uart_id}  
+  id: ${uart_id}
 
 logger:
   level: DEBUG
