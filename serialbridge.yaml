@@ -1,0 +1,27 @@
+esphome:
+  name: haier
+esp32:
+  board: esp32doit-devkit-v1
+  framework:
+    type: esp-idf
+    sdkconfig_options:
+      CONFIG_FREERTOS_UNICORE: y
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+ota:
+
+uart:
+  id: uart_bus
+  tx_pin: 17
+  rx_pin: 16
+  baud_rate: 9600
+
+external_components:
+  - source: github://oxan/esphome-stream-server
+
+stream_server:
+   uart_id: uart_bus
+   port: 8888
