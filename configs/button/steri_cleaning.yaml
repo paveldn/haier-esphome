@@ -1,3 +1,4 @@
+# Introduced in (some) models starting from 2021
   - platform: template
     name: ${device_name} start 56°C steri-cleaning
     icon: mdi:spray-bottle
