@@ -23,17 +23,8 @@ uart:
 
 logger:
   level: VERBOSE
-  baud_rate: 0
+  hardware_uart: uart1
 
 web_server:
 
 <<: !include .haier-smartair2-base.yaml
-
-button:
-  - platform: template
-    name: ${device_name} reset protocol
-    icon: mdi:restart
-    on_press:
-      then:
-        - lambda: |
-            id(${device_id}).reset_protocol();

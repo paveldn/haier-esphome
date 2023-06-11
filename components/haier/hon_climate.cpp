@@ -127,6 +127,12 @@ void HonClimate::start_steri_cleaning() {
 
 haier_protocol::HandlerError HonClimate::get_device_version_answer_handler_(uint8_t request_type, uint8_t message_type,
                                                                             const uint8_t *data, size_t data_size) {
+  // Should check this before preprocess
+  if (message_type == (uint8_t) hon_protocol::FrameType::INVALID) {
+    ESP_LOGW(TAG, "It looks like your ESPHome Haier climate configuration is wrong. You should use the smartAir2 protocol instead of hOn");
+    this->set_phase_(ProtocolPhases::SENDING_INIT_1);    
+    return haier_protocol::HandlerError::INVALID_ANSWER;
+  }
   haier_protocol::HandlerError result = this->answer_preprocess_(
       request_type, (uint8_t) hon_protocol::FrameType::GET_DEVICE_VERSION, message_type,
       (uint8_t) hon_protocol::FrameType::GET_DEVICE_VERSION_RESPONSE, ProtocolPhases::WAITING_INIT_1_ANSWER);
