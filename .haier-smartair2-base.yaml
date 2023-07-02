@@ -14,7 +14,7 @@ climate:
   - platform: haier
     id: ${device_id}
     protocol: smartAir2
-    name: AC
+    name: " "
     uart_id: ${uart_id}
     visual:                     # Optional, you can use it to limit min and max temperatures in UI (not working for remote!)
       min_temperature: 16 °C
