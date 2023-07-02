@@ -1,6 +1,6 @@
   - platform: template
     id: ${device_id}_horizontal_direction
-    name: ${device_name} airflow horizontal
+    name: Airflow Horizontal
     entity_category: config
     icon: mdi:arrow-expand-horizontal
     optimistic: true

@@ -1,6 +1,6 @@
   - platform: template
     id: ${device_id}_health_mode
-    name: ${device_name} health mode
+    name: Health mode
     icon: mdi:leaf
     restore_state: yes
     lambda: |-

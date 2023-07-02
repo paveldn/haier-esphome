@@ -1,6 +1,6 @@
   - platform: template
     id: ${device_id}_vertical_direction
-    name: ${device_name} airflow vertical
+    name: Airflow Vertical
     entity_category: config
     icon: mdi:arrow-expand-vertical
     optimistic: true

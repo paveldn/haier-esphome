@@ -1,7 +1,7 @@
   - platform: template
     id: ${device_id}_beeper_switch
     entity_category: config
-    name: ${device_name} beeper
+    name: Beeper
     icon: mdi:volume-high
     restore_state: yes
     lambda: |-

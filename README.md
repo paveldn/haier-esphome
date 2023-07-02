@@ -68,7 +68,7 @@ climate:
     wifi_signal: true           # Optional, default true, enables WiFI signal transmission from ESP to AC
     beeper: true                # Optional, default true, disables beep on commands from ESP
     outdoor_temperature:        # Optional, outdoor temperature sensor
-      name: Haier AC outdoor temperature
+      name: Haier AC Outdoor Temperature
     visual:                     # Optional, you can use it to limit min and max temperatures in UI (not working for remote!)
       min_temperature: 16 °C
       max_temperature: 30 °C

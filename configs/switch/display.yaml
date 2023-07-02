@@ -1,6 +1,6 @@
   - platform: template
     id: ${device_id}_display_switch
-    name: ${device_name} display
+    name: Display
     icon: mdi:led-on
     entity_category: config
     restore_state: yes

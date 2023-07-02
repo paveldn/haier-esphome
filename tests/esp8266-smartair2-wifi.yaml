@@ -1,11 +1,11 @@
 substitutions:
-  device_name: Haier AC
   device_id: haier_climate
   uart_id: ac_port 
   send_wifi: "true"
 
 esphome:
   name: esp8266-smartair2-wifi
+  friendly_name: Haier AC
 
 esp8266:
   board: esp01_1m
