@@ -160,8 +160,6 @@ void HaierClimateBase::send_power_off_command() { this->action_request_ = Action
 void HaierClimateBase::toggle_power() { this->action_request_ = ActionRequest::TOGGLE_POWER; }
 void HaierClimateBase::set_supported_swing_modes(const std::set<climate::ClimateSwingMode> &modes) {
   this->traits_.set_supported_swing_modes(modes);
-  this->traits_.add_supported_swing_mode(climate::CLIMATE_SWING_OFF);       // Always available
-  this->traits_.add_supported_swing_mode(climate::CLIMATE_SWING_VERTICAL);  // Always available
 }
 
 void HaierClimateBase::set_answer_timeout(uint32_t timeout) {
