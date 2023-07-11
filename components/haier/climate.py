@@ -115,7 +115,6 @@ def validate_visual(config):
 BASE_CONFIG_SCHEMA = (
     climate.CLIMATE_SCHEMA.extend(
         {
-            cv.Optional(CONF_WIFI_SIGNAL, default=True): cv.boolean,
             cv.Optional(CONF_SUPPORTED_MODES): cv.ensure_list(
                 cv.enum(SUPPORTED_CLIMATE_MODES_OPTIONS, upper=True)
             ),
@@ -143,11 +142,13 @@ CONFIG_SCHEMA = cv.All(
             PROTOCOL_SMARTAIR2: BASE_CONFIG_SCHEMA.extend(
                 {
                     cv.GenerateID(): cv.declare_id(Smartair2Climate),
+                    cv.Optional(CONF_WIFI_SIGNAL, default=False): cv.boolean,
                 }
             ),
             PROTOCOL_HON: BASE_CONFIG_SCHEMA.extend(
                 {
                     cv.GenerateID(): cv.declare_id(HonClimate),
+                    cv.Optional(CONF_WIFI_SIGNAL, default=True): cv.boolean,
                     cv.Optional(CONF_BEEPER, default=True): cv.boolean,
                     cv.Optional(CONF_OUTDOOR_TEMPERATURE): sensor.sensor_schema(
                         unit_of_measurement=UNIT_CELSIUS,
