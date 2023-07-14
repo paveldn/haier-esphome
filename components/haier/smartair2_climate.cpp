@@ -178,6 +178,7 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
     case ProtocolPhases::SENDING_SIGNAL_LEVEL:
       if (this->can_send_message() && this->is_message_interval_exceeded_(now)) {
         this->send_message_(this->get_wifi_signal_message_((uint8_t) smartair2_protocol::FrameType::REPORT_NETWORK_STATUS), false);
+        this->last_signal_request_ = now;
         this->set_phase_(ProtocolPhases::WAITING_SIGNAL_LEVEL_ANSWER);
       }
       break;
