@@ -17,11 +17,6 @@ constexpr size_t SIGNAL_LEVEL_UPDATE_INTERVAL_MS = 10000;
 Smartair2Climate::Smartair2Climate()
     : last_status_message_(new uint8_t[sizeof(smartair2_protocol::HaierPacketControl)]),
       timeouts_counter_(0) {
-  this->traits_.set_supported_presets({
-      climate::CLIMATE_PRESET_NONE,
-      climate::CLIMATE_PRESET_BOOST,
-      climate::CLIMATE_PRESET_COMFORT,
-  });
 }
 
 haier_protocol::HandlerError Smartair2Climate::status_handler_(uint8_t request_type, uint8_t message_type,

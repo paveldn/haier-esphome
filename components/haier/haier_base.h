@@ -44,6 +44,7 @@ class HaierClimateBase : public esphome::Component,
   void reset_protocol() { this->reset_protocol_request_ = true; };
   void set_supported_modes(const std::set<esphome::climate::ClimateMode> &modes);
   void set_supported_swing_modes(const std::set<esphome::climate::ClimateSwingMode> &modes);
+  void set_supported_presets(const std::set<esphome::climate::ClimatePreset> &presets);
   size_t available() noexcept override { return esphome::uart::UARTDevice::available(); };
   size_t read_array(uint8_t *data, size_t len) noexcept override {
     return esphome::uart::UARTDevice::read_array(data, len) ? len : 0;

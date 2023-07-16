@@ -158,8 +158,11 @@ void HaierClimateBase::send_power_on_command() { this->action_request_ = ActionR
 void HaierClimateBase::send_power_off_command() { this->action_request_ = ActionRequest::TURN_POWER_OFF; }
 
 void HaierClimateBase::toggle_power() { this->action_request_ = ActionRequest::TOGGLE_POWER; }
+
 void HaierClimateBase::set_supported_swing_modes(const std::set<climate::ClimateSwingMode> &modes) {
   this->traits_.set_supported_swing_modes(modes);
+  if (!modes.empty())
+    this->traits_.add_supported_swing_mode(climate::CLIMATE_SWING_OFF);
 }
 
 void HaierClimateBase::set_answer_timeout(uint32_t timeout) {
@@ -170,6 +173,12 @@ void HaierClimateBase::set_supported_modes(const std::set<climate::ClimateMode> 
   this->traits_.set_supported_modes(modes);
   this->traits_.add_supported_mode(climate::CLIMATE_MODE_OFF);   // Always available
   this->traits_.add_supported_mode(climate::CLIMATE_MODE_AUTO);  // Always available
+}
+
+void HaierClimateBase::set_supported_presets(const std::set<climate::ClimatePreset> &presets) {
+  this->traits_.set_supported_presets(presets);
+  if (!presets.empty())
+    this->traits_.add_supported_preset(climate::CLIMATE_PRESET_NONE);
 }
 
 void HaierClimateBase::set_send_wifi(bool send_wifi) { this->send_wifi_signal_ = send_wifi; }

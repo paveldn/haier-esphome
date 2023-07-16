@@ -32,10 +32,14 @@ climate:
       - DRY
       - FAN_ONLY
     supported_swing_modes:      # Optional, can be used to disable some swing modes if your AC does not support it
-      - 'OFF'                     # always available
-      - VERTICAL                  # always available
+      - 'OFF'
+      - VERTICAL
       - HORIZONTAL
       - BOTH
+    supported_presets:          # Optional, can be used to disable some presets if your AC does not support it
+      - ECO
+      - BOOST
+      - SLEEP
 
 select:
   # Vertical airflow direction setting. Works only if the vertical swing is

@@ -14,6 +14,7 @@ from esphome.const import (
     CONF_MIN_TEMPERATURE,
     CONF_PROTOCOL,
     CONF_SUPPORTED_MODES,
+    CONF_SUPPORTED_PRESETS,
     CONF_SUPPORTED_SWING_MODES,
     CONF_VISUAL,
     CONF_WIFI,
@@ -23,8 +24,9 @@ from esphome.const import (
     UNIT_CELSIUS,
 )
 from esphome.components.climate import (
-    ClimateSwingMode,
     ClimateMode,
+    ClimatePreset,
+    ClimateSwingMode,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,6 +86,16 @@ SUPPORTED_CLIMATE_MODES_OPTIONS = {
     "FAN_ONLY": ClimateMode.CLIMATE_MODE_FAN_ONLY,
 }
 
+SUPPORTED_CLIMATE_PRESETS_SMARTAIR2_OPTIONS = {
+    "BOOST": ClimatePreset.CLIMATE_PRESET_BOOST,
+    "COMFORT": ClimatePreset.CLIMATE_PRESET_COMFORT,
+}
+
+SUPPORTED_CLIMATE_PRESETS_HON_OPTIONS = {
+    "ECO": ClimatePreset.CLIMATE_PRESET_ECO,
+    "BOOST": ClimatePreset.CLIMATE_PRESET_BOOST,
+    "SLEEP": ClimatePreset.CLIMATE_PRESET_SLEEP,
+}
 
 def validate_visual(config):
     if CONF_VISUAL in config:
@@ -143,6 +155,13 @@ CONFIG_SCHEMA = cv.All(
                 {
                     cv.GenerateID(): cv.declare_id(Smartair2Climate),
                     cv.Optional(CONF_WIFI_SIGNAL, default=False): cv.boolean,
+                    cv.Optional(
+                        CONF_SUPPORTED_PRESETS, 
+                        default=list(SUPPORTED_CLIMATE_PRESETS_SMARTAIR2_OPTIONS.keys())
+                    ): cv.ensure_list(
+                        cv.enum(SUPPORTED_CLIMATE_PRESETS_SMARTAIR2_OPTIONS, upper=True)
+                    ),
+
                 }
             ),
             PROTOCOL_HON: BASE_CONFIG_SCHEMA.extend(
@@ -150,6 +169,12 @@ CONFIG_SCHEMA = cv.All(
                     cv.GenerateID(): cv.declare_id(HonClimate),
                     cv.Optional(CONF_WIFI_SIGNAL, default=True): cv.boolean,
                     cv.Optional(CONF_BEEPER, default=True): cv.boolean,
+                    cv.Optional(
+                        CONF_SUPPORTED_PRESETS, 
+                        default=list(SUPPORTED_CLIMATE_PRESETS_HON_OPTIONS.keys())
+                    ): cv.ensure_list(
+                        cv.enum(SUPPORTED_CLIMATE_PRESETS_HON_OPTIONS, upper=True)
+                    ),
                     cv.Optional(CONF_OUTDOOR_TEMPERATURE): sensor.sensor_schema(
                         unit_of_measurement=UNIT_CELSIUS,
                         icon=ICON_THERMOMETER,
@@ -364,6 +389,8 @@ async def to_code(config):
         cg.add(var.set_supported_modes(config[CONF_SUPPORTED_MODES]))
     if CONF_SUPPORTED_SWING_MODES in config:
         cg.add(var.set_supported_swing_modes(config[CONF_SUPPORTED_SWING_MODES]))
+    if CONF_SUPPORTED_PRESETS in config:
+        cg.add(var.set_supported_presets(config[CONF_SUPPORTED_PRESETS]))
     if CONF_ANSWER_TIMEOUT in config:
         cg.add(var.set_answer_timeout(config[CONF_ANSWER_TIMEOUT]))
     # https://github.com/paveldn/HaierProtocol
