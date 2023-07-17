@@ -49,12 +49,12 @@ struct HaierPacketControl {
   uint8_t : 3;
   uint8_t lock_remote : 1;  // Disable remote
   // 27
-  uint8_t ac_power : 1;     // Is ac on or off
+  uint8_t ac_power : 1;  // Is ac on or off
   uint8_t : 2;
   uint8_t health_mode : 1;  // Health mode on or off
   uint8_t compressor : 1;   // Compressor on or off ???
   uint8_t half_degree : 1;  // Use half degree
-  uint8_t ten_degree : 1;   // 10 degree status (only work in heat mode)
+  uint8_t ten_degree : 1;  // 10 degree status (only work in heat mode)
   uint8_t : 0;
   // 28
   uint8_t : 8;
