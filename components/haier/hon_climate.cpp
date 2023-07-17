@@ -11,7 +11,7 @@ using namespace esphome::uart;
 namespace esphome {
 namespace haier {
 
-const char TAG[] = "haier.climate";
+static const char *const TAG = "haier.climate";
 constexpr size_t SIGNAL_LEVEL_UPDATE_INTERVAL_MS = 10000;
 constexpr int PROTOCOL_OUTDOOR_TEMPERATURE_OFFSET = -64;
 
@@ -124,7 +124,7 @@ haier_protocol::HandlerError HonClimate::get_device_version_answer_handler_(uint
   // Should check this before preprocess
   if (message_type == (uint8_t) hon_protocol::FrameType::INVALID) {
     ESP_LOGW(TAG, "It looks like your ESPHome Haier climate configuration is wrong. You should use the smartAir2 protocol instead of hOn");
-    this->set_phase_(ProtocolPhases::SENDING_INIT_1);    
+    this->set_phase_(ProtocolPhases::SENDING_INIT_1);
     return haier_protocol::HandlerError::INVALID_ANSWER;
   }
   haier_protocol::HandlerError result = this->answer_preprocess_(

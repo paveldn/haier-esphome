@@ -11,7 +11,7 @@ using namespace esphome::uart;
 namespace esphome {
 namespace haier {
 
-const char TAG[] = "haier.climate";
+static const char *const TAG = "haier.climate";
 constexpr size_t SIGNAL_LEVEL_UPDATE_INTERVAL_MS = 10000;
 
 Smartair2Climate::Smartair2Climate()
@@ -152,14 +152,6 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
     IGNORE_PHASE(ProtocolPhases::SENDING_INIT_2, ProtocolPhases::SENDING_FIRST_STATUS_REQUEST);
     IGNORE_PHASE(ProtocolPhases::WAITING_INIT_2_ANSWER, ProtocolPhases::SENDING_FIRST_STATUS_REQUEST);
     case ProtocolPhases::SENDING_FIRST_STATUS_REQUEST:
-      if (this->can_send_message() && this->is_message_interval_exceeded_(now)) {
-        static const haier_protocol::HaierMessage STATUS_REQUEST((uint8_t) smartair2_protocol::FrameType::CONTROL,
-                                                                 0x4D01);
-        this->send_message_(STATUS_REQUEST, false);
-        this->last_status_request_ = now;
-        this->set_phase_((ProtocolPhases) ((uint8_t) this->protocol_phase_ + 1));
-      }
-      break;
     case ProtocolPhases::SENDING_STATUS_REQUEST:
       if (this->can_send_message() && this->is_message_interval_exceeded_(now)) {
         static const haier_protocol::HaierMessage STATUS_REQUEST((uint8_t) smartair2_protocol::FrameType::CONTROL,
