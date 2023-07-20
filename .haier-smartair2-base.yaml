@@ -8,7 +8,7 @@ api:
 ota:
 
 packages:
-  hon_climate: !include configs/climate/haier_smartair2.yaml
+  smartair2_climate: !include configs/climate/haier_smartair2.yaml
   turn_on_service: !include configs/api/service.turn_on.yaml
   turn_off_service: !include configs/api/service.turn_off.yaml
   display_switch: !include configs/switch/display.yaml

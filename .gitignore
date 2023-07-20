@@ -5,3 +5,4 @@ __pycache__/
 /secrets.yaml
 /buildlog.txt
 *.bak
+*.local.yaml
