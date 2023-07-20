@@ -16,6 +16,8 @@ from esphome.const import (
     CONF_SUPPORTED_MODES,
     CONF_SUPPORTED_PRESETS,
     CONF_SUPPORTED_SWING_MODES,
+    CONF_TARGET_TEMPERATURE,
+    CONF_TEMPERATURE_STEP,
     CONF_VISUAL,
     CONF_WIFI,
     DEVICE_CLASS_TEMPERATURE,
@@ -27,12 +29,15 @@ from esphome.components.climate import (
     ClimateMode,
     ClimatePreset,
     ClimateSwingMode,
+    CONF_CURRENT_TEMPERATURE,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 PROTOCOL_MIN_TEMPERATURE = 16.0
 PROTOCOL_MAX_TEMPERATURE = 30.0
+PROTOCOL_TARGET_TEMPERATURE_STEP = 1.0
+PROTOCOL_CURRENT_TEMPERATURE_STEP = 0.5
 
 CODEOWNERS = ["@paveldn"]
 AUTO_LOAD = ["sensor"]
@@ -116,10 +121,25 @@ def validate_visual(config):
                 )
         else:
             config[CONF_VISUAL][CONF_MAX_TEMPERATURE] = PROTOCOL_MAX_TEMPERATURE
+        if CONF_TEMPERATURE_STEP in visual_config:
+            temp_step = config[CONF_VISUAL][CONF_TEMPERATURE_STEP][CONF_TARGET_TEMPERATURE]
+            if ((int)(temp_step * 2)) / 2 != temp_step:
+                raise cv.Invalid(
+                    f"Configured visual temperature step {temp_step} is wrong, it should be a multiple of 0.5"
+                )
+        else:
+            config[CONF_VISUAL][CONF_TEMPERATURE_STEP] = {
+                CONF_TARGET_TEMPERATURE: PROTOCOL_TARGET_TEMPERATURE_STEP,
+                CONF_CURRENT_TEMPERATURE: PROTOCOL_CURRENT_TEMPERATURE_STEP,
+            }
     else:
         config[CONF_VISUAL] = {
             CONF_MIN_TEMPERATURE: PROTOCOL_MIN_TEMPERATURE,
             CONF_MAX_TEMPERATURE: PROTOCOL_MAX_TEMPERATURE,
+            CONF_TEMPERATURE_STEP: {
+                CONF_TARGET_TEMPERATURE: PROTOCOL_TARGET_TEMPERATURE_STEP,
+                CONF_CURRENT_TEMPERATURE: PROTOCOL_CURRENT_TEMPERATURE_STEP,
+            }
         }
     return config
 
