@@ -540,8 +540,10 @@ haier_protocol::HaierMessage HonClimate::get_control_message() {
       }
     }
     if (climate_control.target_temperature.has_value()) {
+      float target_temp = climate_control.target_temperature.value();
       out_data->set_point =
-          climate_control.target_temperature.value() - 16;  // set the temperature at our offset, subtract 16.
+          ((int)target_temp) - 16;  // set the temperature at our offset, subtract 16.
+        out_data->half_degree = (target_temp - ((int) target_temp) >= 0.49) ? 1 : 0;
     }
     if (out_data->ac_power == 0) {
       // If AC is off - no presets allowed
@@ -658,7 +660,7 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
   {
     // Target temperature
     float old_target_temperature = this->target_temperature;
-    this->target_temperature = packet.control.set_point + 16.0f;
+    this->target_temperature = packet.control.set_point + packet.control.half_degree + 16.0f;
     should_publish = should_publish || (old_target_temperature != this->target_temperature);
   }
   {
