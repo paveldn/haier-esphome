@@ -1,9 +1,10 @@
+switch:
   - platform: template
     id: ${device_id}_beeper_switch
     entity_category: config
     name: ${device_name} beeper
     icon: mdi:volume-high
-    restore_state: yes
+    restore_mode: RESTORE_DEFAULT_ON 
     lambda: |-
       return id(${device_id}).get_beeper_state();
     turn_on_action:

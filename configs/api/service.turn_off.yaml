@@ -1,3 +1,5 @@
+api:
+  services:
     - service: turn_off
       then:
       - climate.haier.power_off: ${device_id}

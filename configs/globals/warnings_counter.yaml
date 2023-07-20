@@ -1,3 +1,4 @@
+globals:
   - id: ${warnings_counter}
     type: int
     restore_value: yes

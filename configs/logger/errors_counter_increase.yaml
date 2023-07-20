@@ -1,3 +1,5 @@
+logger:
+  on_message:
     - level: ERROR
       then:
         - globals.set:

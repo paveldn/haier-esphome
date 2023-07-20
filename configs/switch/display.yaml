@@ -1,9 +1,10 @@
+switch:
   - platform: template
     id: ${device_id}_display_switch
     name: ${device_name} display
     icon: mdi:led-on
     entity_category: config
-    restore_state: yes
+    restore_mode: RESTORE_DEFAULT_ON
     lambda: |-
       return id(${device_id}).get_display_state();
     turn_on_action:
