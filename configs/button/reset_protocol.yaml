@@ -1,4 +1,5 @@
-﻿# Use for testing purposes only! Reset communication with AC to initial state
+﻿button:
+# Use for testing purposes only! Reset communication with AC to initial state
   - platform: template
     name: ${device_name} reset protocol
     icon: mdi:restart

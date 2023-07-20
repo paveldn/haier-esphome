@@ -4,9 +4,6 @@ external_components:
     path: ./components
 
 api:
-  services:
-    - <<: !include configs/api/service.turn_on.yaml
-    - <<: !include configs/api/service.turn_off.yaml
 
 ota:
 
@@ -37,7 +34,9 @@ climate:
       - BOOST
       - COMFORT
 
-switch:
-  - <<: !include configs/switch/display.yaml
-  - <<: !include configs/switch/health_mode.yaml
-  - <<: !include configs/switch/restart.yaml
+packages:
+  turn_on_service: !include configs/api/service.turn_on.yaml
+  turn_off_service: !include configs/api/service.turn_off.yaml
+  display_switch: !include configs/switch/display.yaml
+  health_mode_switch: !include configs/switch/health_mode.yaml
+  restart_switch: !include configs/switch/restart.yaml

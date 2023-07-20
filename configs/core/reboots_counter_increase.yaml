@@ -1,3 +1,5 @@
+esphome:
+  on_boot:
     - priority: 250.0
       then:
         - globals.set:

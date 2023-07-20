@@ -1,3 +1,4 @@
+select:
   - platform: template
     id: ${device_id}_vertical_direction
     name: ${device_name} airflow vertical

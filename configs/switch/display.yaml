@@ -1,3 +1,4 @@
+switch:
   - platform: template
     id: ${device_id}_display_switch
     name: ${device_name} display

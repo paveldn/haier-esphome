@@ -1,3 +1,4 @@
+sensor:
   - platform: template
     id: warnings_counter_sensor
     name: "Warnings counter"

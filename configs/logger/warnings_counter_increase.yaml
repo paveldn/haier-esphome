@@ -1,3 +1,5 @@
+logger:
+  on_message:
     - level: WARN
       then:
         - globals.set:

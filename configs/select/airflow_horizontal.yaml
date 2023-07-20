@@ -1,3 +1,4 @@
+select:
   - platform: template
     id: ${device_id}_horizontal_direction
     name: ${device_name} airflow horizontal

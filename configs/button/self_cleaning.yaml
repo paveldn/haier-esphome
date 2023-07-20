@@ -1,3 +1,4 @@
+button:
   - platform: template
     name: ${device_name} start self cleaning
     icon: mdi:spray-bottle
