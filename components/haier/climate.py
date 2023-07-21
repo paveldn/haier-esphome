@@ -43,11 +43,11 @@ CODEOWNERS = ["@paveldn"]
 AUTO_LOAD = ["sensor"]
 DEPENDENCIES = ["climate", "uart"]
 CONF_WIFI_SIGNAL = "wifi_signal"
+CONF_ANSWER_TIMEOUT = "answer_timeout"
+CONF_DISPLAY = "display"
 CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
 CONF_VERTICAL_AIRFLOW = "vertical_airflow"
 CONF_HORIZONTAL_AIRFLOW = "horizontal_airflow"
-CONF_ANSWER_TIMEOUT = "answer_timeout"
-
 
 PROTOCOL_HON = "HON"
 PROTOCOL_SMARTAIR2 = "SMARTAIR2"
@@ -159,6 +159,7 @@ BASE_CONFIG_SCHEMA = (
                     "BOTH",
                 ],
             ): cv.ensure_list(cv.enum(SUPPORTED_SWING_MODES_OPTIONS, upper=True)),
+            cv.Optional(CONF_DISPLAY): cv.boolean,
             cv.Optional(
                 CONF_ANSWER_TIMEOUT,
             ): cv.positive_time_period_milliseconds,
@@ -402,6 +403,8 @@ async def to_code(config):
         cg.add(var.set_send_wifi(config[CONF_WIFI_SIGNAL]))
     if CONF_BEEPER in config:
         cg.add(var.set_beeper_state(config[CONF_BEEPER]))
+    if CONF_DISPLAY in config:
+        cg.add(var.set_display_state(config[CONF_DISPLAY]))
     if CONF_OUTDOOR_TEMPERATURE in config:
         sens = await sensor.new_sensor(config[CONF_OUTDOOR_TEMPERATURE])
         cg.add(var.set_outdoor_temperature_sensor(sens))
