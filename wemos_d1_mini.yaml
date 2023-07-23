@@ -28,4 +28,6 @@ logger:
 
 web_server:
 
-<<: !include .haier-hon-base.yaml
+packages:
+  local_haier: !include configs/external_components/local_haier.yaml
+  haier_base: !include .haier-hon-base.yaml

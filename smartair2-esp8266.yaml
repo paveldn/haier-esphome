@@ -22,10 +22,11 @@ uart:
   id: ${uart_id}
 
 logger:
-  level: VERBOSE
+  level: DEBUG
   hardware_uart: uart1
 
 web_server:
 
-<<: !include .haier-smartair2-base.yaml
-
+packages:
+  local_haier: !include configs/external_components/local_haier.yaml
+  haier_base: !include .haier-smartair2-base.yaml

@@ -20,11 +20,7 @@ logger:
   level: DEBUG
   baud_rate: 0
 
-external_components:
-  source:
-    type: local
-    path: ../components
-
-<<: !include ./.wifi-base.yaml
-
-<<: !include ../.haier-hon-base.yaml
+packages:
+  local_haier: !include .local-haier.yaml
+  haier_base: !include ../.haier-hon-base.yaml 
+  wifi: !include .wifi-base.yaml
