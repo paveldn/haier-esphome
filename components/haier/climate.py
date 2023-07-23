@@ -159,6 +159,7 @@ BASE_CONFIG_SCHEMA = (
                     "BOTH",
                 ],
             ): cv.ensure_list(cv.enum(SUPPORTED_SWING_MODES_OPTIONS, upper=True)),
+            cv.Optional(CONF_WIFI_SIGNAL, default=False): cv.boolean,
             cv.Optional(CONF_DISPLAY): cv.boolean,
             cv.Optional(
                 CONF_ANSWER_TIMEOUT,
@@ -175,7 +176,6 @@ CONFIG_SCHEMA = cv.All(
             PROTOCOL_SMARTAIR2: BASE_CONFIG_SCHEMA.extend(
                 {
                     cv.GenerateID(): cv.declare_id(Smartair2Climate),
-                    cv.Optional(CONF_WIFI_SIGNAL, default=False): cv.boolean,
                     cv.Optional(
                         CONF_SUPPORTED_PRESETS,
                         default=list(SUPPORTED_CLIMATE_PRESETS_SMARTAIR2_OPTIONS.keys())
@@ -188,7 +188,6 @@ CONFIG_SCHEMA = cv.All(
             PROTOCOL_HON: BASE_CONFIG_SCHEMA.extend(
                 {
                     cv.GenerateID(): cv.declare_id(HonClimate),
-                    cv.Optional(CONF_WIFI_SIGNAL, default=True): cv.boolean,
                     cv.Optional(CONF_BEEPER, default=True): cv.boolean,
                     cv.Optional(
                         CONF_SUPPORTED_PRESETS,
