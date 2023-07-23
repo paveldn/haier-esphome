@@ -1,0 +1,28 @@
+﻿climate:
+  - platform: haier
+    id: ${device_id}
+    protocol: hOn
+    name: ${device_name}
+    uart_id: ${uart_id}
+    wifi_signal: ${send_wifi}   # Optional, default true, enables WiFI signal transmission from ESP to AC
+    beeper: true                # Optional, default true, disables beep on commands from ESP
+    outdoor_temperature:        # Optional, outdoor temperature sensor
+      name: ${device_name} outdoor temperature
+    visual:                     # Optional, you can use it to limit min and max temperatures in UI (not working for remote!)
+      min_temperature: 16 °C
+      max_temperature: 30 °C
+      temperature_step: 
+        target_temperature: 1
+        current_temperature: 0.5
+    supported_modes:            # Optional, can be used to disable some modes if you don't need them
+      - 'OFF'                     # always available
+      - AUTO                      # always available
+      - COOL
+      - HEAT
+      - DRY
+      - FAN_ONLY
+    supported_swing_modes:      # Optional, can be used to disable some swing modes if your AC does not support it
+      - 'OFF'
+      - VERTICAL
+      - HORIZONTAL
+      - BOTH

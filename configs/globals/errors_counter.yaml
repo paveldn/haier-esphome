@@ -1,3 +1,4 @@
+globals:
   - id: ${errors_counter}
     type: int
     restore_value: yes

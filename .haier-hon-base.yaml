@@ -1,59 +1,26 @@
 ﻿external_components:
   source:
     type: local
-    path: ./components    
-    
+    path: ./components
+
 api:
-  services:
-    - <<: !include configs/api/service.turn_on.yaml
-    - <<: !include configs/api/service.turn_off.yaml
 
 ota:
 
-climate:
-  - platform: haier
-    id: ${device_id}
-    protocol: hOn
-    name: ${device_name} 
-    uart_id: ${uart_id}
-    wifi_signal: ${send_wifi}   # Optional, default true, enables WiFI signal transmission from ESP to AC
-    beeper: true                # Optional, default true, disables beep on commands from ESP
-    outdoor_temperature:        # Optional, outdoor temperature sensor
-      name: ${device_name} outdoor temperature
-    visual:                     # Optional, you can use it to limit min and max temperatures in UI (not working for remote!)
-      min_temperature: 16 °C
-      max_temperature: 30 °C
-      temperature_step: 1 °C
-    supported_modes:            # Optional, can be used to disable some modes if you don't need them
-    - 'OFF'                     # always available
-    - AUTO                      # always available
-    - COOL
-    - HEAT
-    - DRY
-    - FAN_ONLY
-    supported_swing_modes:      # Optional, can be used to disable some swing modes if your AC does not support it
-    - 'OFF'                     # always available
-    - VERTICAL                  # always available
-    - HORIZONTAL
-    - BOTH
-
-select:
-  # Vertical airflow direction setting. Works only if the vertical swing is off
-  # You can remove this control if you don't need it
-  - <<: !include configs/select/airflow_vertical.yaml
-  # Horizontal airflow direction setting. Works only if the horizontal swing is off
-  # You can remove this control if you don't need it
-  - <<: !include configs/select/airflow_horizontal.yaml
-
-switch:
-  - <<: !include configs/switch/display.yaml
-  - <<: !include configs/switch/beeper.yaml
-  - <<: !include configs/switch/health_mode.yaml
-  - <<: !include configs/switch/restart.yaml
-
-text_sensor:
-  - <<: !include configs/text_sensor/cleaning_status.yaml
-
-button:
-  - <<: !include configs/button/self_cleaning.yaml
-  - <<: !include configs/button/steri_cleaning.yaml
+packages:
+  hon_climate: !include configs/climate/haier_hon.yaml
+  turn_on_service: !include configs/api/service.turn_on.yaml
+  turn_off_service: !include configs/api/service.turn_off.yaml
+  self_cleaning_button: !include configs/button/self_cleaning.yaml
+  steri_cleaning_button: !include configs/button/steri_cleaning.yaml
+  cleaning_status_sensor: !include configs/text_sensor/cleaning_status.yaml
+  display_switch: !include configs/switch/display.yaml
+  beeper_switch: !include configs/switch/beeper.yaml
+  health_mode_switch: !include configs/switch/health_mode.yaml
+  restart_switch: !include configs/switch/restart.yaml
+  # Vertical airflow direction setting. Works only if the vertical swing is
+  # off. You can remove this control if you don't need it
+  airflow_vertical_select: !include configs/select/airflow_vertical.yaml
+  # Horizontal airflow direction setting. Works only if the horizontal swing
+  # is off. You can remove this control if you don't need it
+  airflow_horizontal_select: !include configs/select/airflow_horizontal.yaml

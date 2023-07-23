@@ -1,3 +1,4 @@
+select:
   - platform: template
     id: ${device_id}_vertical_direction
     name: ${device_name} airflow vertical
@@ -5,7 +6,7 @@
     icon: mdi:arrow-expand-vertical
     optimistic: true
     restore_value: true
-    initial_option: Center 
+    initial_option: Center
     options:
       - Health Up
       - Max Up

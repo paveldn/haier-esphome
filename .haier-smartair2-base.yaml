@@ -2,38 +2,15 @@ external_components:
   source:
     type: local
     path: ./components
-    
+
 api:
-  services:
-    - <<: !include configs/api/service.turn_on.yaml
-    - <<: !include configs/api/service.turn_off.yaml
 
 ota:
 
-climate:
-  - platform: haier
-    id: ${device_id}
-    protocol: smartAir2
-    name: ${device_name} 
-    uart_id: ${uart_id}
-    visual:                     # Optional, you can use it to limit min and max temperatures in UI (not working for remote!)
-      min_temperature: 16 °C
-      max_temperature: 30 °C
-      temperature_step: 1 °C
-    supported_modes:            # Optional, can be used to disable some modes if you don't need them
-    - 'OFF'                     # always available
-    - AUTO                      # always available
-    - COOL
-    - HEAT
-    - DRY
-    - FAN_ONLY
-    supported_swing_modes:      # Optional, can be used to disable some swing modes if your AC does not support it
-    - 'OFF'                     # always available
-    - VERTICAL                  # always available
-    - HORIZONTAL
-    - BOTH
-
-switch:
-  - <<: !include configs/switch/display.yaml
-  - <<: !include configs/switch/health_mode.yaml
-  - <<: !include configs/switch/restart.yaml
+packages:
+  smartair2_climate: !include configs/climate/haier_smartair2.yaml
+  turn_on_service: !include configs/api/service.turn_on.yaml
+  turn_off_service: !include configs/api/service.turn_off.yaml
+  display_switch: !include configs/switch/display.yaml
+  health_mode_switch: !include configs/switch/health_mode.yaml
+  restart_switch: !include configs/switch/restart.yaml
