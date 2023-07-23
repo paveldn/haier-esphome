@@ -1,0 +1,5 @@
+﻿external_components:
+  source:
+    type: local
+    path: ../components
+  components: [ haier ]

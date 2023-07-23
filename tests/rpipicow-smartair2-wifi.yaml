@@ -21,11 +21,7 @@ uart:
   tx_pin: GPIO0
   rx_pin: GPIO1
 
-external_components:
-  source:
-    type: local
-    path: ../components
-
-<<: !include ./.wifi-base.yaml
-
-<<: !include ../.haier-smartair2-base.yaml
+packages:
+  local_haier: !include .local-haier.yaml
+  haier_base: !include ../.haier-smartair2-base.yaml 
+  wifi: !include .wifi-base.yaml

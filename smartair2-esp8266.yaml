@@ -25,4 +25,6 @@ logger:
   level: DEBUG
   baud_rate: 0
 
-<<: !include .haier-smartair2-base.yaml
+packages:
+  local_haier: !include configs/external_components/local_haier.yaml
+  haier_base: !include .haier-smartair2-base.yaml

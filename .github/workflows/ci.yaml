@@ -4,7 +4,7 @@ name: build CI test
 on:
   push:
   pull_request:
-    branches: [ "master", "dev" ]
+    branches: [ "master", "dev" , "experimental" ]
 
 jobs:
   tests:
@@ -30,6 +30,8 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3.5.2
     - name: Install esphome
-      run: pip3 install esphome
+      run: pip3 install -U esphome
+    - name: Version esphome
+      run: esphome version
     - name: Build ESPHome config
       run: esphome compile ${{ matrix.file }}

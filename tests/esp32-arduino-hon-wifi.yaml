@@ -19,11 +19,8 @@ uart:
 logger:
   level: DEBUG
 
-external_components:
-  source:
-    type: local
-    path: ../components
+packages:
+  local_haier: !include .local-haier.yaml
+  haier_base: !include ../.haier-hon-base.yaml 
+  wifi: !include .wifi-base.yaml
 
-<<: !include ./.wifi-base.yaml
-
-<<: !include ../.haier-hon-base.yaml

@@ -21,16 +21,7 @@ uart:
 logger:
   level: DEBUG
 
-external_components:
-  source:
-    type: local
-    path: ../components
-
-ethernet:
-  type: LAN8720
-  mdc_pin: GPIO23
-  mdio_pin: GPIO18
-  clk_mode: GPIO0_IN
-  phy_addr: 0
-
-<<: !include ../.haier-smartair2-base.yaml
+packages:
+  local_haier: !include .local-haier.yaml
+  haier_base: !include ../.haier-smartair2-base.yaml 
+  ethernet: !include .ethernet-base.yaml

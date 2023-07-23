@@ -1,9 +1,4 @@
-﻿external_components:
-  source:
-    type: local
-    path: ./components
-
-api:
+﻿api:
 
 ota:
 
