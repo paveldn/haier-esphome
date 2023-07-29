@@ -18,5 +18,4 @@ select:
       then:
         - climate.haier.set_vertical_airflow:
            id: ${device_id}
-           vertical_airflow: !lambda |-
-             return esphome::haier::AirflowVerticalDirection(i);
+           vertical_airflow: !lambda "return esphome::haier::AirflowVerticalDirection(i);"
