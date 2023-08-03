@@ -1,5 +1,4 @@
 #include <chrono>
-#include <string>
 #include "esphome/components/climate/climate.h"
 #include "esphome/components/uart/uart.h"
 #include "smartair2_climate.h"

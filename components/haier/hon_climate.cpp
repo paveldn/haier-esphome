@@ -652,7 +652,7 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
   {
     // Target temperature
     float old_target_temperature = this->target_temperature;
-    this->target_temperature = packet.control.set_point + packet.control.half_degree + 16.0f;
+    this->target_temperature = packet.control.set_point + 16.0f +((packet.control.half_degree == 1) ? 0.5f : 0.0f);
     should_publish = should_publish || (old_target_temperature != this->target_temperature);
   }
   {
