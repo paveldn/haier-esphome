@@ -87,7 +87,7 @@ class HaierClimateBase : public esphome::Component,
 #if (HAIER_LOG_LEVEL > 4)
   const char *phase_to_string_(ProtocolPhases phase);
 #endif
-  virtual void set_handlers_() = 0;
+  virtual void set_handlers() = 0;
   virtual void process_phase(std::chrono::steady_clock::time_point now) = 0;
   virtual haier_protocol::HaierMessage get_control_message() = 0;
   virtual bool is_message_invalid(uint8_t message_type) = 0;
@@ -102,7 +102,7 @@ class HaierClimateBase : public esphome::Component,
   // Helper functions
   void set_force_send_control_(bool status);
   void send_message_(const haier_protocol::HaierMessage &command, bool use_crc);
-  virtual void set_phase_(ProtocolPhases phase);
+  virtual void set_phase(ProtocolPhases phase);
   bool check_timeout_(std::chrono::steady_clock::time_point now, std::chrono::steady_clock::time_point tpoint,
                       size_t timeout);
   bool is_message_interval_exceeded_(std::chrono::steady_clock::time_point now);

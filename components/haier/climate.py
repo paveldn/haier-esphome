@@ -107,6 +107,7 @@ SUPPORTED_CLIMATE_PRESETS_HON_OPTIONS = {
     "SLEEP": ClimatePreset.CLIMATE_PRESET_SLEEP,
 }
 
+
 def validate_visual(config):
     if CONF_VISUAL in config:
         visual_config = config[CONF_VISUAL]
@@ -127,16 +128,20 @@ def validate_visual(config):
         else:
             config[CONF_VISUAL][CONF_MAX_TEMPERATURE] = PROTOCOL_MAX_TEMPERATURE
         if CONF_TEMPERATURE_STEP in visual_config:
-            temp_step = config[CONF_VISUAL][CONF_TEMPERATURE_STEP][CONF_TARGET_TEMPERATURE]
+            temp_step = config[CONF_VISUAL][CONF_TEMPERATURE_STEP][
+                CONF_TARGET_TEMPERATURE
+            ]
             if ((int)(temp_step * 2)) / 2 != temp_step:
                 raise cv.Invalid(
                     f"Configured visual temperature step {temp_step} is wrong, it should be a multiple of 0.5"
                 )
         else:
-            config[CONF_VISUAL][CONF_TEMPERATURE_STEP] = {
-                CONF_TARGET_TEMPERATURE: PROTOCOL_TARGET_TEMPERATURE_STEP,
-                CONF_CURRENT_TEMPERATURE: PROTOCOL_CURRENT_TEMPERATURE_STEP,
-            }
+            config[CONF_VISUAL][CONF_TEMPERATURE_STEP] = (
+                {
+                    CONF_TARGET_TEMPERATURE: PROTOCOL_TARGET_TEMPERATURE_STEP,
+                    CONF_CURRENT_TEMPERATURE: PROTOCOL_CURRENT_TEMPERATURE_STEP,
+                },
+            )
     else:
         config[CONF_VISUAL] = {
             CONF_MIN_TEMPERATURE: PROTOCOL_MIN_TEMPERATURE,
@@ -144,7 +149,7 @@ def validate_visual(config):
             CONF_TEMPERATURE_STEP: {
                 CONF_TARGET_TEMPERATURE: PROTOCOL_TARGET_TEMPERATURE_STEP,
                 CONF_CURRENT_TEMPERATURE: PROTOCOL_CURRENT_TEMPERATURE_STEP,
-            }
+            },
         }
     return config
 
@@ -183,11 +188,12 @@ CONFIG_SCHEMA = cv.All(
                     cv.GenerateID(): cv.declare_id(Smartair2Climate),
                     cv.Optional(
                         CONF_SUPPORTED_PRESETS,
-                        default=list(SUPPORTED_CLIMATE_PRESETS_SMARTAIR2_OPTIONS.keys())
+                        default=list(
+                            SUPPORTED_CLIMATE_PRESETS_SMARTAIR2_OPTIONS.keys()
+                        ),
                     ): cv.ensure_list(
                         cv.enum(SUPPORTED_CLIMATE_PRESETS_SMARTAIR2_OPTIONS, upper=True)
                     ),
-
                 }
             ),
             PROTOCOL_HON: BASE_CONFIG_SCHEMA.extend(
@@ -196,7 +202,7 @@ CONFIG_SCHEMA = cv.All(
                     cv.Optional(CONF_BEEPER, default=True): cv.boolean,
                     cv.Optional(
                         CONF_SUPPORTED_PRESETS,
-                        default=list(SUPPORTED_CLIMATE_PRESETS_HON_OPTIONS.keys())
+                        default=list(SUPPORTED_CLIMATE_PRESETS_HON_OPTIONS.keys()),
                     ): cv.ensure_list(
                         cv.enum(SUPPORTED_CLIMATE_PRESETS_HON_OPTIONS, upper=True)
                     ),
@@ -403,8 +409,7 @@ async def to_code(config):
     await uart.register_uart_device(var, config)
     await climate.register_climate(var, config)
 
-    if CONF_WIFI_SIGNAL in config:
-        cg.add(var.set_send_wifi(config[CONF_WIFI_SIGNAL]))
+    cg.add(var.set_send_wifi(config[CONF_WIFI_SIGNAL]))
     if CONF_BEEPER in config:
         cg.add(var.set_beeper_state(config[CONF_BEEPER]))
     if CONF_DISPLAY in config:

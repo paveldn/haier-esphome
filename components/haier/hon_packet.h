@@ -53,12 +53,12 @@ struct HaierPacketControl {
   // 13
   uint8_t : 8;
   // 14
-  uint8_t ten_degree : 1;          // 10 degree status
-  uint8_t display_status : 1;      // If 0 disables AC's display
-  uint8_t half_degree : 1;         // Use half degree
+  uint8_t ten_degree : 1;           // 10 degree status
+  uint8_t display_status : 1;       // If 0 disables AC's display
+  uint8_t half_degree : 1;          // Use half degree
   uint8_t intelligence_status : 1;  // Intelligence status
-  uint8_t pmv_status : 1;          // Comfort/PMV status
-  uint8_t use_fahrenheit : 1;      // Use Fahrenheit instead of Celsius
+  uint8_t pmv_status : 1;           // Comfort/PMV status
+  uint8_t use_fahrenheit : 1;       // Use Fahrenheit instead of Celsius
   uint8_t : 1;
   uint8_t steri_clean : 1;
   // 15

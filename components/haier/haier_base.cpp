@@ -82,7 +82,7 @@ HaierClimateBase::HaierClimateBase()
 
 HaierClimateBase::~HaierClimateBase() {}
 
-void HaierClimateBase::set_phase_(ProtocolPhases phase) {
+void HaierClimateBase::set_phase(ProtocolPhases phase) {
   if (this->protocol_phase_ != phase) {
 #if (HAIER_LOG_LEVEL > 4)
     ESP_LOGV(TAG, "Phase transition: %s => %s", phase_to_string_(this->protocol_phase_), phase_to_string_(phase));
@@ -207,9 +207,9 @@ haier_protocol::HandlerError HaierClimateBase::timeout_default_handler_(uint8_t 
   ESP_LOGW(TAG, "Answer timeout for command %02X, phase %d", request_type, (int) this->protocol_phase_);
 #endif
   if (this->protocol_phase_ > ProtocolPhases::IDLE) {
-    this->set_phase_(ProtocolPhases::IDLE);
+    this->set_phase(ProtocolPhases::IDLE);
   } else {
-    this->set_phase_(ProtocolPhases::SENDING_INIT_1);
+    this->set_phase(ProtocolPhases::SENDING_INIT_1);
   }
   return haier_protocol::HandlerError::HANDLER_OK;
 }
@@ -218,8 +218,8 @@ void HaierClimateBase::setup() {
   ESP_LOGI(TAG, "Haier initialization...");
   // Set timestamp here to give AC time to boot
   this->last_request_timestamp_ = std::chrono::steady_clock::now();
-  this->set_phase_(ProtocolPhases::SENDING_INIT_1);
-  this->set_handlers_();
+  this->set_phase(ProtocolPhases::SENDING_INIT_1);
+  this->set_handlers();
   this->haier_protocol_.set_default_timeout_handler(
       std::bind(&esphome::haier::HaierClimateBase::timeout_default_handler_, this, std::placeholders::_1));
 }
@@ -247,7 +247,7 @@ void HaierClimateBase::loop() {
       this->set_force_send_control_(false);
       if (this->hvac_settings_.valid)
         this->hvac_settings_.reset();
-      this->set_phase_(ProtocolPhases::SENDING_INIT_1);
+      this->set_phase(ProtocolPhases::SENDING_INIT_1);
       return;
     } else {
       // No need to reset protocol if we didn't pass initialization phase
@@ -264,7 +264,7 @@ void HaierClimateBase::loop() {
       this->process_pending_action();
     } else if (this->hvac_settings_.valid || this->force_send_control_) {
       ESP_LOGV(TAG, "Control packet is pending...");
-      this->set_phase_(ProtocolPhases::SENDING_CONTROL);
+      this->set_phase(ProtocolPhases::SENDING_CONTROL);
     }
   }
   this->process_phase(now);
@@ -278,10 +278,10 @@ void HaierClimateBase::process_pending_action() {
   }
   switch (request) {
     case ActionRequest::TURN_POWER_ON:
-      this->set_phase_(ProtocolPhases::SENDING_POWER_ON_COMMAND);
+      this->set_phase(ProtocolPhases::SENDING_POWER_ON_COMMAND);
       break;
     case ActionRequest::TURN_POWER_OFF:
-      this->set_phase_(ProtocolPhases::SENDING_POWER_OFF_COMMAND);
+      this->set_phase(ProtocolPhases::SENDING_POWER_OFF_COMMAND);
       break;
     case ActionRequest::TOGGLE_POWER:
     case ActionRequest::NO_ACTION:
@@ -338,10 +338,11 @@ void HaierClimateBase::set_force_send_control_(bool status) {
 }
 
 void HaierClimateBase::send_message_(const haier_protocol::HaierMessage &command, bool use_crc) {
-  if (this->answer_timeout_.has_value())
+  if (this->answer_timeout_.has_value()) {
     this->haier_protocol_.send_message(command, use_crc, this->answer_timeout_.value());
-  else
+  } else {
     this->haier_protocol_.send_message(command, use_crc);
+  }
   this->last_request_timestamp_ = std::chrono::steady_clock::now();
 }
 

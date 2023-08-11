@@ -50,7 +50,7 @@ class HonClimate : public HaierClimateBase {
   void start_steri_cleaning();
 
  protected:
-  void set_handlers_() override;
+  void set_handlers() override;
   void process_phase(std::chrono::steady_clock::time_point now) override;
   haier_protocol::HaierMessage get_control_message() override;
   bool is_message_invalid(uint8_t message_type) override;
