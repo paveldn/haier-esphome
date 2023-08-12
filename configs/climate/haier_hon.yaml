@@ -26,3 +26,7 @@
       - VERTICAL
       - HORIZONTAL
       - BOTH
+    supported_presets:          # Optional, can be used to disable some presets if your AC does not support it
+      - ECO
+      - BOOST
+      - SLEEP

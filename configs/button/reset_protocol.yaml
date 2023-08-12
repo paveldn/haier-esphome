@@ -1,0 +1,9 @@
+﻿button:
+# Use for testing purposes only! Reset communication with AC to initial state
+  - platform: template
+    name: ${device_name} reset protocol
+    icon: mdi:restart
+    on_press:
+      then:
+        - lambda: |
+            id(${device_id}).reset_protocol();

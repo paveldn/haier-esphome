@@ -1,7 +1,7 @@
 substitutions:
   device_name: Haier AC
   device_id: haier_climate
-  uart_id: ac_port 
+  uart_id: ac_port
   send_wifi: "true"
 
 esphome:
@@ -12,7 +12,7 @@ esphome:
 
 esp32:
   board: esp32-c3-devkitm-1
-  variant: esp32c3 
+  variant: esp32c3
   framework:
     type: esp-idf
 
@@ -24,7 +24,7 @@ uart:
   baud_rate: 9600
   tx_pin: 19
   rx_pin: 18
-  id: ${uart_id}  
+  id: ${uart_id}
 
 logger:
   level: DEBUG

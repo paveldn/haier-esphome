@@ -1,7 +1,7 @@
 substitutions:
-  device_name: Haier AC
-  device_id: haier_climate
-  uart_id: ac_port 
+  device_name: "Haier AC"
+  device_id: "haier_climate"
+  uart_id: "ac_port"
   send_wifi: "true"
 
 esphome:
@@ -17,7 +17,7 @@ logger:
 
 uart:
   baud_rate: 9600
-  id: ${uart_id}  
+  id: ${uart_id}
   tx_pin: GPIO0
   rx_pin: GPIO1
 

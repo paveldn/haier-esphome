@@ -1,7 +1,7 @@
 substitutions:
   device_name: Haier AC
   device_id: haier_climate
-  uart_id: ac_port 
+  uart_id: ac_port
   send_wifi: "true"
 
 esphome:
@@ -16,7 +16,7 @@ wifi:
   password: !secret wifi_password
 
 uart:
-  - id: ${uart_id}  
+  - id: ${uart_id}
     baud_rate: 9600
     # You can also use pins 15 (TX) and 13 (RX)
     tx_pin: 1
@@ -25,7 +25,7 @@ uart:
 logger:
   level: DEBUG
   baud_rate: 0
-      
+
 web_server:
 
 packages:

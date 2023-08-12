@@ -67,6 +67,9 @@ climate:
     uart_id: ac_port
     wifi_signal: true           # Optional, default true, enables WiFI signal transmission from ESP to AC
     beeper: true                # Optional, default true, disables beep on commands from ESP
+    display: true               # Optional, default true, can be used to turn off LED display
+    answer_timeout:: 200ms      # Optional, request answer timeout, can be used to increase the timeout
+                                # for some ACs that have longer answer delays
     outdoor_temperature:        # Optional, outdoor temperature sensor
       name: Haier AC outdoor temperature
     visual:                     # Optional, you can use it to limit min and max temperatures in UI (not working for remote!)
@@ -80,6 +83,10 @@ climate:
     - HEAT
     - DRY
     - FAN_ONLY
+    supported_presets:          # Optional, can be used to disable some presets if your AC does not support it
+      - ECO
+      - BOOST
+      - SLEEP
     supported_swing_modes:      # Optional, can be used to disable some swing modes if your AC does not support it
     - 'OFF'
     - VERTICAL
@@ -102,6 +109,10 @@ climate:
     protocol: smartAir2
     name: Haier AC 
     uart_id: ac_port
+    wifi_signal: true           # Optional, default true, enables WiFI signal transmission from ESP to AC
+    display: true               # Optional, default true, can be used to turn off LED display
+    answer_timeout: 200ms       # Optional, request answer timeout, can be used to increase the timeout
+                                # for some ACs that have longer answer delays
     visual:                     # Optional, you can use it to limit min and max temperatures in UI (not working for remote!)
       min_temperature: 16 °C
       max_temperature: 30 °C
@@ -113,6 +124,9 @@ climate:
     - HEAT
     - DRY
     - FAN_ONLY
+    supported_presets:          # Optional, can be used to disable some presets if your AC does not support it
+      - BOOST
+      - COMFORT
     supported_swing_modes:      # Optional, can be used to disable some swing modes if your AC does not support it
     - 'OFF'
     - VERTICAL
@@ -126,13 +140,15 @@ climate:
 - **uart_id (Optional, [ID](https://esphome.io/guides/configuration-types.html#config-id)):** ID of the UART port to communicate with AC
 - **protocol (Required, string):** Defines protocol of communication with AC. Possible values: hon or smartair2
 - **name (Required, string):** The name of the climate device
-- **wifi_signal (Optional, boolean):** If true - send wifi signal level to AC
+- **wifi_signal (Optional, boolean):** If true - send wifi signal level to AC (Olny for devices that support this feature)
 - **beeper (Optional, boolean):** (supported only by hOn) Can be used to disable beeping on commands from AC
+- **answer_timeout (Optional, [Time](https://esphome.io/guides/configuration-types.html#config-time)):** Can be used to change default answer timeout. Can help in case AC takes longer to answer requests (some Candy models).
 - **outdoor_temperature (Optional):** (supported only by hOn) Temperature sensor for outdoor temperature
   - **name (Required, string):** The name of the sensor.
   - **id (Optional, [ID](https://esphome.io/guides/configuration-types.html#config-id)):** ID of the sensor, can be used for code generation
   - All other options from Sensor.
 - **supported_modes (Optional, list):** Can be used to disable some of AC modes. Possible values: OFF (use quotes in opposite case ESPHome will convert it to False), AUTO, COOL, HEAT, DRY, FAN_ONLY
+- **supported_presets (Optional, list):** Optional, can be used to disable some presets. Possible values: BOOST, COMFORT for SmartAir2, or ECO, BOOST, SLEEP for hOn.
 - **supported_swing_modes (Optional, list):** Can be used to disable some swing modes if your AC does not support it. Possible values: OFF (use quotes in opposite case ESPHome will convert it to False), VERTICAL, HORIZONTAL, BOTH
 - All other options from [Climate](https://esphome.io/components/climate/index.html#config-climate).
 
