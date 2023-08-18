@@ -11,7 +11,7 @@
       temperature_step: 1 °C
     supported_modes:            # Optional, can be used to disable some modes if you don't need them
       - 'OFF'                   # always available
-      - AUTO                    # always available
+      - HEAT_COOL               # always available
       - COOL
       - HEAT
       - DRY
