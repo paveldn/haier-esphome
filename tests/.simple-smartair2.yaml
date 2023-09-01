@@ -1,0 +1,7 @@
+﻿climate:
+  - platform: haier
+    name: ${device_name}
+#    visual:                     # Optional. Example of visual settings override.
+#      min_temperature: 17 °C    # min: 17
+#      max_temperature: 30 °C    # max: 30
+#      temperature_step: 0.5 °C

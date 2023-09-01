@@ -26,6 +26,8 @@ jobs:
           - tests/esp8266-smartair2-wifi.yaml
           - tests/rpipicow-hon-wifi.yaml
           - tests/rpipicow-smartair2-wifi.yaml
+          - tests/esp8266-simple-smartair2.yaml
+          - tests/esp8266-simple-hon.yaml
     steps:
     - name: Checkout code
       uses: actions/checkout@v3.5.2

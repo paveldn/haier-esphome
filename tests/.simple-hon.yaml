@@ -1,0 +1,4 @@
+﻿climate:
+  - platform: haier
+    protocol: hOn
+    name: ${device_name}
