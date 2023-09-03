@@ -13,6 +13,7 @@ class Smartair2Climate : public HaierClimateBase {
   Smartair2Climate &operator=(const Smartair2Climate &) = delete;
   ~Smartair2Climate();
   void dump_config() override;
+  void set_alternative_swing_control(bool swing_control);
 
  protected:
   void set_handlers() override;
@@ -34,6 +35,7 @@ class Smartair2Climate : public HaierClimateBase {
   haier_protocol::HandlerError process_status_message_(const uint8_t *packet, uint8_t size);
   std::unique_ptr<uint8_t[]> last_status_message_;
   unsigned int timeouts_counter_;
+  bool use_alternative_swing_control_;
 };
 
 }  // namespace haier

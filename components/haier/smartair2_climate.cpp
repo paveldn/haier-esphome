@@ -327,27 +327,44 @@ haier_protocol::HaierMessage Smartair2Climate::get_control_message() {
     }
     // Set swing mode
     if (climate_control.swing_mode.has_value()) {
-      switch (climate_control.swing_mode.value()) {
-        case CLIMATE_SWING_OFF:
-          out_data->use_swing_bits = 0;
-          out_data->swing_both = 0;
-          break;
-        case CLIMATE_SWING_VERTICAL:
-          out_data->swing_both = 0;
-          out_data->vertical_swing = 1;
-          out_data->horizontal_swing = 0;
-          break;
-        case CLIMATE_SWING_HORIZONTAL:
-          out_data->swing_both = 0;
-          out_data->vertical_swing = 0;
-          out_data->horizontal_swing = 1;
-          break;
-        case CLIMATE_SWING_BOTH:
-          out_data->swing_both = 1;
-          out_data->use_swing_bits = 0;
-          out_data->vertical_swing = 0;
-          out_data->horizontal_swing = 0;
-          break;
+      if (this->use_alternative_swing_control_) {
+        switch (climate_control.swing_mode.value()) {
+          case CLIMATE_SWING_OFF:
+            out_data->swing_mode = 0;
+            break;
+          case CLIMATE_SWING_VERTICAL:
+            out_data->swing_mode = 1;
+            break;
+          case CLIMATE_SWING_HORIZONTAL:
+            out_data->swing_mode = 2;
+            break;
+          case CLIMATE_SWING_BOTH:
+            out_data->swing_mode = 3;
+            break;
+        }
+      } else {
+        switch (climate_control.swing_mode.value()) {
+          case CLIMATE_SWING_OFF:
+            out_data->use_swing_bits = 0;
+            out_data->swing_mode = 0;
+            break;
+          case CLIMATE_SWING_VERTICAL:
+            out_data->swing_mode = 0;
+            out_data->vertical_swing = 1;
+            out_data->horizontal_swing = 0;
+            break;
+          case CLIMATE_SWING_HORIZONTAL:
+            out_data->swing_mode = 0;
+            out_data->vertical_swing = 0;
+            out_data->horizontal_swing = 1;
+            break;
+          case CLIMATE_SWING_BOTH:
+            out_data->swing_mode = 1;
+            out_data->use_swing_bits = 0;
+            out_data->vertical_swing = 0;
+            out_data->horizontal_swing = 0;
+            break;
+        }
       }
     }
     if (climate_control.target_temperature.has_value()) {
@@ -502,16 +519,33 @@ haier_protocol::HandlerError Smartair2Climate::process_status_message_(const uin
   {
     // Swing mode
     ClimateSwingMode old_swing_mode = this->swing_mode;
-    if (packet.control.swing_both == 0) {
-      if (packet.control.vertical_swing != 0) {
-        this->swing_mode = CLIMATE_SWING_VERTICAL;
-      } else if (packet.control.horizontal_swing != 0) {
-        this->swing_mode = CLIMATE_SWING_HORIZONTAL;
-      } else {
-        this->swing_mode = CLIMATE_SWING_OFF;
+    if (this->use_alternative_swing_control_) {
+      switch (packet.control.swing_mode) {
+        case 1:
+          this->swing_mode = CLIMATE_SWING_VERTICAL;
+          break;
+        case 2:
+          this->swing_mode = CLIMATE_SWING_HORIZONTAL;
+          break;
+        case 3:
+          this->swing_mode = CLIMATE_SWING_BOTH;
+          break;
+        default:
+          this->swing_mode = CLIMATE_SWING_OFF;
+          break;
       }
     } else {
-      swing_mode = CLIMATE_SWING_BOTH;
+      if (packet.control.swing_mode == 0) {
+        if (packet.control.vertical_swing != 0) {
+          this->swing_mode = CLIMATE_SWING_VERTICAL;
+        } else if (packet.control.horizontal_swing != 0) {
+          this->swing_mode = CLIMATE_SWING_HORIZONTAL;
+        } else {
+          this->swing_mode = CLIMATE_SWING_OFF;
+        }
+      } else {
+        swing_mode = CLIMATE_SWING_BOTH;
+      }
     }
     should_publish = should_publish || (old_swing_mode != this->swing_mode);
   }
@@ -557,6 +591,10 @@ void Smartair2Climate::set_phase(HaierClimateBase::ProtocolPhases phase) {
   if ((min_p % 2 != 0) || (max_p - min_p > 1))
     this->timeouts_counter_ = 0;
   HaierClimateBase::set_phase(phase);
+}
+
+void Smartair2Climate::set_alternative_swing_control(bool swing_control) {
+  this->use_alternative_swing_control_ = swing_control;
 }
 
 }  // namespace haier

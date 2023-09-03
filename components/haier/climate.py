@@ -42,12 +42,13 @@ PROTOCOL_CURRENT_TEMPERATURE_STEP = 0.5
 CODEOWNERS = ["@paveldn"]
 AUTO_LOAD = ["sensor"]
 DEPENDENCIES = ["climate", "uart"]
-CONF_WIFI_SIGNAL = "wifi_signal"
+CONF_ALTERNATIVE_SWING_CONTROL = "alternative_swing_control"
 CONF_ANSWER_TIMEOUT = "answer_timeout"
 CONF_DISPLAY = "display"
+CONF_HORIZONTAL_AIRFLOW = "horizontal_airflow"
 CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
 CONF_VERTICAL_AIRFLOW = "vertical_airflow"
-CONF_HORIZONTAL_AIRFLOW = "horizontal_airflow"
+CONF_WIFI_SIGNAL = "wifi_signal"
 
 PROTOCOL_HON = "HON"
 PROTOCOL_SMARTAIR2 = "SMARTAIR2"
@@ -184,6 +185,7 @@ CONFIG_SCHEMA = cv.All(
             PROTOCOL_SMARTAIR2: BASE_CONFIG_SCHEMA.extend(
                 {
                     cv.GenerateID(): cv.declare_id(Smartair2Climate),
+                    cv.Optional(CONF_ALTERNATIVE_SWING_CONTROL, default=False) : cv.boolean,
                     cv.Optional(
                         CONF_SUPPORTED_PRESETS,
                         default=list(
@@ -423,5 +425,7 @@ async def to_code(config):
         cg.add(var.set_supported_presets(config[CONF_SUPPORTED_PRESETS]))
     if CONF_ANSWER_TIMEOUT in config:
         cg.add(var.set_answer_timeout(config[CONF_ANSWER_TIMEOUT]))
+    if CONF_ALTERNATIVE_SWING_CONTROL in config:
+        cg.add(var.set_alternative_swing_control(config[CONF_ALTERNATIVE_SWING_CONTROL]))
     # https://github.com/paveldn/HaierProtocol
     cg.add_library("pavlodn/HaierProtocol", "0.9.20")
