@@ -227,7 +227,7 @@ void HaierClimateBase::setup() {
 void HaierClimateBase::dump_config() {
   LOG_CLIMATE("", "Haier Climate", this);
   ESP_LOGCONFIG(TAG, "  Device communication status: %s",
-                (this->protocol_phase_ >= ProtocolPhases::IDLE) ? "established" : "none");
+                this->valid_connection() ? "established" : "none");
 }
 
 void HaierClimateBase::loop() {
