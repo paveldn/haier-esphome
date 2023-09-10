@@ -38,12 +38,14 @@ PROTOCOL_MIN_TEMPERATURE = 16.0
 PROTOCOL_MAX_TEMPERATURE = 30.0
 PROTOCOL_TARGET_TEMPERATURE_STEP = 1.0
 PROTOCOL_CURRENT_TEMPERATURE_STEP = 0.5
+PROTOCOL_CONTROL_PACKET_SIZE = 10
 
 CODEOWNERS = ["@paveldn"]
 AUTO_LOAD = ["sensor"]
 DEPENDENCIES = ["climate", "uart"]
 CONF_ALTERNATIVE_SWING_CONTROL = "alternative_swing_control"
 CONF_ANSWER_TIMEOUT = "answer_timeout"
+CONF_CONTROL_PACKET_SIZE = "control_packet_size"
 CONF_DISPLAY = "display"
 CONF_HORIZONTAL_AIRFLOW = "horizontal_airflow"
 CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
@@ -200,6 +202,7 @@ CONFIG_SCHEMA = cv.All(
                 {
                     cv.GenerateID(): cv.declare_id(HonClimate),
                     cv.Optional(CONF_BEEPER, default=True): cv.boolean,
+                    cv.Optional(CONF_CONTROL_PACKET_SIZE, default=PROTOCOL_CONTROL_PACKET_SIZE): cv.int_range(min=PROTOCOL_CONTROL_PACKET_SIZE, max=50),
                     cv.Optional(
                         CONF_SUPPORTED_PRESETS,
                         default=list(SUPPORTED_CLIMATE_PRESETS_HON_OPTIONS.keys()),
@@ -427,5 +430,7 @@ async def to_code(config):
         cg.add(var.set_answer_timeout(config[CONF_ANSWER_TIMEOUT]))
     if CONF_ALTERNATIVE_SWING_CONTROL in config:
         cg.add(var.set_alternative_swing_control(config[CONF_ALTERNATIVE_SWING_CONTROL]))
+    if CONF_CONTROL_PACKET_SIZE in config:
+        cg.add(var.set_extra_control_packet_bytes_size(config[CONF_CONTROL_PACKET_SIZE] - PROTOCOL_CONTROL_PACKET_SIZE))
     # https://github.com/paveldn/HaierProtocol
     cg.add_library("pavlodn/HaierProtocol", "0.9.20")

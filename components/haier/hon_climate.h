@@ -48,6 +48,7 @@ class HonClimate : public HaierClimateBase {
   CleaningState get_cleaning_status() const;
   void start_self_cleaning();
   void start_steri_cleaning();
+  void set_extra_control_packet_bytes_size(size_t size) { this->extra_control_packet_bytes_ = size; };
 
  protected:
   void set_handlers() override;
@@ -85,6 +86,7 @@ class HonClimate : public HaierClimateBase {
   bool hvac_functions_[5];
   bool &use_crc_;
   uint8_t active_alarms_[8];
+  int extra_control_packet_bytes_;
   esphome::sensor::Sensor *outdoor_sensor_;
 };
 

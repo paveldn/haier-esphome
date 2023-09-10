@@ -124,11 +124,7 @@ struct HaierPacketSensors {
   uint16_t co2_value;  // CO2 value (0 PPM -  10000 PPM, 1 PPM step)
 };
 
-struct HaierStatus {
-  uint16_t subcommand;
-  HaierPacketControl control;
-  HaierPacketSensors sensors;
-};
+constexpr size_t HAIER_STATUS_FRAME_SIZE = 2 + sizeof(HaierPacketControl) + sizeof(HaierPacketSensors);
 
 struct DeviceVersionAnswer {
   char protocol_version[8];
