@@ -123,6 +123,8 @@ class HaierClimateBase : public esphome::Component,
     esphome::optional<esphome::climate::ClimatePreset> preset;
     bool valid;
     HvacSettings() : valid(false){};
+    HvacSettings(const HvacSettings&) = default;
+    HvacSettings& operator=(const HvacSettings&) = default;
     void reset();
   };
   haier_protocol::ProtocolHandler haier_protocol_;
@@ -138,7 +140,8 @@ class HaierClimateBase : public esphome::Component,
   bool first_control_attempt_;
   bool reset_protocol_request_;
   esphome::climate::ClimateTraits traits_;
-  HvacSettings hvac_settings_;
+  HvacSettings current_hvac_settings_;
+  HvacSettings next_hvac_settings_;  
   std::chrono::steady_clock::time_point last_request_timestamp_;       // For interval between messages
   std::chrono::steady_clock::time_point last_valid_status_timestamp_;  // For protocol timeout
   std::chrono::steady_clock::time_point last_status_request_;          // To request AC status

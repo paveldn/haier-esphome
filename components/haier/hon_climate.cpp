@@ -199,8 +199,8 @@ haier_protocol::HandlerError HonClimate::status_handler_(uint8_t request_type, u
       } else if (this->protocol_phase_ == ProtocolPhases::WAITING_CONTROL_ANSWER) {
         this->set_phase(ProtocolPhases::IDLE);
         this->set_force_send_control_(false);
-        if (this->hvac_settings_.valid)
-          this->hvac_settings_.reset();
+        if (this->current_hvac_settings_.valid)
+          this->current_hvac_settings_.reset();
       }
     }
     return result;
@@ -382,8 +382,8 @@ void HonClimate::process_phase(std::chrono::steady_clock::time_point now) {
       if (this->is_control_message_timeout_exceeded_(now)) {
         ESP_LOGW(TAG, "Sending control packet timeout!");
         this->set_force_send_control_(false);
-        if (this->hvac_settings_.valid)
-          this->hvac_settings_.reset();
+        if (this->current_hvac_settings_.valid)
+          this->current_hvac_settings_.reset();
         this->forced_request_status_ = true;
         this->forced_publish_ = true;
         this->set_phase(ProtocolPhases::IDLE);
@@ -449,10 +449,9 @@ haier_protocol::HaierMessage HonClimate::get_control_message() {
   memcpy(control_out_buffer, this->last_status_message_.get(), sizeof(hon_protocol::HaierPacketControl));
   hon_protocol::HaierPacketControl *out_data = (hon_protocol::HaierPacketControl *) control_out_buffer;
   bool has_hvac_settings = false;
-  if (this->hvac_settings_.valid) {
+  if (this->current_hvac_settings_.valid) {
     has_hvac_settings = true;
-    HvacSettings climate_control;
-    climate_control = this->hvac_settings_;
+    HvacSettings& climate_control = this->current_hvac_settings_;
     if (climate_control.mode.has_value()) {
       switch (climate_control.mode.value()) {
         case CLIMATE_MODE_OFF:
