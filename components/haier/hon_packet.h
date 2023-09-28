@@ -35,6 +35,20 @@ enum class ConditioningMode : uint8_t {
   FAN = 0x06
 };
 
+enum class DataParameters : uint8_t {
+  AC_POWER = 0x01,
+  SET_POINT = 0x02,
+  AC_MODE = 0x04,
+  FAN_MODE = 0x05,
+  USE_FAHRENHEIT = 0x07,
+  TEN_DEGREE = 0x0A,
+  HEALTH_MODE = 0x0B,
+  BEEPER_STATUS = 0x16,
+  LOCK_REMOTE = 0x17,
+  QUIET_MODE = 0x19,
+  FAST_MODE = 0x1A,
+};
+
 enum class SpecialMode : uint8_t { NONE = 0x00, ELDERLY = 0x01, CHILDREN = 0x02, PREGNANT = 0x03 };
 
 enum class FanMode : uint8_t { FAN_HIGH = 0x01, FAN_MID = 0x02, FAN_LOW = 0x03, FAN_AUTO = 0x05 };

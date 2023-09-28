@@ -72,6 +72,7 @@ class HonClimate : public HaierClimateBase {
                                                                 const uint8_t *data, size_t data_size);
   // Helper functions
   haier_protocol::HandlerError process_status_message_(const uint8_t *packet, uint8_t size);
+  void fill_control_messages_queue_();
   std::unique_ptr<uint8_t[]> last_status_message_;
   bool beeper_status_;
   CleaningState cleaning_status_;
@@ -88,6 +89,7 @@ class HonClimate : public HaierClimateBase {
   uint8_t active_alarms_[8];
   int extra_control_packet_bytes_;
   esphome::sensor::Sensor *outdoor_sensor_;
+  std::queue<haier_protocol::HaierMessage> control_messages_queue_;
 };
 
 }  // namespace haier
