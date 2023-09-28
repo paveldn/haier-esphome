@@ -245,8 +245,10 @@ void HaierClimateBase::loop() {
       }
       this->last_valid_status_timestamp_ = now;
       this->set_force_send_control_(false);
-      if (this->hvac_settings_.valid)
-        this->hvac_settings_.reset();
+      if (this->current_hvac_settings_.valid)
+        this->current_hvac_settings_.reset();
+      if (this->next_hvac_settings_.valid)
+        this->next_hvac_settings_.reset();
       this->set_phase(ProtocolPhases::SENDING_INIT_1);
       return;
     } else {
@@ -262,9 +264,16 @@ void HaierClimateBase::loop() {
     // procedure or waiting for an answer
     if (this->action_request_ != ActionRequest::NO_ACTION) {
       this->process_pending_action();
-    } else if (this->hvac_settings_.valid || this->force_send_control_) {
+    } else if (this->next_hvac_settings_.valid || this->force_send_control_) {
       ESP_LOGV(TAG, "Control packet is pending...");
       this->set_phase(ProtocolPhases::SENDING_CONTROL);
+      this->first_control_attempt_ = true;
+      if (this->next_hvac_settings_.valid) {
+        this->current_hvac_settings_ = this->next_hvac_settings_;
+        this->next_hvac_settings_.reset();
+      } else {
+        this->current_hvac_settings_.reset();
+      }
     }
   }
   this->process_phase(now);
@@ -302,23 +311,22 @@ void HaierClimateBase::control(const ClimateCall &call) {
     ESP_LOGW(TAG, "Can't send control packet, first poll answer not received");
     return;  // cancel the control, we cant do it without a poll answer.
   }
-  if (this->hvac_settings_.valid) {
-    ESP_LOGW(TAG, "Overriding old valid settings before they were applied!");
+  if (this->current_hvac_settings_.valid) { 
+    ESP_LOGW(TAG, "New settings come faster then processed!");
   }
   {
     if (call.get_mode().has_value())
-      this->hvac_settings_.mode = call.get_mode();
+      this->next_hvac_settings_.mode = call.get_mode();
     if (call.get_fan_mode().has_value())
-      this->hvac_settings_.fan_mode = call.get_fan_mode();
+      this->next_hvac_settings_.fan_mode = call.get_fan_mode();
     if (call.get_swing_mode().has_value())
-      this->hvac_settings_.swing_mode = call.get_swing_mode();
+      this->next_hvac_settings_.swing_mode = call.get_swing_mode();
     if (call.get_target_temperature().has_value())
-      this->hvac_settings_.target_temperature = call.get_target_temperature();
+      this->next_hvac_settings_.target_temperature = call.get_target_temperature();
     if (call.get_preset().has_value())
-      this->hvac_settings_.preset = call.get_preset();
-    this->hvac_settings_.valid = true;
+      this->next_hvac_settings_.preset = call.get_preset();
+    this->next_hvac_settings_.valid = true;
   }
-  this->first_control_attempt_ = true;
 }
 
 void HaierClimateBase::HvacSettings::reset() {
