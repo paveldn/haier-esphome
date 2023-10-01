@@ -51,6 +51,7 @@ CONF_HORIZONTAL_AIRFLOW = "horizontal_airflow"
 CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
 CONF_VERTICAL_AIRFLOW = "vertical_airflow"
 CONF_WIFI_SIGNAL = "wifi_signal"
+CONF_CONTROL_METHOD = "control_method"
 
 PROTOCOL_HON = "HON"
 PROTOCOL_SMARTAIR2 = "SMARTAIR2"
@@ -108,6 +109,13 @@ SUPPORTED_CLIMATE_PRESETS_HON_OPTIONS = {
     "ECO": ClimatePreset.CLIMATE_PRESET_ECO,
     "BOOST": ClimatePreset.CLIMATE_PRESET_BOOST,
     "SLEEP": ClimatePreset.CLIMATE_PRESET_SLEEP,
+}
+
+HonControlMethod = haier_ns.enum("HonControlMethod", True)
+SUPPORTED_HON_CONTROL_METHODS = {
+    "MONITOR_ONLY": HonControlMethod.MONITOR_ONLY,
+    "SET_GROUP_PARAMETERS": HonControlMethod.SET_GROUP_PARAMETERS,
+    "SET_SINGLE_PARAMETERS": HonControlMethod.SET_SINGLE_PARAMETERS,
 }
 
 
@@ -201,6 +209,9 @@ CONFIG_SCHEMA = cv.All(
             PROTOCOL_HON: BASE_CONFIG_SCHEMA.extend(
                 {
                     cv.GenerateID(): cv.declare_id(HonClimate),
+                    cv.Optional(CONF_CONTROL_METHOD, default="SET_GROUP_PARAMETERS") : cv.ensure_list(
+                        cv.enum(SUPPORTED_HON_CONTROL_METHODS, upper=True)
+                    ),
                     cv.Optional(CONF_BEEPER, default=True): cv.boolean,
                     cv.Optional(CONF_CONTROL_PACKET_SIZE, default=PROTOCOL_CONTROL_PACKET_SIZE): cv.int_range(min=PROTOCOL_CONTROL_PACKET_SIZE, max=50),
                     cv.Optional(
@@ -411,8 +422,10 @@ async def to_code(config):
     await cg.register_component(var, config)
     await uart.register_uart_device(var, config)
     await climate.register_climate(var, config)
-
+  
     cg.add(var.set_send_wifi(config[CONF_WIFI_SIGNAL]))
+    if CONF_CONTROL_METHOD in config:
+        cg.add(var.set_control_method(config[CONF_CONTROL_METHOD]))
     if CONF_BEEPER in config:
         cg.add(var.set_beeper_state(config[CONF_BEEPER]))
     if CONF_DISPLAY in config:
