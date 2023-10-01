@@ -30,6 +30,12 @@ enum class CleaningState : uint8_t {
   STERI_CLEAN = 2,
 };
 
+enum class HonControlMethod {
+  MONITOR_ONLY = 0,
+  SET_GROUP_PARAMETERS,
+  SET_SINGLE_PARAMETERS
+};
+
 class HonClimate : public HaierClimateBase {
  public:
   HonClimate();
@@ -49,6 +55,7 @@ class HonClimate : public HaierClimateBase {
   void start_self_cleaning();
   void start_steri_cleaning();
   void set_extra_control_packet_bytes_size(size_t size) { this->extra_control_packet_bytes_ = size; };
+  void set_control_method(HonControlMethod method) { this->control_method_ = method; };
 
  protected:
   void set_handlers() override;
@@ -73,6 +80,8 @@ class HonClimate : public HaierClimateBase {
   // Helper functions
   haier_protocol::HandlerError process_status_message_(const uint8_t *packet, uint8_t size);
   void fill_control_messages_queue_();
+  void clear_control_messages_queue_();
+  void reset_to_idle_();
   std::unique_ptr<uint8_t[]> last_status_message_;
   bool beeper_status_;
   CleaningState cleaning_status_;
@@ -88,6 +97,7 @@ class HonClimate : public HaierClimateBase {
   bool &use_crc_;
   uint8_t active_alarms_[8];
   int extra_control_packet_bytes_;
+  HonControlMethod control_method_;
   esphome::sensor::Sensor *outdoor_sensor_;
   std::queue<haier_protocol::HaierMessage> control_messages_queue_;
 };
