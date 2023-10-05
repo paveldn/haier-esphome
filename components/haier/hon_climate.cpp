@@ -183,6 +183,7 @@ haier_protocol::HandlerError HonClimate::status_handler_(uint8_t request_type, u
       this->set_phase((this->protocol_phase_ >= ProtocolPhases::IDLE) ? ProtocolPhases::IDLE
                                                                       : ProtocolPhases::SENDING_INIT_1);
       this->action_request_ = ActionRequest::NO_ACTION;
+      this->set_force_send_control_(false);
     } else {
       if (data_size >= sizeof(hon_protocol::HaierPacketControl) + 2) {
         memcpy(this->last_status_message_.get(), data + 2, sizeof(hon_protocol::HaierPacketControl));
@@ -198,13 +199,15 @@ haier_protocol::HandlerError HonClimate::status_handler_(uint8_t request_type, u
                  (this->protocol_phase_ == ProtocolPhases::WAITING_POWER_OFF_ANSWER)) {
         this->set_phase(ProtocolPhases::IDLE);
       } else if (this->protocol_phase_ == ProtocolPhases::WAITING_CONTROL_ANSWER) {
+        if (!this->control_messages_queue_.empty())
+          this->control_messages_queue_.pop();
         if (this->control_messages_queue_.empty()) {
           this->set_phase(ProtocolPhases::IDLE);
           this->set_force_send_control_(false);
           if (this->current_hvac_settings_.valid)
             this->current_hvac_settings_.reset();
         } else {
-          this->control_messages_queue_.pop();
+          this->set_phase(ProtocolPhases::SENDING_CONTROL);
           this->control_request_timestamp_ = std::chrono::steady_clock::now();
         }
       }
@@ -212,6 +215,7 @@ haier_protocol::HandlerError HonClimate::status_handler_(uint8_t request_type, u
     return result;
   } else {
     this->action_request_ = ActionRequest::NO_ACTION;
+    this->set_force_send_control_(false);
     this->set_phase((this->protocol_phase_ >= ProtocolPhases::IDLE) ? ProtocolPhases::IDLE
                                                                     : ProtocolPhases::SENDING_INIT_1);
     return result;
@@ -393,7 +397,7 @@ void HonClimate::process_phase(std::chrono::steady_clock::time_point now) {
               this->control_messages_queue_.push(control_message);
             }
             break;
-          case HonControlMethod::SET_SINGLE_PARAMETERS:
+          case HonControlMethod::SET_SINGLE_PARAMETER:
             this->fill_control_messages_queue_();
             break;
           case HonControlMethod::MONITOR_ONLY:
@@ -413,8 +417,8 @@ void HonClimate::process_phase(std::chrono::steady_clock::time_point now) {
         ESP_LOGW(TAG, "Sending control packet timeout!");
         this->reset_to_idle_();
       } else if (this->can_send_message() && this->is_control_message_interval_exceeded_(now)) {
+        ESP_LOGI(TAG, "Sending control packet, queue size %d", this->control_messages_queue_.size());
         this->send_message_(this->control_messages_queue_.front(), this->use_crc_);
-        ESP_LOGI(TAG, "Control packet sent");
         this->set_phase(ProtocolPhases::WAITING_CONTROL_ANSWER);
       }
       break;

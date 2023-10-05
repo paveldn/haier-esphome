@@ -115,7 +115,7 @@ HonControlMethod = haier_ns.enum("HonControlMethod", True)
 SUPPORTED_HON_CONTROL_METHODS = {
     "MONITOR_ONLY": HonControlMethod.MONITOR_ONLY,
     "SET_GROUP_PARAMETERS": HonControlMethod.SET_GROUP_PARAMETERS,
-    "SET_SINGLE_PARAMETERS": HonControlMethod.SET_SINGLE_PARAMETERS,
+    "SET_SINGLE_PARAMETER": HonControlMethod.SET_SINGLE_PARAMETER,
 }
 
 
