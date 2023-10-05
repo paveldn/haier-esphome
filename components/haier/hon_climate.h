@@ -33,7 +33,7 @@ enum class CleaningState : uint8_t {
 enum class HonControlMethod {
   MONITOR_ONLY = 0,
   SET_GROUP_PARAMETERS,
-  SET_SINGLE_PARAMETERS
+  SET_SINGLE_PARAMETER
 };
 
 class HonClimate : public HaierClimateBase {
