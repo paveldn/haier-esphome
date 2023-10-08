@@ -984,6 +984,16 @@ void HonClimate::fill_control_messages_queue_() {
       ));
     }
   }
+  // Target temperature
+  if (climate_control.target_temperature.has_value()) {
+    uint8_t buffer[2] = {0x00, 0x00};
+    buffer[1] = ((uint8_t)climate_control.target_temperature.value()) - 16;
+    this->control_messages_queue_.push(haier_protocol::HaierMessage(
+      (uint8_t) hon_protocol::FrameType::CONTROL,
+      (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER + (uint8_t) hon_protocol::DataParameters::SET_POINT,
+      buffer, 2
+    ));
+  }
   // Fan mode
   if (climate_control.fan_mode.has_value()) {
     switch (climate_control.fan_mode.value()) {
