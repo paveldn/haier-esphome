@@ -20,7 +20,6 @@ constexpr size_t PROTOCOL_INITIALIZATION_INTERVAL = 10000;
 constexpr size_t DEFAULT_MESSAGES_INTERVAL_MS = 2000;
 constexpr size_t CONTROL_MESSAGES_INTERVAL_MS = 400;
 constexpr size_t CONTROL_TIMEOUT_MS = 7000;
-constexpr size_t NO_COMMAND = 0xFF;  // Indicate that there is no command supplied
 
 #if (HAIER_LOG_LEVEL > 4)
 // To reduce size of binary this function only available when log level is Verbose
@@ -119,7 +118,7 @@ bool HaierClimateBase::is_protocol_initialisation_interval_exceeded_(std::chrono
 }
 
 #ifdef USE_WIFI
-haier_protocol::HaierMessage HaierClimateBase::get_wifi_signal_message_(uint8_t message_type) {
+haier_protocol::HaierMessage HaierClimateBase::get_wifi_signal_message_(haier_protocol::FrameType message_type) {
   static uint8_t wifi_status_data[4] = {0x00, 0x00, 0x00, 0x00};
   if (wifi::global_wifi_component->is_connected()) {
     wifi_status_data[1] = 0;
@@ -183,24 +182,24 @@ void HaierClimateBase::set_supported_presets(const std::set<climate::ClimatePres
 
 void HaierClimateBase::set_send_wifi(bool send_wifi) { this->send_wifi_signal_ = send_wifi; }
 
-haier_protocol::HandlerError HaierClimateBase::answer_preprocess_(uint8_t request_message_type,
-                                                                  uint8_t expected_request_message_type,
-                                                                  uint8_t answer_message_type,
-                                                                  uint8_t expected_answer_message_type,
+haier_protocol::HandlerError HaierClimateBase::answer_preprocess_(haier_protocol::FrameType request_message_type,
+                                                                  haier_protocol::FrameType expected_request_message_type,
+                                                                  haier_protocol::FrameType answer_message_type,
+                                                                  haier_protocol::FrameType expected_answer_message_type,
                                                                   ProtocolPhases expected_phase) {
   haier_protocol::HandlerError result = haier_protocol::HandlerError::HANDLER_OK;
-  if ((expected_request_message_type != NO_COMMAND) && (request_message_type != expected_request_message_type))
+  if ((expected_request_message_type != haier_protocol::FrameType::UNKNOWN_FRAME_TYPE) && (request_message_type != expected_request_message_type))
     result = haier_protocol::HandlerError::UNSUPPORTED_MESSAGE;
-  if ((expected_answer_message_type != NO_COMMAND) && (answer_message_type != expected_answer_message_type))
+  if ((expected_answer_message_type != haier_protocol::FrameType::UNKNOWN_FRAME_TYPE) && (answer_message_type != expected_answer_message_type))
     result = haier_protocol::HandlerError::UNSUPPORTED_MESSAGE;
   if ((expected_phase != ProtocolPhases::UNKNOWN) && (expected_phase != this->protocol_phase_))
     result = haier_protocol::HandlerError::UNEXPECTED_MESSAGE;
-  if (is_message_invalid(answer_message_type))
+  if (answer_message_type == haier_protocol::FrameType::INVALID)
     result = haier_protocol::HandlerError::INVALID_ANSWER;
   return result;
 }
 
-haier_protocol::HandlerError HaierClimateBase::timeout_default_handler_(uint8_t request_type) {
+haier_protocol::HandlerError HaierClimateBase::timeout_default_handler_(haier_protocol::FrameType request_type) {
 #if (HAIER_LOG_LEVEL > 4)
   ESP_LOGW(TAG, "Answer timeout for command %02X, phase %s", request_type, phase_to_string_(this->protocol_phase_));
 #else
