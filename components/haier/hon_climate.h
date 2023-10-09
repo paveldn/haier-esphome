@@ -61,21 +61,20 @@ class HonClimate : public HaierClimateBase {
   void set_handlers() override;
   void process_phase(std::chrono::steady_clock::time_point now) override;
   haier_protocol::HaierMessage get_control_message() override;
-  bool is_message_invalid(uint8_t message_type) override;
   void process_pending_action() override;
 
   // Answers handlers
-  haier_protocol::HandlerError get_device_version_answer_handler_(uint8_t request_type, uint8_t message_type,
+  haier_protocol::HandlerError get_device_version_answer_handler_(haier_protocol::FrameType request_type, haier_protocol::FrameType message_type,
                                                                   const uint8_t *data, size_t data_size);
-  haier_protocol::HandlerError get_device_id_answer_handler_(uint8_t request_type, uint8_t message_type,
+  haier_protocol::HandlerError get_device_id_answer_handler_(haier_protocol::FrameType request_type, haier_protocol::FrameType message_type,
                                                              const uint8_t *data, size_t data_size);
-  haier_protocol::HandlerError status_handler_(uint8_t request_type, uint8_t message_type, const uint8_t *data,
+  haier_protocol::HandlerError status_handler_(haier_protocol::FrameType request_type, haier_protocol::FrameType message_type, const uint8_t *data,
                                                size_t data_size);
-  haier_protocol::HandlerError get_management_information_answer_handler_(uint8_t request_type, uint8_t message_type,
+  haier_protocol::HandlerError get_management_information_answer_handler_(haier_protocol::FrameType request_type, haier_protocol::FrameType message_type,
                                                                           const uint8_t *data, size_t data_size);
-  haier_protocol::HandlerError report_network_status_answer_handler_(uint8_t request_type, uint8_t message_type,
+  haier_protocol::HandlerError report_network_status_answer_handler_(haier_protocol::FrameType request_type, haier_protocol::FrameType message_type,
                                                                      const uint8_t *data, size_t data_size);
-  haier_protocol::HandlerError get_alarm_status_answer_handler_(uint8_t request_type, uint8_t message_type,
+  haier_protocol::HandlerError get_alarm_status_answer_handler_(haier_protocol::FrameType request_type, haier_protocol::FrameType message_type,
                                                                 const uint8_t *data, size_t data_size);
   // Helper functions
   haier_protocol::HandlerError process_status_message_(const uint8_t *packet, uint8_t size);

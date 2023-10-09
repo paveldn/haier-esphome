@@ -91,15 +91,14 @@ class HaierClimateBase : public esphome::Component,
   virtual void set_handlers() = 0;
   virtual void process_phase(std::chrono::steady_clock::time_point now) = 0;
   virtual haier_protocol::HaierMessage get_control_message() = 0;
-  virtual bool is_message_invalid(uint8_t message_type) = 0;
   virtual void process_pending_action();
   esphome::climate::ClimateTraits traits() override;
   // Answers handlers
-  haier_protocol::HandlerError answer_preprocess_(uint8_t request_message_type, uint8_t expected_request_message_type,
-                                                  uint8_t answer_message_type, uint8_t expected_answer_message_type,
+  haier_protocol::HandlerError answer_preprocess_(haier_protocol::FrameType request_message_type, haier_protocol::FrameType expected_request_message_type,
+                                                  haier_protocol::FrameType answer_message_type, haier_protocol::FrameType expected_answer_message_type,
                                                   ProtocolPhases expected_phase);
   // Timeout handler
-  haier_protocol::HandlerError timeout_default_handler_(uint8_t request_type);
+  haier_protocol::HandlerError timeout_default_handler_(haier_protocol::FrameType request_type);
   // Helper functions
   void set_force_send_control_(bool status);
   void send_message_(const haier_protocol::HaierMessage &command, bool use_crc);
@@ -112,7 +111,7 @@ class HaierClimateBase : public esphome::Component,
   bool is_control_message_interval_exceeded_(std::chrono::steady_clock::time_point now);
   bool is_protocol_initialisation_interval_exceeded_(std::chrono::steady_clock::time_point now);
 #ifdef USE_WIFI
-  haier_protocol::HaierMessage get_wifi_signal_message_(uint8_t message_type);
+  haier_protocol::HaierMessage get_wifi_signal_message_(haier_protocol::FrameType message_type);
 #endif
 
   struct HvacSettings {

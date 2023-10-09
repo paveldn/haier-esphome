@@ -16,11 +16,11 @@ constexpr size_t SIGNAL_LEVEL_UPDATE_INTERVAL_MS = 10000;
 Smartair2Climate::Smartair2Climate()
     : last_status_message_(new uint8_t[sizeof(smartair2_protocol::HaierPacketControl)]), timeouts_counter_(0) {}
 
-haier_protocol::HandlerError Smartair2Climate::status_handler_(uint8_t request_type, uint8_t message_type,
+haier_protocol::HandlerError Smartair2Climate::status_handler_(haier_protocol::FrameType request_type, haier_protocol::FrameType message_type,
                                                                const uint8_t *data, size_t data_size) {
   haier_protocol::HandlerError result =
-      this->answer_preprocess_(request_type, (uint8_t) smartair2_protocol::FrameType::CONTROL, message_type,
-                               (uint8_t) smartair2_protocol::FrameType::STATUS, ProtocolPhases::UNKNOWN);
+      this->answer_preprocess_(request_type, haier_protocol::FrameType::CONTROL, message_type,
+                               haier_protocol::FrameType::STATUS, ProtocolPhases::UNKNOWN);
   if (result == haier_protocol::HandlerError::HANDLER_OK) {
     result = this->process_status_message_(data, data_size);
     if (result != haier_protocol::HandlerError::HANDLER_OK) {
@@ -54,16 +54,16 @@ haier_protocol::HandlerError Smartair2Climate::status_handler_(uint8_t request_t
   }
 }
 
-haier_protocol::HandlerError Smartair2Climate::get_device_version_answer_handler_(uint8_t request_type,
-                                                                                  uint8_t message_type,
+haier_protocol::HandlerError Smartair2Climate::get_device_version_answer_handler_(haier_protocol::FrameType request_type,
+                                                                                  haier_protocol::FrameType message_type,
                                                                                   const uint8_t *data,
                                                                                   size_t data_size) {
-  if (request_type != (uint8_t) smartair2_protocol::FrameType::GET_DEVICE_VERSION)
+  if (request_type != haier_protocol::FrameType::GET_DEVICE_VERSION)
     return haier_protocol::HandlerError::UNSUPPORTED_MESSAGE;
   if (ProtocolPhases::WAITING_INIT_1_ANSWER != this->protocol_phase_)
     return haier_protocol::HandlerError::UNEXPECTED_MESSAGE;
   // Invalid packet is expected answer
-  if ((message_type == (uint8_t) smartair2_protocol::FrameType::GET_DEVICE_VERSION_RESPONSE) && (data_size >= 39) &&
+  if ((message_type == haier_protocol::FrameType::GET_DEVICE_VERSION_RESPONSE) && (data_size >= 39) &&
       ((data[37] & 0x04) != 0)) {
     ESP_LOGW(TAG, "It looks like your ESPHome Haier climate configuration is wrong. You should use the hOn protocol "
                   "instead of smartAir2");
@@ -72,18 +72,18 @@ haier_protocol::HandlerError Smartair2Climate::get_device_version_answer_handler
   return haier_protocol::HandlerError::HANDLER_OK;
 }
 
-haier_protocol::HandlerError Smartair2Climate::report_network_status_answer_handler_(uint8_t request_type,
-                                                                                     uint8_t message_type,
+haier_protocol::HandlerError Smartair2Climate::report_network_status_answer_handler_(haier_protocol::FrameType request_type,
+                                                                                     haier_protocol::FrameType message_type,
                                                                                      const uint8_t *data,
                                                                                      size_t data_size) {
   haier_protocol::HandlerError result = this->answer_preprocess_(
-      request_type, (uint8_t) smartair2_protocol::FrameType::REPORT_NETWORK_STATUS, message_type,
-      (uint8_t) smartair2_protocol::FrameType::CONFIRM, ProtocolPhases::WAITING_SIGNAL_LEVEL_ANSWER);
+      request_type, haier_protocol::FrameType::REPORT_NETWORK_STATUS, message_type,
+      haier_protocol::FrameType::CONFIRM, ProtocolPhases::WAITING_SIGNAL_LEVEL_ANSWER);
   this->set_phase(ProtocolPhases::IDLE);
   return result;
 }
 
-haier_protocol::HandlerError Smartair2Climate::initial_messages_timeout_handler_(uint8_t message_type) {
+haier_protocol::HandlerError Smartair2Climate::initial_messages_timeout_handler_(haier_protocol::FrameType message_type) {
   if (this->protocol_phase_ >= ProtocolPhases::IDLE)
     return HaierClimateBase::timeout_default_handler_(message_type);
   this->timeouts_counter_++;
@@ -104,25 +104,25 @@ haier_protocol::HandlerError Smartair2Climate::initial_messages_timeout_handler_
 void Smartair2Climate::set_handlers() {
   // Set handlers
   this->haier_protocol_.set_answer_handler(
-      (uint8_t) (smartair2_protocol::FrameType::GET_DEVICE_VERSION),
+      haier_protocol::FrameType::GET_DEVICE_VERSION,
       std::bind(&Smartair2Climate::get_device_version_answer_handler_, this, std::placeholders::_1,
                 std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
   this->haier_protocol_.set_answer_handler(
-      (uint8_t) (smartair2_protocol::FrameType::CONTROL),
+      haier_protocol::FrameType::CONTROL,
       std::bind(&Smartair2Climate::status_handler_, this, std::placeholders::_1, std::placeholders::_2,
                 std::placeholders::_3, std::placeholders::_4));
   this->haier_protocol_.set_answer_handler(
-      (uint8_t) (smartair2_protocol::FrameType::REPORT_NETWORK_STATUS),
+      haier_protocol::FrameType::REPORT_NETWORK_STATUS,
       std::bind(&Smartair2Climate::report_network_status_answer_handler_, this, std::placeholders::_1,
                 std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
   this->haier_protocol_.set_timeout_handler(
-      (uint8_t) (smartair2_protocol::FrameType::GET_DEVICE_ID),
+      haier_protocol::FrameType::GET_DEVICE_ID,
       std::bind(&Smartair2Climate::initial_messages_timeout_handler_, this, std::placeholders::_1));
   this->haier_protocol_.set_timeout_handler(
-      (uint8_t) (smartair2_protocol::FrameType::GET_DEVICE_VERSION),
+      haier_protocol::FrameType::GET_DEVICE_VERSION,
       std::bind(&Smartair2Climate::initial_messages_timeout_handler_, this, std::placeholders::_1));
   this->haier_protocol_.set_timeout_handler(
-      (uint8_t) (smartair2_protocol::FrameType::CONTROL),
+      haier_protocol::FrameType::CONTROL,
       std::bind(&Smartair2Climate::initial_messages_timeout_handler_, this, std::placeholders::_1));
 }
 
@@ -145,7 +145,7 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
         // bit 4..bit 15 - not used
         uint8_t module_capabilities[2] = {0b00000000, 0b00000111};
         static const haier_protocol::HaierMessage DEVICE_VERSION_REQUEST(
-            (uint8_t) smartair2_protocol::FrameType::GET_DEVICE_VERSION, module_capabilities,
+            haier_protocol::FrameType::GET_DEVICE_VERSION, module_capabilities,
             sizeof(module_capabilities));
         this->send_message_(DEVICE_VERSION_REQUEST, false);
         this->set_phase(ProtocolPhases::WAITING_INIT_1_ANSWER);
@@ -158,7 +158,7 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
     case ProtocolPhases::SENDING_FIRST_STATUS_REQUEST:
     case ProtocolPhases::SENDING_STATUS_REQUEST:
       if (this->can_send_message() && this->is_message_interval_exceeded_(now)) {
-        static const haier_protocol::HaierMessage STATUS_REQUEST((uint8_t) smartair2_protocol::FrameType::CONTROL,
+        static const haier_protocol::HaierMessage STATUS_REQUEST(haier_protocol::FrameType::CONTROL,
                                                                  0x4D01);
         this->send_message_(STATUS_REQUEST, false);
         this->last_status_request_ = now;
@@ -169,7 +169,7 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
     case ProtocolPhases::SENDING_SIGNAL_LEVEL:
       if (this->can_send_message() && this->is_message_interval_exceeded_(now)) {
         this->send_message_(
-            this->get_wifi_signal_message_((uint8_t) smartair2_protocol::FrameType::REPORT_NETWORK_STATUS), false);
+            this->get_wifi_signal_message_(haier_protocol::FrameType::REPORT_NETWORK_STATUS), false);
         this->last_signal_request_ = now;
         this->set_phase(ProtocolPhases::WAITING_SIGNAL_LEVEL_ANSWER);
       }
@@ -216,7 +216,7 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
     case ProtocolPhases::SENDING_POWER_OFF_COMMAND:
       if (this->can_send_message() && this->is_message_interval_exceeded_(now)) {
         haier_protocol::HaierMessage power_cmd(
-            (uint8_t) smartair2_protocol::FrameType::CONTROL,
+            haier_protocol::FrameType::CONTROL,
             this->protocol_phase_ == ProtocolPhases::SENDING_POWER_ON_COMMAND ? 0x4D02 : 0x4D03);
         this->send_message_(power_cmd, false);
         this->set_phase(this->protocol_phase_ == ProtocolPhases::SENDING_POWER_ON_COMMAND
@@ -399,7 +399,7 @@ haier_protocol::HaierMessage Smartair2Climate::get_control_message() {
   }
   out_data->display_status = this->display_status_ ? 0 : 1;
   out_data->health_mode = this->health_mode_ ? 1 : 0;
-  return haier_protocol::HaierMessage((uint8_t) smartair2_protocol::FrameType::CONTROL, 0x4D5F, control_out_buffer,
+  return haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL, 0x4D5F, control_out_buffer,
                                       sizeof(smartair2_protocol::HaierPacketControl));
 }
 
@@ -576,10 +576,6 @@ haier_protocol::HandlerError Smartair2Climate::process_status_message_(const uin
   esp_log_printf_((should_publish ? ESPHOME_LOG_LEVEL_INFO : ESPHOME_LOG_LEVEL_DEBUG), TAG, __LINE__,
                   "Set Point Status = 0x%X", packet.control.set_point);
   return haier_protocol::HandlerError::HANDLER_OK;
-}
-
-bool Smartair2Climate::is_message_invalid(uint8_t message_type) {
-  return message_type == (uint8_t) smartair2_protocol::FrameType::INVALID;
 }
 
 void Smartair2Climate::set_phase(HaierClimateBase::ProtocolPhases phase) {

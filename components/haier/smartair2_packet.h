@@ -83,18 +83,6 @@ struct HaierStatus {
   HaierPacketControl control;
 };
 
-enum class FrameType : uint8_t {
-  CONTROL = 0x01,
-  STATUS = 0x02,
-  INVALID = 0x03,
-  CONFIRM = 0x05,
-  GET_DEVICE_VERSION = 0x61,
-  GET_DEVICE_VERSION_RESPONSE = 0x62,
-  GET_DEVICE_ID = 0x70,
-  GET_DEVICE_ID_RESPONSE = 0x71,
-  REPORT_NETWORK_STATUS = 0xF7,
-  NO_COMMAND = 0xFF,
-};
 
 }  // namespace smartair2_protocol
 }  // namespace haier
