@@ -50,14 +50,11 @@ hon_protocol::HorizontalSwingMode get_horizontal_swing_mode(AirflowHorizontalDir
 }
 
 HonClimate::HonClimate()
-    : last_status_message_(new uint8_t[sizeof(hon_protocol::HaierPacketControl)]),
-      cleaning_status_(CleaningState::NO_CLEANING),
+    : cleaning_status_(CleaningState::NO_CLEANING),
       got_valid_outdoor_temp_(false),
-      hvac_hardware_info_available_(false),
-      hvac_functions_{false, false, false, false, false},
-      use_crc_(hvac_functions_[2]),
       active_alarms_{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
       outdoor_sensor_(nullptr) {
+  last_status_message_ = std::unique_ptr<uint8_t[]>(new uint8_t[sizeof(hon_protocol::HaierPacketControl)]);
   this->fan_mode_speed_ = (uint8_t) hon_protocol::FanMode::FAN_MID;
   this->other_modes_fan_speed_ = (uint8_t) hon_protocol::FanMode::FAN_AUTO;
 }
@@ -136,19 +133,20 @@ haier_protocol::HandlerError HonClimate::get_device_version_answer_handler_(haie
     char tmp[9];
     tmp[8] = 0;
     strncpy(tmp, answr->protocol_version, 8);
-    this->hvac_protocol_version_ = std::string(tmp);
+    this->hvac_hardware_info_ = HardwareInfo();
+    this->hvac_hardware_info_.value().protocol_version_ = std::string(tmp);
     strncpy(tmp, answr->software_version, 8);
-    this->hvac_software_version_ = std::string(tmp);
+    this->hvac_hardware_info_.value().software_version_ = std::string(tmp);
     strncpy(tmp, answr->hardware_version, 8);
-    this->hvac_hardware_version_ = std::string(tmp);
+    this->hvac_hardware_info_.value().hardware_version_ = std::string(tmp);
     strncpy(tmp, answr->device_name, 8);
-    this->hvac_device_name_ = std::string(tmp);
-    this->hvac_functions_[0] = (answr->functions[1] & 0x01) != 0;  // interactive mode support
-    this->hvac_functions_[1] = (answr->functions[1] & 0x02) != 0;  // controller-device mode support
-    this->hvac_functions_[2] = (answr->functions[1] & 0x04) != 0;  // crc support
-    this->hvac_functions_[3] = (answr->functions[1] & 0x08) != 0;  // multiple AC support
-    this->hvac_functions_[4] = (answr->functions[1] & 0x20) != 0;  // roles support
-    this->hvac_hardware_info_available_ = true;
+    this->hvac_hardware_info_.value().device_name_ = std::string(tmp);
+    this->hvac_hardware_info_.value().functions_[0] = (answr->functions[1] & 0x01) != 0;  // interactive mode support
+    this->hvac_hardware_info_.value().functions_[1] = (answr->functions[1] & 0x02) != 0;  // controller-device mode support
+    this->hvac_hardware_info_.value().functions_[2] = (answr->functions[1] & 0x04) != 0;  // crc support
+    this->hvac_hardware_info_.value().functions_[3] = (answr->functions[1] & 0x08) != 0;  // multiple AC support
+    this->hvac_hardware_info_.value().functions_[4] = (answr->functions[1] & 0x20) != 0;  // roles support
+    this->use_crc_ = this->hvac_hardware_info_.value().functions_[2];
     this->set_phase(ProtocolPhases::SENDING_INIT_2);
     return result;
   } else {
@@ -304,14 +302,14 @@ void HonClimate::dump_config() {
   HaierClimateBase::dump_config();
   ESP_LOGCONFIG(TAG, "  Protocol version: hOn");
   ESP_LOGCONFIG(TAG, "  Control method: %d", (uint8_t)this->control_method_);
-  if (this->hvac_hardware_info_available_) {
-    ESP_LOGCONFIG(TAG, "  Device protocol version: %s", this->hvac_protocol_version_.c_str());
-    ESP_LOGCONFIG(TAG, "  Device software version: %s", this->hvac_software_version_.c_str());
-    ESP_LOGCONFIG(TAG, "  Device hardware version: %s", this->hvac_hardware_version_.c_str());
-    ESP_LOGCONFIG(TAG, "  Device name: %s", this->hvac_device_name_.c_str());
-    ESP_LOGCONFIG(TAG, "  Device features:%s%s%s%s%s", (this->hvac_functions_[0] ? " interactive" : ""),
-                  (this->hvac_functions_[1] ? " controller-device" : ""), (this->hvac_functions_[2] ? " crc" : ""),
-                  (this->hvac_functions_[3] ? " multinode" : ""), (this->hvac_functions_[4] ? " role" : ""));
+  if (this->hvac_hardware_info_.has_value()) {
+    ESP_LOGCONFIG(TAG, "  Device protocol version: %s", this->hvac_hardware_info_.value().protocol_version_.c_str());
+    ESP_LOGCONFIG(TAG, "  Device software version: %s", this->hvac_hardware_info_.value().software_version_.c_str());
+    ESP_LOGCONFIG(TAG, "  Device hardware version: %s", this->hvac_hardware_info_.value().hardware_version_.c_str());
+    ESP_LOGCONFIG(TAG, "  Device name: %s", this->hvac_hardware_info_.value().device_name_.c_str());
+    ESP_LOGCONFIG(TAG, "  Device features:%s%s%s%s%s", (this->hvac_hardware_info_.value().functions_[0] ? " interactive" : ""),
+                  (this->hvac_hardware_info_.value().functions_[1] ? " controller-device" : ""), (this->hvac_hardware_info_.value().functions_[2] ? " crc" : ""),
+                  (this->hvac_hardware_info_.value().functions_[3] ? " multinode" : ""), (this->hvac_hardware_info_.value().functions_[4] ? " role" : ""));
     ESP_LOGCONFIG(TAG, "  Active alarms: %s", buf_to_hex(this->active_alarms_, sizeof(this->active_alarms_)).c_str());
   }
 }
@@ -320,7 +318,7 @@ void HonClimate::process_phase(std::chrono::steady_clock::time_point now) {
   switch (this->protocol_phase_) {
     case ProtocolPhases::SENDING_INIT_1:
       if (this->can_send_message() && this->is_protocol_initialisation_interval_exceeded_(now)) {
-        this->hvac_hardware_info_available_ = false;
+        this->hvac_hardware_info_.reset();
         // Indicate device capabilities:
         // bit 0 - if 1 module support interactive mode
         // bit 1 - if 1 module support controller-device mode
@@ -388,29 +386,30 @@ void HonClimate::process_phase(std::chrono::steady_clock::time_point now) {
       }
       break;
     case ProtocolPhases::SENDING_CONTROL:
-      switch (this->control_method_) {
-        case HonControlMethod::SET_GROUP_PARAMETERS: {
-            haier_protocol::HaierMessage control_message = this->get_control_message();
-            this->clear_control_messages_queue_();
-            this->control_messages_queue_.push(control_message);
-          }
-          break;
-        case HonControlMethod::SET_SINGLE_PARAMETER:
-          this->fill_control_messages_queue_();
-          break;
-        case HonControlMethod::MONITOR_ONLY:
-          ESP_LOGI(TAG, "AC control is disabled, monitor only");
-          this->reset_to_idle_();
-          return;
-        default:
-          ESP_LOGW(TAG, "Unsupported control method for hOn protocol!");
-          this->reset_to_idle_();
-          return;
+      if (this->control_messages_queue_.empty()) {
+        switch (this->control_method_) {
+          case HonControlMethod::SET_GROUP_PARAMETERS: {
+              haier_protocol::HaierMessage control_message = this->get_control_message();
+              this->control_messages_queue_.push(control_message);
+            }
+            break;
+          case HonControlMethod::SET_SINGLE_PARAMETER:
+            this->fill_control_messages_queue_();
+            break;
+          case HonControlMethod::MONITOR_ONLY:
+            ESP_LOGI(TAG, "AC control is disabled, monitor only");
+            this->reset_to_idle_();
+            return;
+          default:
+            ESP_LOGW(TAG, "Unsupported control method for hOn protocol!");
+            this->reset_to_idle_();
+            return;
+        }
       }
       if (this->control_messages_queue_.empty()) {
         ESP_LOGW(TAG, "Control message queue is empty!");
         this->reset_to_idle_();
-      } else if (this->can_send_message() && this->is_message_interval_exceeded_(now)) {
+      } else if (this->can_send_message() && this->is_control_message_interval_exceeded_(now)) {
         ESP_LOGI(TAG, "Sending control packet, queue size %d", this->control_messages_queue_.size());
         this->send_message_(this->control_messages_queue_.front(), this->use_crc_, CONTROL_MESSAGE_RETRIES, CONTROL_MESSAGE_RETRIES_INTERVAL);
         this->set_phase(ProtocolPhases::WAITING_CONTROL_ANSWER);
@@ -807,7 +806,7 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
     should_publish = should_publish || (old_swing_mode != this->swing_mode);
   }
   this->last_valid_status_timestamp_ = std::chrono::steady_clock::now();
-  if (this->forced_publish_ || should_publish) {
+  if (should_publish) {
 #if (HAIER_LOG_LEVEL > 4)
     std::chrono::high_resolution_clock::time_point _publish_start = std::chrono::high_resolution_clock::now();
 #endif
@@ -818,7 +817,6 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
                                                                    _publish_start)
                  .count());
 #endif
-    this->forced_publish_ = false;
   }
   if (should_publish) {
     ESP_LOGI(TAG, "HVAC values changed");

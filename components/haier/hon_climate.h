@@ -81,19 +81,20 @@ class HonClimate : public HaierClimateBase {
   void fill_control_messages_queue_();
   void clear_control_messages_queue_();
 
-  std::unique_ptr<uint8_t[]> last_status_message_;
+  struct HardwareInfo {
+    std::string protocol_version_;
+    std::string software_version_;
+    std::string hardware_version_;
+    std::string device_name_;
+    bool functions_[5];
+  };
+
   bool beeper_status_;
   CleaningState cleaning_status_;
   bool got_valid_outdoor_temp_;
   AirflowVerticalDirection vertical_direction_;
   AirflowHorizontalDirection horizontal_direction_;
-  bool hvac_hardware_info_available_;
-  std::string hvac_protocol_version_;
-  std::string hvac_software_version_;
-  std::string hvac_hardware_version_;
-  std::string hvac_device_name_;
-  bool hvac_functions_[5];
-  bool &use_crc_;
+  esphome::optional<HardwareInfo> hvac_hardware_info_;
   uint8_t active_alarms_[8];
   int extra_control_packet_bytes_;
   HonControlMethod control_method_;
