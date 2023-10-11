@@ -18,6 +18,7 @@ constexpr size_t COMMUNICATION_TIMEOUT_MS = 60000;
 constexpr size_t STATUS_REQUEST_INTERVAL_MS = 5000;
 constexpr size_t PROTOCOL_INITIALIZATION_INTERVAL = 10000;
 constexpr size_t DEFAULT_MESSAGES_INTERVAL_MS = 2000;
+constexpr size_t CONTROL_MESSAGES_INTERVAL_MS = 400;
 
 #if (HAIER_LOG_LEVEL > 4)
 // To reduce size of binary this function only available when log level is Verbose
@@ -61,10 +62,10 @@ HaierClimateBase::HaierClimateBase()
       display_status_(true),
       health_mode_(false),
       force_send_control_(false),
-      forced_publish_(false),
       forced_request_status_(false),
       reset_protocol_request_(false),
-      send_wifi_signal_(true) {
+      send_wifi_signal_(true),
+      use_crc_(false) {
   this->traits_ = climate::ClimateTraits();
   this->traits_.set_supported_modes({climate::CLIMATE_MODE_OFF, climate::CLIMATE_MODE_COOL, climate::CLIMATE_MODE_HEAT,
                                      climate::CLIMATE_MODE_FAN_ONLY, climate::CLIMATE_MODE_DRY,
@@ -94,7 +95,6 @@ void HaierClimateBase::reset_to_idle_() {
   if (this->current_hvac_settings_.valid)
     this->current_hvac_settings_.reset();
   this->forced_request_status_ = true;
-  this->forced_publish_ = false;
   this->set_phase(ProtocolPhases::IDLE);
   this->action_request_ = ActionRequest::NO_ACTION;
 }
@@ -110,6 +110,10 @@ bool HaierClimateBase::is_message_interval_exceeded_(std::chrono::steady_clock::
 
 bool HaierClimateBase::is_status_request_interval_exceeded_(std::chrono::steady_clock::time_point now) {
   return this->check_timeout_(now, this->last_status_request_, STATUS_REQUEST_INTERVAL_MS);
+}
+
+bool HaierClimateBase::is_control_message_interval_exceeded_(std::chrono::steady_clock::time_point now) {
+  return this->check_timeout_(now, this->last_request_timestamp_, CONTROL_MESSAGES_INTERVAL_MS);
 }
 
 bool HaierClimateBase::is_protocol_initialisation_interval_exceeded_(std::chrono::steady_clock::time_point now) {

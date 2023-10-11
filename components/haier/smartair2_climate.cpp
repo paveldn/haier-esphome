@@ -15,8 +15,9 @@ constexpr size_t SIGNAL_LEVEL_UPDATE_INTERVAL_MS = 10000;
 constexpr uint8_t CONTROL_MESSAGE_RETRIES = 5;
 constexpr std::chrono::milliseconds CONTROL_MESSAGE_RETRIES_INTERVAL = std::chrono::milliseconds(500);
 
-Smartair2Climate::Smartair2Climate()
-    : last_status_message_(new uint8_t[sizeof(smartair2_protocol::HaierPacketControl)]), timeouts_counter_(0) {}
+Smartair2Climate::Smartair2Climate(): timeouts_counter_(0) {
+  last_status_message_ = std::unique_ptr<uint8_t[]>(new uint8_t[sizeof(smartair2_protocol::HaierPacketControl)]);
+}
 
 haier_protocol::HandlerError Smartair2Climate::status_handler_(haier_protocol::FrameType request_type, haier_protocol::FrameType message_type,
                                                                const uint8_t *data, size_t data_size) {
@@ -193,7 +194,7 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
       this->set_phase(ProtocolPhases::SENDING_INIT_1);
       break;
     case ProtocolPhases::SENDING_CONTROL:
-      if (this->can_send_message() && this->is_message_interval_exceeded_(now))
+      if (this->can_send_message() && this->is_control_message_interval_exceeded_(now))
       {
         haier_protocol::HaierMessage control_message = get_control_message();
         this->send_message_(control_message, false, CONTROL_MESSAGE_RETRIES, CONTROL_MESSAGE_RETRIES_INTERVAL);
@@ -538,7 +539,7 @@ haier_protocol::HandlerError Smartair2Climate::process_status_message_(const uin
     should_publish = should_publish || (old_swing_mode != this->swing_mode);
   }
   this->last_valid_status_timestamp_ = std::chrono::steady_clock::now();
-  if (this->forced_publish_ || should_publish) {
+  if (should_publish) {
 #if (HAIER_LOG_LEVEL > 4)
     std::chrono::high_resolution_clock::time_point _publish_start = std::chrono::high_resolution_clock::now();
 #endif
@@ -549,7 +550,6 @@ haier_protocol::HandlerError Smartair2Climate::process_status_message_(const uin
                                                                    _publish_start)
                  .count());
 #endif
-    this->forced_publish_ = false;
   }
   if (should_publish) {
     ESP_LOGI(TAG, "HVAC values changed");

@@ -32,7 +32,6 @@ class Smartair2Climate : public HaierClimateBase {
   haier_protocol::HandlerError initial_messages_timeout_handler_(haier_protocol::FrameType message_type);
   // Helper functions
   haier_protocol::HandlerError process_status_message_(const uint8_t *packet, uint8_t size);
-  std::unique_ptr<uint8_t[]> last_status_message_;
   unsigned int timeouts_counter_;
   bool use_alternative_swing_control_;
 };

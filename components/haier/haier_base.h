@@ -107,6 +107,7 @@ class HaierClimateBase : public esphome::Component,
                       size_t timeout);
   bool is_message_interval_exceeded_(std::chrono::steady_clock::time_point now);
   bool is_status_request_interval_exceeded_(std::chrono::steady_clock::time_point now);
+  bool is_control_message_interval_exceeded_(std::chrono::steady_clock::time_point now);
   bool is_protocol_initialisation_interval_exceeded_(std::chrono::steady_clock::time_point now);
 #ifdef USE_WIFI
   haier_protocol::HaierMessage get_wifi_signal_message_(haier_protocol::FrameType message_type);
@@ -118,7 +119,10 @@ class HaierClimateBase : public esphome::Component,
     esphome::optional<esphome::climate::ClimateSwingMode> swing_mode;
     esphome::optional<float> target_temperature;
     esphome::optional<esphome::climate::ClimatePreset> preset;
+    esphome::optional<bool> display;
+    esphome::optional<bool> health;
     bool valid;
+    bool force_update;
     HvacSettings() : valid(false){};
     HvacSettings(const HvacSettings&) = default;
     HvacSettings& operator=(const HvacSettings&) = default;
@@ -132,16 +136,17 @@ class HaierClimateBase : public esphome::Component,
   bool display_status_;
   bool health_mode_;
   bool force_send_control_;
-  bool forced_publish_;
   bool forced_request_status_;
   bool reset_protocol_request_;
+  bool send_wifi_signal_;
+  bool use_crc_;
   esphome::climate::ClimateTraits traits_;
   HvacSettings current_hvac_settings_;
-  HvacSettings next_hvac_settings_;  
+  HvacSettings next_hvac_settings_;
+  std::unique_ptr<uint8_t[]> last_status_message_;
   std::chrono::steady_clock::time_point last_request_timestamp_;       // For interval between messages
   std::chrono::steady_clock::time_point last_valid_status_timestamp_;  // For protocol timeout
   std::chrono::steady_clock::time_point last_status_request_;          // To request AC status
-  bool send_wifi_signal_;
   std::chrono::steady_clock::time_point last_signal_request_;  // To send WiFI signal level
 };
 
