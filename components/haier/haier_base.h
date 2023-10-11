@@ -100,15 +100,13 @@ class HaierClimateBase : public esphome::Component,
   // Timeout handler
   haier_protocol::HandlerError timeout_default_handler_(haier_protocol::FrameType request_type);
   // Helper functions
-  void set_force_send_control_(bool status);
-  void send_message_(const haier_protocol::HaierMessage &command, bool use_crc);
+  void send_message_(const haier_protocol::HaierMessage &command, bool use_crc, uint8_t num_retries = 0, std::chrono::milliseconds interval = std::chrono::milliseconds::zero());
   virtual void set_phase(ProtocolPhases phase);
+  void reset_to_idle_();
   bool check_timeout_(std::chrono::steady_clock::time_point now, std::chrono::steady_clock::time_point tpoint,
                       size_t timeout);
   bool is_message_interval_exceeded_(std::chrono::steady_clock::time_point now);
   bool is_status_request_interval_exceeded_(std::chrono::steady_clock::time_point now);
-  bool is_control_message_timeout_exceeded_(std::chrono::steady_clock::time_point now);
-  bool is_control_message_interval_exceeded_(std::chrono::steady_clock::time_point now);
   bool is_protocol_initialisation_interval_exceeded_(std::chrono::steady_clock::time_point now);
 #ifdef USE_WIFI
   haier_protocol::HaierMessage get_wifi_signal_message_(haier_protocol::FrameType message_type);
@@ -136,7 +134,6 @@ class HaierClimateBase : public esphome::Component,
   bool force_send_control_;
   bool forced_publish_;
   bool forced_request_status_;
-  bool first_control_attempt_;
   bool reset_protocol_request_;
   esphome::climate::ClimateTraits traits_;
   HvacSettings current_hvac_settings_;
@@ -144,8 +141,6 @@ class HaierClimateBase : public esphome::Component,
   std::chrono::steady_clock::time_point last_request_timestamp_;       // For interval between messages
   std::chrono::steady_clock::time_point last_valid_status_timestamp_;  // For protocol timeout
   std::chrono::steady_clock::time_point last_status_request_;          // To request AC status
-  std::chrono::steady_clock::time_point control_request_timestamp_;    // To send control message
-  optional<std::chrono::milliseconds> answer_timeout_;                 // Message answer timeout
   bool send_wifi_signal_;
   std::chrono::steady_clock::time_point last_signal_request_;  // To send WiFI signal level
 };
