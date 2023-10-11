@@ -446,4 +446,5 @@ async def to_code(config):
     if CONF_CONTROL_PACKET_SIZE in config:
         cg.add(var.set_extra_control_packet_bytes_size(config[CONF_CONTROL_PACKET_SIZE] - PROTOCOL_CONTROL_PACKET_SIZE))
     # https://github.com/paveldn/HaierProtocol
-    cg.add_library("pavlodn/HaierProtocol", "0.9.22")
+    #cg.add_library("pavlodn/HaierProtocol", "0.9.22")
+    cg.add_library(name="HaierProtocol", repository="https://github.com/paveldn/HaierProtocol", version="a1a2a56258da1e8a24473d37464a4e11c9f71b0e")

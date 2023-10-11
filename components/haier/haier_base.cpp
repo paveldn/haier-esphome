@@ -18,8 +18,6 @@ constexpr size_t COMMUNICATION_TIMEOUT_MS = 60000;
 constexpr size_t STATUS_REQUEST_INTERVAL_MS = 5000;
 constexpr size_t PROTOCOL_INITIALIZATION_INTERVAL = 10000;
 constexpr size_t DEFAULT_MESSAGES_INTERVAL_MS = 2000;
-constexpr size_t CONTROL_MESSAGES_INTERVAL_MS = 400;
-constexpr size_t CONTROL_TIMEOUT_MS = 7000;
 
 #if (HAIER_LOG_LEVEL > 4)
 // To reduce size of binary this function only available when log level is Verbose
@@ -65,7 +63,6 @@ HaierClimateBase::HaierClimateBase()
       force_send_control_(false),
       forced_publish_(false),
       forced_request_status_(false),
-      first_control_attempt_(false),
       reset_protocol_request_(false),
       send_wifi_signal_(true) {
   this->traits_ = climate::ClimateTraits();
@@ -92,6 +89,16 @@ void HaierClimateBase::set_phase(ProtocolPhases phase) {
   }
 }
 
+void HaierClimateBase::reset_to_idle_() {
+  this->force_send_control_ = false;
+  if (this->current_hvac_settings_.valid)
+    this->current_hvac_settings_.reset();
+  this->forced_request_status_ = true;
+  this->forced_publish_ = false;
+  this->set_phase(ProtocolPhases::IDLE);
+  this->action_request_ = ActionRequest::NO_ACTION;
+}
+
 bool HaierClimateBase::check_timeout_(std::chrono::steady_clock::time_point now,
                                       std::chrono::steady_clock::time_point tpoint, size_t timeout) {
   return std::chrono::duration_cast<std::chrono::milliseconds>(now - tpoint).count() > timeout;
@@ -103,14 +110,6 @@ bool HaierClimateBase::is_message_interval_exceeded_(std::chrono::steady_clock::
 
 bool HaierClimateBase::is_status_request_interval_exceeded_(std::chrono::steady_clock::time_point now) {
   return this->check_timeout_(now, this->last_status_request_, STATUS_REQUEST_INTERVAL_MS);
-}
-
-bool HaierClimateBase::is_control_message_timeout_exceeded_(std::chrono::steady_clock::time_point now) {
-  return this->check_timeout_(now, this->control_request_timestamp_, CONTROL_TIMEOUT_MS);
-}
-
-bool HaierClimateBase::is_control_message_interval_exceeded_(std::chrono::steady_clock::time_point now) {
-  return this->check_timeout_(now, this->last_request_timestamp_, CONTROL_MESSAGES_INTERVAL_MS);
 }
 
 bool HaierClimateBase::is_protocol_initialisation_interval_exceeded_(std::chrono::steady_clock::time_point now) {
@@ -139,7 +138,7 @@ bool HaierClimateBase::get_display_state() const { return this->display_status_;
 void HaierClimateBase::set_display_state(bool state) {
   if (this->display_status_ != state) {
     this->display_status_ = state;
-    this->set_force_send_control_(true);
+    this->force_send_control_ = true;
   }
 }
 
@@ -148,7 +147,7 @@ bool HaierClimateBase::get_health_mode() const { return this->health_mode_; }
 void HaierClimateBase::set_health_mode(bool state) {
   if (this->health_mode_ != state) {
     this->health_mode_ = state;
-    this->set_force_send_control_(true);
+    this->force_send_control_ = true;
   }
 }
 
@@ -165,7 +164,7 @@ void HaierClimateBase::set_supported_swing_modes(const std::set<climate::Climate
 }
 
 void HaierClimateBase::set_answer_timeout(uint32_t timeout) {
-  this->answer_timeout_ = std::chrono::milliseconds(timeout);
+  this->haier_protocol_.set_answer_timeout(timeout);
 }
 
 void HaierClimateBase::set_supported_modes(const std::set<climate::ClimateMode> &modes) {
@@ -243,7 +242,7 @@ void HaierClimateBase::loop() {
         ESP_LOGW(TAG, "Communication timeout, reseting protocol");
       }
       this->last_valid_status_timestamp_ = now;
-      this->set_force_send_control_(false);
+      this->force_send_control_ = false;
       if (this->current_hvac_settings_.valid)
         this->current_hvac_settings_.reset();
       if (this->next_hvac_settings_.valid)
@@ -266,7 +265,6 @@ void HaierClimateBase::loop() {
     } else if (this->next_hvac_settings_.valid || this->force_send_control_) {
       ESP_LOGV(TAG, "Control packet is pending...");
       this->set_phase(ProtocolPhases::SENDING_CONTROL);
-      this->first_control_attempt_ = true;
       if (this->next_hvac_settings_.valid) {
         this->current_hvac_settings_ = this->next_hvac_settings_;
         this->next_hvac_settings_.reset();
@@ -335,21 +333,10 @@ void HaierClimateBase::HvacSettings::reset() {
   this->swing_mode.reset();
   this->target_temperature.reset();
   this->preset.reset();
-}
+}  
 
-void HaierClimateBase::set_force_send_control_(bool status) {
-  this->force_send_control_ = status;
-  if (status) {
-    this->first_control_attempt_ = true;
-  }
-}
-
-void HaierClimateBase::send_message_(const haier_protocol::HaierMessage &command, bool use_crc) {
-  if (this->answer_timeout_.has_value()) {
-    this->haier_protocol_.send_message(command, use_crc, this->answer_timeout_.value());
-  } else {
-    this->haier_protocol_.send_message(command, use_crc);
-  }
+void HaierClimateBase::send_message_(const haier_protocol::HaierMessage &command, bool use_crc, uint8_t num_repeats, std::chrono::milliseconds interval) {
+  this->haier_protocol_.send_message(command, use_crc, num_repeats, interval);
   this->last_request_timestamp_ = std::chrono::steady_clock::now();
 }
 

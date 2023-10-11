@@ -12,6 +12,8 @@ namespace haier {
 
 static const char *const TAG = "haier.climate";
 constexpr size_t SIGNAL_LEVEL_UPDATE_INTERVAL_MS = 10000;
+constexpr uint8_t CONTROL_MESSAGE_RETRIES = 5;
+constexpr std::chrono::milliseconds CONTROL_MESSAGE_RETRIES_INTERVAL = std::chrono::milliseconds(500);
 
 Smartair2Climate::Smartair2Climate()
     : last_status_message_(new uint8_t[sizeof(smartair2_protocol::HaierPacketControl)]), timeouts_counter_(0) {}
@@ -41,7 +43,7 @@ haier_protocol::HandlerError Smartair2Climate::status_handler_(haier_protocol::F
         this->set_phase(ProtocolPhases::IDLE);
       } else if (this->protocol_phase_ == ProtocolPhases::WAITING_CONTROL_ANSWER) {
         this->set_phase(ProtocolPhases::IDLE);
-        this->set_force_send_control_(false);
+        this->force_send_control_ = false;
         if (this->current_hvac_settings_.valid)
           this->current_hvac_settings_.reset();
       }
@@ -191,23 +193,10 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
       this->set_phase(ProtocolPhases::SENDING_INIT_1);
       break;
     case ProtocolPhases::SENDING_CONTROL:
-      if (this->first_control_attempt_) {
-        this->control_request_timestamp_ = now;
-        this->first_control_attempt_ = false;
-      }
-      if (this->is_control_message_timeout_exceeded_(now)) {
-        ESP_LOGW(TAG, "Sending control packet timeout!");
-        this->set_force_send_control_(false);
-        if (this->current_hvac_settings_.valid)
-          this->current_hvac_settings_.reset();
-        this->forced_request_status_ = true;
-        this->forced_publish_ = true;
-        this->set_phase(ProtocolPhases::IDLE);
-      } else if (this->can_send_message() && this->is_control_message_interval_exceeded_(
-                                                 now))  // Using CONTROL_MESSAGES_INTERVAL_MS to speedup requests
+      if (this->can_send_message() && this->is_message_interval_exceeded_(now))
       {
         haier_protocol::HaierMessage control_message = get_control_message();
-        this->send_message_(control_message, false);
+        this->send_message_(control_message, false, CONTROL_MESSAGE_RETRIES, CONTROL_MESSAGE_RETRIES_INTERVAL);
         ESP_LOGI(TAG, "Control packet sent");
         this->set_phase(ProtocolPhases::WAITING_CONTROL_ANSWER);
       }
@@ -475,7 +464,7 @@ haier_protocol::HandlerError Smartair2Climate::process_status_message_(const uin
         // Do something only if display status changed
         if (this->mode == CLIMATE_MODE_OFF) {
           // AC just turned on from remote need to turn off display
-          this->set_force_send_control_(true);
+          this->force_send_control_ = true;
         } else {
           this->display_status_ = disp_status;
         }

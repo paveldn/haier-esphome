@@ -14,6 +14,8 @@ namespace haier {
 static const char *const TAG = "haier.climate";
 constexpr size_t SIGNAL_LEVEL_UPDATE_INTERVAL_MS = 10000;
 constexpr int PROTOCOL_OUTDOOR_TEMPERATURE_OFFSET = -64;
+constexpr uint8_t CONTROL_MESSAGE_RETRIES = 5;
+constexpr std::chrono::milliseconds CONTROL_MESSAGE_RETRIES_INTERVAL = std::chrono::milliseconds(500);
 
 hon_protocol::VerticalSwingMode get_vertical_swing_mode(AirflowVerticalDirection direction) {
   switch (direction) {
@@ -72,14 +74,14 @@ AirflowVerticalDirection HonClimate::get_vertical_airflow() const { return this-
 
 void HonClimate::set_vertical_airflow(AirflowVerticalDirection direction) {
   this->vertical_direction_ = direction;
-  this->set_force_send_control_(true);
+  this->force_send_control_ = true;
 }
 
 AirflowHorizontalDirection HonClimate::get_horizontal_airflow() const { return this->horizontal_direction_; }
 
 void HonClimate::set_horizontal_airflow(AirflowHorizontalDirection direction) {
   this->horizontal_direction_ = direction;
-  this->set_force_send_control_(true);
+  this->force_send_control_ = true;
 }
 
 std::string HonClimate::get_cleaning_status_text() const {
@@ -99,7 +101,7 @@ void HonClimate::start_self_cleaning() {
   if (this->cleaning_status_ == CleaningState::NO_CLEANING) {
     ESP_LOGI(TAG, "Sending self cleaning start request");
     this->action_request_ = ActionRequest::START_SELF_CLEAN;
-    this->set_force_send_control_(true);
+    this->force_send_control_ = true;
   }
 }
 
@@ -107,7 +109,7 @@ void HonClimate::start_steri_cleaning() {
   if (this->cleaning_status_ == CleaningState::NO_CLEANING) {
     ESP_LOGI(TAG, "Sending steri cleaning start request");
     this->action_request_ = ActionRequest::START_STERI_CLEAN;
-    this->set_force_send_control_(true);
+    this->force_send_control_ = true;
   }
 }
 
@@ -183,7 +185,7 @@ haier_protocol::HandlerError HonClimate::status_handler_(haier_protocol::FrameTy
       this->set_phase((this->protocol_phase_ >= ProtocolPhases::IDLE) ? ProtocolPhases::IDLE
                                                                       : ProtocolPhases::SENDING_INIT_1);
       this->action_request_ = ActionRequest::NO_ACTION;
-      this->set_force_send_control_(false);
+      this->force_send_control_ = false;
     } else {
       if (data_size >= sizeof(hon_protocol::HaierPacketControl) + 2) {
         memcpy(this->last_status_message_.get(), data + 2, sizeof(hon_protocol::HaierPacketControl));
@@ -203,19 +205,18 @@ haier_protocol::HandlerError HonClimate::status_handler_(haier_protocol::FrameTy
           this->control_messages_queue_.pop();
         if (this->control_messages_queue_.empty()) {
           this->set_phase(ProtocolPhases::IDLE);
-          this->set_force_send_control_(false);
+          this->force_send_control_ = false;
           if (this->current_hvac_settings_.valid)
             this->current_hvac_settings_.reset();
         } else {
           this->set_phase(ProtocolPhases::SENDING_CONTROL);
-          this->control_request_timestamp_ = std::chrono::steady_clock::now();
         }
       }
     }
     return result;
   } else {
     this->action_request_ = ActionRequest::NO_ACTION;
-    this->set_force_send_control_(false);
+    this->force_send_control_ = false;
     this->set_phase((this->protocol_phase_ >= ProtocolPhases::IDLE) ? ProtocolPhases::IDLE
                                                                     : ProtocolPhases::SENDING_INIT_1);
     return result;
@@ -387,38 +388,31 @@ void HonClimate::process_phase(std::chrono::steady_clock::time_point now) {
       }
       break;
     case ProtocolPhases::SENDING_CONTROL:
-      if (this->first_control_attempt_) {
-        this->control_request_timestamp_ = now;
-        this->first_control_attempt_ = false;
-        switch (this->control_method_) {
-          case HonControlMethod::SET_GROUP_PARAMETERS: {
-              haier_protocol::HaierMessage control_message = this->get_control_message();
-              this->clear_control_messages_queue_();
-              this->control_messages_queue_.push(control_message);
-            }
-            break;
-          case HonControlMethod::SET_SINGLE_PARAMETER:
-            this->fill_control_messages_queue_();
-            break;
-          case HonControlMethod::MONITOR_ONLY:
-            ESP_LOGI(TAG, "AC control is disabled, monitor only");
-            this->reset_to_idle_();
-            return;
-          default:
-            ESP_LOGW(TAG, "Unsupported control method for hOn protocol!");
-            this->reset_to_idle_();
-            return;
-        }
+      switch (this->control_method_) {
+        case HonControlMethod::SET_GROUP_PARAMETERS: {
+            haier_protocol::HaierMessage control_message = this->get_control_message();
+            this->clear_control_messages_queue_();
+            this->control_messages_queue_.push(control_message);
+          }
+          break;
+        case HonControlMethod::SET_SINGLE_PARAMETER:
+          this->fill_control_messages_queue_();
+          break;
+        case HonControlMethod::MONITOR_ONLY:
+          ESP_LOGI(TAG, "AC control is disabled, monitor only");
+          this->reset_to_idle_();
+          return;
+        default:
+          ESP_LOGW(TAG, "Unsupported control method for hOn protocol!");
+          this->reset_to_idle_();
+          return;
       }
       if (this->control_messages_queue_.empty()) {
         ESP_LOGW(TAG, "Control message queue is empty!");
         this->reset_to_idle_();
-      } else if (this->is_control_message_timeout_exceeded_(now)) {
-        ESP_LOGW(TAG, "Sending control packet timeout!");
-        this->reset_to_idle_();
-      } else if (this->can_send_message() && this->is_control_message_interval_exceeded_(now)) {
+      } else if (this->can_send_message() && this->is_message_interval_exceeded_(now)) {
         ESP_LOGI(TAG, "Sending control packet, queue size %d", this->control_messages_queue_.size());
-        this->send_message_(this->control_messages_queue_.front(), this->use_crc_);
+        this->send_message_(this->control_messages_queue_.front(), this->use_crc_, CONTROL_MESSAGE_RETRIES, CONTROL_MESSAGE_RETRIES_INTERVAL);
         this->set_phase(ProtocolPhases::WAITING_CONTROL_ANSWER);
       }
       break;
@@ -733,7 +727,7 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
         // Do something only if display status changed
         if (this->mode == CLIMATE_MODE_OFF) {
           // AC just turned on from remote need to turn off display
-          this->set_force_send_control_(true);
+          this->force_send_control_ = true;
         } else {
           this->display_status_ = disp_status;
         }
@@ -1027,17 +1021,6 @@ void HonClimate::fill_control_messages_queue_() {
 void HonClimate::clear_control_messages_queue_() {
   while (!this->control_messages_queue_.empty())
     this->control_messages_queue_.pop();
-}
-
-void HonClimate::reset_to_idle_() {
-  this->set_force_send_control_(false);
-  if (this->current_hvac_settings_.valid)
-    this->current_hvac_settings_.reset();
-  this->forced_request_status_ = true;
-  this->forced_publish_ = false;
-  this->first_control_attempt_ = true;
-  this->set_phase(ProtocolPhases::IDLE);
-  this->action_request_ = ActionRequest::NO_ACTION;
 }
 
 void HonClimate::process_pending_action() {

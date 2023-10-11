@@ -80,7 +80,7 @@ class HonClimate : public HaierClimateBase {
   haier_protocol::HandlerError process_status_message_(const uint8_t *packet, uint8_t size);
   void fill_control_messages_queue_();
   void clear_control_messages_queue_();
-  void reset_to_idle_();
+
   std::unique_ptr<uint8_t[]> last_status_message_;
   bool beeper_status_;
   CleaningState cleaning_status_;
