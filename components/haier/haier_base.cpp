@@ -10,6 +10,7 @@
 using namespace esphome::climate;
 using namespace esphome::uart;
 
+
 namespace esphome {
 namespace haier {
 
@@ -55,6 +56,12 @@ const char *HaierClimateBase::phase_to_string_(ProtocolPhases phase) {
 }
 #endif
 
+bool check_timeout_(std::chrono::steady_clock::time_point now,
+                    std::chrono::steady_clock::time_point tpoint, size_t timeout) {
+  return std::chrono::duration_cast<std::chrono::milliseconds>(now - tpoint).count() > timeout;
+}
+
+
 HaierClimateBase::HaierClimateBase()
     : haier_protocol_(*this),
       protocol_phase_(ProtocolPhases::SENDING_INIT_1),
@@ -99,25 +106,20 @@ void HaierClimateBase::reset_to_idle_() {
   this->action_request_ = ActionRequest::NO_ACTION;
 }
 
-bool HaierClimateBase::check_timeout_(std::chrono::steady_clock::time_point now,
-                                      std::chrono::steady_clock::time_point tpoint, size_t timeout) {
-  return std::chrono::duration_cast<std::chrono::milliseconds>(now - tpoint).count() > timeout;
-}
-
 bool HaierClimateBase::is_message_interval_exceeded_(std::chrono::steady_clock::time_point now) {
-  return this->check_timeout_(now, this->last_request_timestamp_, DEFAULT_MESSAGES_INTERVAL_MS);
+  return check_timeout_(now, this->last_request_timestamp_, DEFAULT_MESSAGES_INTERVAL_MS);
 }
 
 bool HaierClimateBase::is_status_request_interval_exceeded_(std::chrono::steady_clock::time_point now) {
-  return this->check_timeout_(now, this->last_status_request_, STATUS_REQUEST_INTERVAL_MS);
+  return check_timeout_(now, this->last_status_request_, STATUS_REQUEST_INTERVAL_MS);
 }
 
 bool HaierClimateBase::is_control_message_interval_exceeded_(std::chrono::steady_clock::time_point now) {
-  return this->check_timeout_(now, this->last_request_timestamp_, CONTROL_MESSAGES_INTERVAL_MS);
+  return check_timeout_(now, this->last_request_timestamp_, CONTROL_MESSAGES_INTERVAL_MS);
 }
 
 bool HaierClimateBase::is_protocol_initialisation_interval_exceeded_(std::chrono::steady_clock::time_point now) {
-  return this->check_timeout_(now, this->last_request_timestamp_, PROTOCOL_INITIALIZATION_INTERVAL);
+  return check_timeout_(now, this->last_request_timestamp_, PROTOCOL_INITIALIZATION_INTERVAL);
 }
 
 #ifdef USE_WIFI
@@ -202,6 +204,16 @@ haier_protocol::HandlerError HaierClimateBase::answer_preprocess_(haier_protocol
   return result;
 }
 
+haier_protocol::HandlerError HaierClimateBase::report_network_status_answer_handler_(haier_protocol::FrameType request_type,
+                                                                                     haier_protocol::FrameType message_type,
+                                                                                     const uint8_t *data, size_t data_size) {
+  haier_protocol::HandlerError result = this->answer_preprocess_(
+      request_type, haier_protocol::FrameType::REPORT_NETWORK_STATUS, message_type,
+      haier_protocol::FrameType::CONFIRM, ProtocolPhases::WAITING_SIGNAL_LEVEL_ANSWER);
+  this->set_phase(ProtocolPhases::IDLE);
+  return result;
+}
+
 haier_protocol::HandlerError HaierClimateBase::timeout_default_handler_(haier_protocol::FrameType request_type) {
 #if (HAIER_LOG_LEVEL > 4)
   ESP_LOGW(TAG, "Answer timeout for command %02X, phase %s", request_type, phase_to_string_(this->protocol_phase_));
@@ -221,9 +233,9 @@ void HaierClimateBase::setup() {
   // Set timestamp here to give AC time to boot
   this->last_request_timestamp_ = std::chrono::steady_clock::now();
   this->set_phase(ProtocolPhases::SENDING_INIT_1);
-  this->set_handlers();
   this->haier_protocol_.set_default_timeout_handler(
       std::bind(&esphome::haier::HaierClimateBase::timeout_default_handler_, this, std::placeholders::_1));
+  this->set_handlers();
 }
 
 void HaierClimateBase::dump_config() {

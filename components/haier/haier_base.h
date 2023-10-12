@@ -33,7 +33,6 @@ class HaierClimateBase : public esphome::Component,
   void control(const esphome::climate::ClimateCall &call) override;
   void dump_config() override;
   float get_setup_priority() const override { return esphome::setup_priority::HARDWARE; }
-  void set_fahrenheit(bool fahrenheit);
   void set_display_state(bool state);
   bool get_display_state() const;
   void set_health_mode(bool state);
@@ -93,18 +92,18 @@ class HaierClimateBase : public esphome::Component,
   virtual haier_protocol::HaierMessage get_control_message() = 0;
   virtual void process_pending_action();
   esphome::climate::ClimateTraits traits() override;
-  // Answers handlers
+  // Answer handlers
   haier_protocol::HandlerError answer_preprocess_(haier_protocol::FrameType request_message_type, haier_protocol::FrameType expected_request_message_type,
                                                   haier_protocol::FrameType answer_message_type, haier_protocol::FrameType expected_answer_message_type,
                                                   ProtocolPhases expected_phase);
+  haier_protocol::HandlerError report_network_status_answer_handler_(haier_protocol::FrameType request_type, haier_protocol::FrameType message_type,
+                                                                     const uint8_t *data, size_t data_size);
   // Timeout handler
   haier_protocol::HandlerError timeout_default_handler_(haier_protocol::FrameType request_type);
   // Helper functions
   void send_message_(const haier_protocol::HaierMessage &command, bool use_crc, uint8_t num_retries = 0, std::chrono::milliseconds interval = std::chrono::milliseconds::zero());
   virtual void set_phase(ProtocolPhases phase);
   void reset_to_idle_();
-  bool check_timeout_(std::chrono::steady_clock::time_point now, std::chrono::steady_clock::time_point tpoint,
-                      size_t timeout);
   bool is_message_interval_exceeded_(std::chrono::steady_clock::time_point now);
   bool is_status_request_interval_exceeded_(std::chrono::steady_clock::time_point now);
   bool is_control_message_interval_exceeded_(std::chrono::steady_clock::time_point now);
@@ -119,10 +118,7 @@ class HaierClimateBase : public esphome::Component,
     esphome::optional<esphome::climate::ClimateSwingMode> swing_mode;
     esphome::optional<float> target_temperature;
     esphome::optional<esphome::climate::ClimatePreset> preset;
-    esphome::optional<bool> display;
-    esphome::optional<bool> health;
     bool valid;
-    bool force_update;
     HvacSettings() : valid(false){};
     HvacSettings(const HvacSettings&) = default;
     HvacSettings& operator=(const HvacSettings&) = default;
