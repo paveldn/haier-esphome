@@ -238,16 +238,6 @@ haier_protocol::HandlerError HonClimate::get_management_information_answer_handl
   }
 }
 
-haier_protocol::HandlerError HonClimate::report_network_status_answer_handler_(haier_protocol::FrameType request_type,
-                                                                               haier_protocol::FrameType message_type,
-                                                                               const uint8_t *data, size_t data_size) {
-  haier_protocol::HandlerError result =
-      this->answer_preprocess_(request_type, haier_protocol::FrameType::REPORT_NETWORK_STATUS, message_type,
-                               haier_protocol::FrameType::CONFIRM, ProtocolPhases::WAITING_SIGNAL_LEVEL_ANSWER);
-  this->set_phase(ProtocolPhases::IDLE);
-  return result;
-}
-
 haier_protocol::HandlerError HonClimate::get_alarm_status_answer_handler_(haier_protocol::FrameType request_type, haier_protocol::FrameType message_type,
                                                                           const uint8_t *data, size_t data_size) {
   if (request_type == haier_protocol::FrameType::GET_ALARM_STATUS) {
@@ -430,7 +420,6 @@ void HonClimate::process_phase(std::chrono::steady_clock::time_point now) {
                             : ProtocolPhases::WAITING_POWER_OFF_ANSWER);
       }
       break;
-
     case ProtocolPhases::WAITING_INIT_1_ANSWER:
     case ProtocolPhases::WAITING_INIT_2_ANSWER:
     case ProtocolPhases::WAITING_FIRST_STATUS_ANSWER:
@@ -555,7 +544,7 @@ haier_protocol::HaierMessage HonClimate::get_control_message() {
     }
     if (climate_control.target_temperature.has_value()) {
       float target_temp = climate_control.target_temperature.value();
-      out_data->set_point = ((int) target_temp) - 16;  // set the temperature at our offset, subtract 16.
+      out_data->set_point = ((int) target_temp) - 16;  // set the temperature with offset 16
       out_data->half_degree = (target_temp - ((int) target_temp) >= 0.49) ? 1 : 0;
     }
     if (out_data->ac_power == 0) {

@@ -72,8 +72,6 @@ class HonClimate : public HaierClimateBase {
                                                size_t data_size);
   haier_protocol::HandlerError get_management_information_answer_handler_(haier_protocol::FrameType request_type, haier_protocol::FrameType message_type,
                                                                           const uint8_t *data, size_t data_size);
-  haier_protocol::HandlerError report_network_status_answer_handler_(haier_protocol::FrameType request_type, haier_protocol::FrameType message_type,
-                                                                     const uint8_t *data, size_t data_size);
   haier_protocol::HandlerError get_alarm_status_answer_handler_(haier_protocol::FrameType request_type, haier_protocol::FrameType message_type,
                                                                 const uint8_t *data, size_t data_size);
   // Helper functions
