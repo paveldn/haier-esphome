@@ -216,9 +216,9 @@ haier_protocol::HandlerError HaierClimateBase::report_network_status_answer_hand
 
 haier_protocol::HandlerError HaierClimateBase::timeout_default_handler_(haier_protocol::FrameType request_type) {
 #if (HAIER_LOG_LEVEL > 4)
-  ESP_LOGW(TAG, "Answer timeout for command %02X, phase %s", request_type, phase_to_string_(this->protocol_phase_));
+  ESP_LOGW(TAG, "Answer timeout for command %02X, phase %s", (uint8_t) request_type, phase_to_string_(this->protocol_phase_));
 #else
-  ESP_LOGW(TAG, "Answer timeout for command %02X, phase %d", request_type, (int) this->protocol_phase_);
+  ESP_LOGW(TAG, "Answer timeout for command %02X, phase %d", (uint8_t) request_type, (int) this->protocol_phase_);
 #endif
   if (this->protocol_phase_ > ProtocolPhases::IDLE) {
     this->set_phase(ProtocolPhases::IDLE);
