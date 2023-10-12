@@ -629,7 +629,6 @@ haier_protocol::HaierMessage HonClimate::get_control_message() {
 }
 
 haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *packet_buffer, uint8_t size) {
-
   if (size < hon_protocol::HAIER_STATUS_FRAME_SIZE + this->extra_control_packet_bytes_)
     return haier_protocol::HandlerError::WRONG_MESSAGE_STRUCTURE;
   struct {
@@ -826,7 +825,7 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
 void HonClimate::fill_control_messages_queue_() {
   static uint8_t one_buf[] = {0x00, 0x01};
   static uint8_t zero_buf[] = {0x00, 0x00};
-  if (!this->current_hvac_settings_.valid)
+  if (!this->current_hvac_settings_.valid && !this->force_send_control_)
     return;
   this->clear_control_messages_queue_();
   HvacSettings climate_control;
