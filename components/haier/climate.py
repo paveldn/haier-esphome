@@ -195,7 +195,9 @@ CONFIG_SCHEMA = cv.All(
             PROTOCOL_SMARTAIR2: BASE_CONFIG_SCHEMA.extend(
                 {
                     cv.GenerateID(): cv.declare_id(Smartair2Climate),
-                    cv.Optional(CONF_ALTERNATIVE_SWING_CONTROL, default=False) : cv.boolean,
+                    cv.Optional(
+                        CONF_ALTERNATIVE_SWING_CONTROL, default=False
+                    ): cv.boolean,
                     cv.Optional(
                         CONF_SUPPORTED_PRESETS,
                         default=list(
@@ -209,11 +211,15 @@ CONFIG_SCHEMA = cv.All(
             PROTOCOL_HON: BASE_CONFIG_SCHEMA.extend(
                 {
                     cv.GenerateID(): cv.declare_id(HonClimate),
-                    cv.Optional(CONF_CONTROL_METHOD, default="SET_GROUP_PARAMETERS") : cv.ensure_list(
+                    cv.Optional(
+                        CONF_CONTROL_METHOD, default="SET_GROUP_PARAMETERS"
+                    ): cv.ensure_list(
                         cv.enum(SUPPORTED_HON_CONTROL_METHODS, upper=True)
                     ),
                     cv.Optional(CONF_BEEPER, default=True): cv.boolean,
-                    cv.Optional(CONF_CONTROL_PACKET_SIZE, default=PROTOCOL_CONTROL_PACKET_SIZE): cv.int_range(min=PROTOCOL_CONTROL_PACKET_SIZE, max=50),
+                    cv.Optional(
+                        CONF_CONTROL_PACKET_SIZE, default=PROTOCOL_CONTROL_PACKET_SIZE
+                    ): cv.int_range(min=PROTOCOL_CONTROL_PACKET_SIZE, max=50),
                     cv.Optional(
                         CONF_SUPPORTED_PRESETS,
                         default=list(SUPPORTED_CLIMATE_PRESETS_HON_OPTIONS.keys()),
@@ -422,7 +428,7 @@ async def to_code(config):
     await cg.register_component(var, config)
     await uart.register_uart_device(var, config)
     await climate.register_climate(var, config)
-  
+
     cg.add(var.set_send_wifi(config[CONF_WIFI_SIGNAL]))
     if CONF_CONTROL_METHOD in config:
         cg.add(var.set_control_method(config[CONF_CONTROL_METHOD]))
@@ -442,8 +448,14 @@ async def to_code(config):
     if CONF_ANSWER_TIMEOUT in config:
         cg.add(var.set_answer_timeout(config[CONF_ANSWER_TIMEOUT]))
     if CONF_ALTERNATIVE_SWING_CONTROL in config:
-        cg.add(var.set_alternative_swing_control(config[CONF_ALTERNATIVE_SWING_CONTROL]))
+        cg.add(
+            var.set_alternative_swing_control(config[CONF_ALTERNATIVE_SWING_CONTROL])
+        )
     if CONF_CONTROL_PACKET_SIZE in config:
-        cg.add(var.set_extra_control_packet_bytes_size(config[CONF_CONTROL_PACKET_SIZE] - PROTOCOL_CONTROL_PACKET_SIZE))
+        cg.add(
+            var.set_extra_control_packet_bytes_size(
+                config[CONF_CONTROL_PACKET_SIZE] - PROTOCOL_CONTROL_PACKET_SIZE
+            )
+        )
     # https://github.com/paveldn/HaierProtocol
     cg.add_library("pavlodn/HaierProtocol", "0.9.23")

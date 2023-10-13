@@ -10,7 +10,6 @@
 using namespace esphome::climate;
 using namespace esphome::uart;
 
-
 namespace esphome {
 namespace haier {
 
@@ -56,11 +55,10 @@ const char *HaierClimateBase::phase_to_string_(ProtocolPhases phase) {
 }
 #endif
 
-bool check_timeout_(std::chrono::steady_clock::time_point now,
-                    std::chrono::steady_clock::time_point tpoint, size_t timeout) {
+bool check_timeout(std::chrono::steady_clock::time_point now, std::chrono::steady_clock::time_point tpoint,
+                   size_t timeout) {
   return std::chrono::duration_cast<std::chrono::milliseconds>(now - tpoint).count() > timeout;
 }
-
 
 HaierClimateBase::HaierClimateBase()
     : haier_protocol_(*this),
@@ -107,19 +105,19 @@ void HaierClimateBase::reset_to_idle_() {
 }
 
 bool HaierClimateBase::is_message_interval_exceeded_(std::chrono::steady_clock::time_point now) {
-  return check_timeout_(now, this->last_request_timestamp_, DEFAULT_MESSAGES_INTERVAL_MS);
+  return check_timeout(now, this->last_request_timestamp_, DEFAULT_MESSAGES_INTERVAL_MS);
 }
 
 bool HaierClimateBase::is_status_request_interval_exceeded_(std::chrono::steady_clock::time_point now) {
-  return check_timeout_(now, this->last_status_request_, STATUS_REQUEST_INTERVAL_MS);
+  return check_timeout(now, this->last_status_request_, STATUS_REQUEST_INTERVAL_MS);
 }
 
 bool HaierClimateBase::is_control_message_interval_exceeded_(std::chrono::steady_clock::time_point now) {
-  return check_timeout_(now, this->last_request_timestamp_, CONTROL_MESSAGES_INTERVAL_MS);
+  return check_timeout(now, this->last_request_timestamp_, CONTROL_MESSAGES_INTERVAL_MS);
 }
 
 bool HaierClimateBase::is_protocol_initialisation_interval_exceeded_(std::chrono::steady_clock::time_point now) {
-  return check_timeout_(now, this->last_request_timestamp_, PROTOCOL_INITIALIZATION_INTERVAL);
+  return check_timeout(now, this->last_request_timestamp_, PROTOCOL_INITIALIZATION_INTERVAL);
 }
 
 #ifdef USE_WIFI
@@ -169,9 +167,7 @@ void HaierClimateBase::set_supported_swing_modes(const std::set<climate::Climate
     this->traits_.add_supported_swing_mode(climate::CLIMATE_SWING_OFF);
 }
 
-void HaierClimateBase::set_answer_timeout(uint32_t timeout) {
-  this->haier_protocol_.set_answer_timeout(timeout);
-}
+void HaierClimateBase::set_answer_timeout(uint32_t timeout) { this->haier_protocol_.set_answer_timeout(timeout); }
 
 void HaierClimateBase::set_supported_modes(const std::set<climate::ClimateMode> &modes) {
   this->traits_.set_supported_modes(modes);
@@ -187,15 +183,16 @@ void HaierClimateBase::set_supported_presets(const std::set<climate::ClimatePres
 
 void HaierClimateBase::set_send_wifi(bool send_wifi) { this->send_wifi_signal_ = send_wifi; }
 
-haier_protocol::HandlerError HaierClimateBase::answer_preprocess_(haier_protocol::FrameType request_message_type,
-                                                                  haier_protocol::FrameType expected_request_message_type,
-                                                                  haier_protocol::FrameType answer_message_type,
-                                                                  haier_protocol::FrameType expected_answer_message_type,
-                                                                  ProtocolPhases expected_phase) {
+haier_protocol::HandlerError HaierClimateBase::answer_preprocess_(
+    haier_protocol::FrameType request_message_type, haier_protocol::FrameType expected_request_message_type,
+    haier_protocol::FrameType answer_message_type, haier_protocol::FrameType expected_answer_message_type,
+    ProtocolPhases expected_phase) {
   haier_protocol::HandlerError result = haier_protocol::HandlerError::HANDLER_OK;
-  if ((expected_request_message_type != haier_protocol::FrameType::UNKNOWN_FRAME_TYPE) && (request_message_type != expected_request_message_type))
+  if ((expected_request_message_type != haier_protocol::FrameType::UNKNOWN_FRAME_TYPE) &&
+      (request_message_type != expected_request_message_type))
     result = haier_protocol::HandlerError::UNSUPPORTED_MESSAGE;
-  if ((expected_answer_message_type != haier_protocol::FrameType::UNKNOWN_FRAME_TYPE) && (answer_message_type != expected_answer_message_type))
+  if ((expected_answer_message_type != haier_protocol::FrameType::UNKNOWN_FRAME_TYPE) &&
+      (answer_message_type != expected_answer_message_type))
     result = haier_protocol::HandlerError::UNSUPPORTED_MESSAGE;
   if ((expected_phase != ProtocolPhases::UNKNOWN) && (expected_phase != this->protocol_phase_))
     result = haier_protocol::HandlerError::UNEXPECTED_MESSAGE;
@@ -204,19 +201,20 @@ haier_protocol::HandlerError HaierClimateBase::answer_preprocess_(haier_protocol
   return result;
 }
 
-haier_protocol::HandlerError HaierClimateBase::report_network_status_answer_handler_(haier_protocol::FrameType request_type,
-                                                                                     haier_protocol::FrameType message_type,
-                                                                                     const uint8_t *data, size_t data_size) {
-  haier_protocol::HandlerError result = this->answer_preprocess_(
-      request_type, haier_protocol::FrameType::REPORT_NETWORK_STATUS, message_type,
-      haier_protocol::FrameType::CONFIRM, ProtocolPhases::WAITING_SIGNAL_LEVEL_ANSWER);
+haier_protocol::HandlerError HaierClimateBase::report_network_status_answer_handler_(
+    haier_protocol::FrameType request_type, haier_protocol::FrameType message_type, const uint8_t *data,
+    size_t data_size) {
+  haier_protocol::HandlerError result =
+      this->answer_preprocess_(request_type, haier_protocol::FrameType::REPORT_NETWORK_STATUS, message_type,
+                               haier_protocol::FrameType::CONFIRM, ProtocolPhases::WAITING_SIGNAL_LEVEL_ANSWER);
   this->set_phase(ProtocolPhases::IDLE);
   return result;
 }
 
 haier_protocol::HandlerError HaierClimateBase::timeout_default_handler_(haier_protocol::FrameType request_type) {
 #if (HAIER_LOG_LEVEL > 4)
-  ESP_LOGW(TAG, "Answer timeout for command %02X, phase %s", (uint8_t) request_type, phase_to_string_(this->protocol_phase_));
+  ESP_LOGW(TAG, "Answer timeout for command %02X, phase %s", (uint8_t) request_type,
+           phase_to_string_(this->protocol_phase_));
 #else
   ESP_LOGW(TAG, "Answer timeout for command %02X, phase %d", (uint8_t) request_type, (int) this->protocol_phase_);
 #endif
@@ -240,8 +238,7 @@ void HaierClimateBase::setup() {
 
 void HaierClimateBase::dump_config() {
   LOG_CLIMATE("", "Haier Climate", this);
-  ESP_LOGCONFIG(TAG, "  Device communication status: %s",
-                this->valid_connection() ? "established" : "none");
+  ESP_LOGCONFIG(TAG, "  Device communication status: %s", this->valid_connection() ? "established" : "none");
 }
 
 void HaierClimateBase::loop() {
@@ -324,7 +321,7 @@ void HaierClimateBase::control(const ClimateCall &call) {
     ESP_LOGW(TAG, "Can't send control packet, first poll answer not received");
     return;  // cancel the control, we cant do it without a poll answer.
   }
-  if (this->current_hvac_settings_.valid) { 
+  if (this->current_hvac_settings_.valid) {
     ESP_LOGW(TAG, "New settings come faster then processed!");
   }
   {
@@ -349,9 +346,10 @@ void HaierClimateBase::HvacSettings::reset() {
   this->swing_mode.reset();
   this->target_temperature.reset();
   this->preset.reset();
-}  
+}
 
-void HaierClimateBase::send_message_(const haier_protocol::HaierMessage &command, bool use_crc, uint8_t num_repeats, std::chrono::milliseconds interval) {
+void HaierClimateBase::send_message_(const haier_protocol::HaierMessage &command, bool use_crc, uint8_t num_repeats,
+                                     std::chrono::milliseconds interval) {
   this->haier_protocol_.send_message(command, use_crc, num_repeats, interval);
   this->last_request_timestamp_ = std::chrono::steady_clock::now();
 }
