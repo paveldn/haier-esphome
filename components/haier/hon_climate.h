@@ -30,11 +30,7 @@ enum class CleaningState : uint8_t {
   STERI_CLEAN = 2,
 };
 
-enum class HonControlMethod {
-  MONITOR_ONLY = 0,
-  SET_GROUP_PARAMETERS,
-  SET_SINGLE_PARAMETER
-};
+enum class HonControlMethod { MONITOR_ONLY = 0, SET_GROUP_PARAMETERS, SET_SINGLE_PARAMETER };
 
 class HonClimate : public HaierClimateBase {
  public:
@@ -64,15 +60,20 @@ class HonClimate : public HaierClimateBase {
   void process_pending_action() override;
 
   // Answers handlers
-  haier_protocol::HandlerError get_device_version_answer_handler_(haier_protocol::FrameType request_type, haier_protocol::FrameType message_type,
+  haier_protocol::HandlerError get_device_version_answer_handler_(haier_protocol::FrameType request_type,
+                                                                  haier_protocol::FrameType message_type,
                                                                   const uint8_t *data, size_t data_size);
-  haier_protocol::HandlerError get_device_id_answer_handler_(haier_protocol::FrameType request_type, haier_protocol::FrameType message_type,
+  haier_protocol::HandlerError get_device_id_answer_handler_(haier_protocol::FrameType request_type,
+                                                             haier_protocol::FrameType message_type,
                                                              const uint8_t *data, size_t data_size);
-  haier_protocol::HandlerError status_handler_(haier_protocol::FrameType request_type, haier_protocol::FrameType message_type, const uint8_t *data,
+  haier_protocol::HandlerError status_handler_(haier_protocol::FrameType request_type,
+                                               haier_protocol::FrameType message_type, const uint8_t *data,
                                                size_t data_size);
-  haier_protocol::HandlerError get_management_information_answer_handler_(haier_protocol::FrameType request_type, haier_protocol::FrameType message_type,
+  haier_protocol::HandlerError get_management_information_answer_handler_(haier_protocol::FrameType request_type,
+                                                                          haier_protocol::FrameType message_type,
                                                                           const uint8_t *data, size_t data_size);
-  haier_protocol::HandlerError get_alarm_status_answer_handler_(haier_protocol::FrameType request_type, haier_protocol::FrameType message_type,
+  haier_protocol::HandlerError get_alarm_status_answer_handler_(haier_protocol::FrameType request_type,
+                                                                haier_protocol::FrameType message_type,
                                                                 const uint8_t *data, size_t data_size);
   // Helper functions
   haier_protocol::HandlerError process_status_message_(const uint8_t *packet, uint8_t size);

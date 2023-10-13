@@ -41,7 +41,7 @@ struct HaierPacketControl {
   // 24
   uint8_t : 8;
   // 25
-  uint8_t swing_mode;  // In normal mode: If 1 - swing both direction, if 0 - horizontal_swing and 
+  uint8_t swing_mode;  // In normal mode: If 1 - swing both direction, if 0 - horizontal_swing and
                        // vertical_swing define vertical/horizontal/off
                        // In alternative mode: 0 - off, 01 - vertical,  02 - horizontal, 03 - both
   // 26
@@ -82,7 +82,6 @@ struct HaierStatus {
   uint16_t subcommand;
   HaierPacketControl control;
 };
-
 
 }  // namespace smartair2_protocol
 }  // namespace haier

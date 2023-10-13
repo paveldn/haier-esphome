@@ -93,15 +93,19 @@ class HaierClimateBase : public esphome::Component,
   virtual void process_pending_action();
   esphome::climate::ClimateTraits traits() override;
   // Answer handlers
-  haier_protocol::HandlerError answer_preprocess_(haier_protocol::FrameType request_message_type, haier_protocol::FrameType expected_request_message_type,
-                                                  haier_protocol::FrameType answer_message_type, haier_protocol::FrameType expected_answer_message_type,
+  haier_protocol::HandlerError answer_preprocess_(haier_protocol::FrameType request_message_type,
+                                                  haier_protocol::FrameType expected_request_message_type,
+                                                  haier_protocol::FrameType answer_message_type,
+                                                  haier_protocol::FrameType expected_answer_message_type,
                                                   ProtocolPhases expected_phase);
-  haier_protocol::HandlerError report_network_status_answer_handler_(haier_protocol::FrameType request_type, haier_protocol::FrameType message_type,
+  haier_protocol::HandlerError report_network_status_answer_handler_(haier_protocol::FrameType request_type,
+                                                                     haier_protocol::FrameType message_type,
                                                                      const uint8_t *data, size_t data_size);
   // Timeout handler
   haier_protocol::HandlerError timeout_default_handler_(haier_protocol::FrameType request_type);
   // Helper functions
-  void send_message_(const haier_protocol::HaierMessage &command, bool use_crc, uint8_t num_retries = 0, std::chrono::milliseconds interval = std::chrono::milliseconds::zero());
+  void send_message_(const haier_protocol::HaierMessage &command, bool use_crc, uint8_t num_repeats = 0,
+                     std::chrono::milliseconds interval = std::chrono::milliseconds::zero());
   virtual void set_phase(ProtocolPhases phase);
   void reset_to_idle_();
   bool is_message_interval_exceeded_(std::chrono::steady_clock::time_point now);
@@ -120,8 +124,8 @@ class HaierClimateBase : public esphome::Component,
     esphome::optional<esphome::climate::ClimatePreset> preset;
     bool valid;
     HvacSettings() : valid(false){};
-    HvacSettings(const HvacSettings&) = default;
-    HvacSettings& operator=(const HvacSettings&) = default;
+    HvacSettings(const HvacSettings &) = default;
+    HvacSettings &operator=(const HvacSettings &) = default;
     void reset();
   };
   haier_protocol::ProtocolHandler haier_protocol_;
@@ -143,7 +147,7 @@ class HaierClimateBase : public esphome::Component,
   std::chrono::steady_clock::time_point last_request_timestamp_;       // For interval between messages
   std::chrono::steady_clock::time_point last_valid_status_timestamp_;  // For protocol timeout
   std::chrono::steady_clock::time_point last_status_request_;          // To request AC status
-  std::chrono::steady_clock::time_point last_signal_request_;  // To send WiFI signal level
+  std::chrono::steady_clock::time_point last_signal_request_;          // To send WiFI signal level
 };
 
 }  // namespace haier

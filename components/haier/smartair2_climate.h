@@ -20,11 +20,14 @@ class Smartair2Climate : public HaierClimateBase {
   void process_phase(std::chrono::steady_clock::time_point now) override;
   haier_protocol::HaierMessage get_control_message() override;
   // Answer handlers
-  haier_protocol::HandlerError status_handler_(haier_protocol::FrameType request_type, haier_protocol::FrameType message_type, const uint8_t *data,
+  haier_protocol::HandlerError status_handler_(haier_protocol::FrameType request_type,
+                                               haier_protocol::FrameType message_type, const uint8_t *data,
                                                size_t data_size);
-  haier_protocol::HandlerError get_device_version_answer_handler_(haier_protocol::FrameType request_type, haier_protocol::FrameType message_type,
+  haier_protocol::HandlerError get_device_version_answer_handler_(haier_protocol::FrameType request_type,
+                                                                  haier_protocol::FrameType message_type,
                                                                   const uint8_t *data, size_t data_size);
-  haier_protocol::HandlerError get_device_id_answer_handler_(haier_protocol::FrameType request_type, haier_protocol::FrameType message_type,
+  haier_protocol::HandlerError get_device_id_answer_handler_(haier_protocol::FrameType request_type,
+                                                             haier_protocol::FrameType message_type,
                                                              const uint8_t *data, size_t data_size);
   haier_protocol::HandlerError messages_timeout_handler_with_cycle_for_init_(haier_protocol::FrameType message_type);
   // Helper functions
