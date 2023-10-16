@@ -20,40 +20,27 @@ constexpr size_t PROTOCOL_INITIALIZATION_INTERVAL = 10000;
 constexpr size_t DEFAULT_MESSAGES_INTERVAL_MS = 2000;
 constexpr size_t CONTROL_MESSAGES_INTERVAL_MS = 400;
 
-#if (HAIER_LOG_LEVEL > 4)
-// To reduce size of binary this function only available when log level is Verbose
 const char *HaierClimateBase::phase_to_string_(ProtocolPhases phase) {
   static const char *phase_names[] = {
       "SENDING_INIT_1",
-      "WAITING_INIT_1_ANSWER",
       "SENDING_INIT_2",
-      "WAITING_INIT_2_ANSWER",
       "SENDING_FIRST_STATUS_REQUEST",
-      "WAITING_FIRST_STATUS_ANSWER",
       "SENDING_ALARM_STATUS_REQUEST",
-      "WAITING_ALARM_STATUS_ANSWER",
       "IDLE",
-      "UNKNOWN",
       "SENDING_STATUS_REQUEST",
-      "WAITING_STATUS_ANSWER",
       "SENDING_UPDATE_SIGNAL_REQUEST",
-      "WAITING_UPDATE_SIGNAL_ANSWER",
       "SENDING_SIGNAL_LEVEL",
-      "WAITING_SIGNAL_LEVEL_ANSWER",
       "SENDING_CONTROL",
-      "WAITING_CONTROL_ANSWER",
       "SENDING_POWER_ON_COMMAND",
-      "WAITING_POWER_ON_ANSWER",
       "SENDING_POWER_OFF_COMMAND",
-      "WAITING_POWER_OFF_ANSWER",
       "UNKNOWN"  // Should be the last!
   };
+  static_assert((sizeof(phase_names) / sizeof(char*)) == (((int)ProtocolPhases::NUM_PROTOCOL_PHASES) + 1), "Wrong phase_names array size. Please, make sure that this array is aligned with the enum ProtocolPhases");
   int phase_index = (int) phase;
   if ((phase_index > (int) ProtocolPhases::NUM_PROTOCOL_PHASES) || (phase_index < 0))
     phase_index = (int) ProtocolPhases::NUM_PROTOCOL_PHASES;
   return phase_names[phase_index];
 }
-#endif
 
 bool check_timeout(std::chrono::steady_clock::time_point now, std::chrono::steady_clock::time_point tpoint,
                    size_t timeout) {
@@ -86,13 +73,14 @@ HaierClimateBase::~HaierClimateBase() {}
 
 void HaierClimateBase::set_phase(ProtocolPhases phase) {
   if (this->protocol_phase_ != phase) {
-#if (HAIER_LOG_LEVEL > 4)
     ESP_LOGV(TAG, "Phase transition: %s => %s", phase_to_string_(this->protocol_phase_), phase_to_string_(phase));
-#else
-    ESP_LOGV(TAG, "Phase transition: %d => %d", (int) this->protocol_phase_, (int) phase);
-#endif
     this->protocol_phase_ = phase;
   }
+}
+
+void HaierClimateBase::reset_phase_() {
+  this->set_phase((this->protocol_phase_ >= ProtocolPhases::IDLE) ? ProtocolPhases::IDLE
+                                                                  : ProtocolPhases::SENDING_INIT_1);
 }
 
 void HaierClimateBase::reset_to_idle_() {
@@ -194,7 +182,7 @@ haier_protocol::HandlerError HaierClimateBase::answer_preprocess_(
   if ((expected_answer_message_type != haier_protocol::FrameType::UNKNOWN_FRAME_TYPE) &&
       (answer_message_type != expected_answer_message_type))
     result = haier_protocol::HandlerError::UNSUPPORTED_MESSAGE;
-  if ((expected_phase != ProtocolPhases::UNKNOWN) && (expected_phase != this->protocol_phase_))
+  if (!this->haier_protocol_.is_waiting_for_answer() || ((expected_phase != ProtocolPhases::UNKNOWN) && (expected_phase != this->protocol_phase_)))
     result = haier_protocol::HandlerError::UNEXPECTED_MESSAGE;
   if (answer_message_type == haier_protocol::FrameType::INVALID)
     result = haier_protocol::HandlerError::INVALID_ANSWER;
@@ -206,18 +194,14 @@ haier_protocol::HandlerError HaierClimateBase::report_network_status_answer_hand
     size_t data_size) {
   haier_protocol::HandlerError result =
       this->answer_preprocess_(request_type, haier_protocol::FrameType::REPORT_NETWORK_STATUS, message_type,
-                               haier_protocol::FrameType::CONFIRM, ProtocolPhases::WAITING_SIGNAL_LEVEL_ANSWER);
+                               haier_protocol::FrameType::CONFIRM, ProtocolPhases::SENDING_SIGNAL_LEVEL);
   this->set_phase(ProtocolPhases::IDLE);
   return result;
 }
 
 haier_protocol::HandlerError HaierClimateBase::timeout_default_handler_(haier_protocol::FrameType request_type) {
-#if (HAIER_LOG_LEVEL > 4)
   ESP_LOGW(TAG, "Answer timeout for command %02X, phase %s", (uint8_t) request_type,
            phase_to_string_(this->protocol_phase_));
-#else
-  ESP_LOGW(TAG, "Answer timeout for command %02X, phase %d", (uint8_t) request_type, (int) this->protocol_phase_);
-#endif
   if (this->protocol_phase_ > ProtocolPhases::IDLE) {
     this->set_phase(ProtocolPhases::IDLE);
   } else {
@@ -255,12 +239,7 @@ void HaierClimateBase::loop() {
         ESP_LOGW(TAG, "Communication timeout, reseting protocol");
       }
       this->last_valid_status_timestamp_ = now;
-      this->force_send_control_ = false;
-      if (this->current_hvac_settings_.valid)
-        this->current_hvac_settings_.reset();
-      if (this->next_hvac_settings_.valid)
-        this->next_hvac_settings_.reset();
-      this->set_phase(ProtocolPhases::SENDING_INIT_1);
+      this->process_protocol_reset();
       return;
     } else {
       // No need to reset protocol if we didn't pass initialization phase
@@ -288,6 +267,21 @@ void HaierClimateBase::loop() {
   }
   this->process_phase(now);
   this->haier_protocol_.loop();
+}
+
+void HaierClimateBase::process_protocol_reset() {
+  this->force_send_control_ = false;
+  if (this->current_hvac_settings_.valid)
+    this->current_hvac_settings_.reset();
+  if (this->next_hvac_settings_.valid)
+    this->next_hvac_settings_.reset();
+  this->mode = CLIMATE_MODE_OFF;
+  this->current_temperature = NAN;
+  this->target_temperature = NAN;
+  this->fan_mode.reset();
+  this->preset.reset();
+  this->publish_state();
+  this->set_phase(ProtocolPhases::SENDING_INIT_1);
 }
 
 void HaierClimateBase::process_pending_action() {

@@ -458,4 +458,4 @@ async def to_code(config):
             )
         )
     # https://github.com/paveldn/HaierProtocol
-    cg.add_library("pavlodn/HaierProtocol", "0.9.23")
+    cg.add_library("pavlodn/HaierProtocol", "0.9.24")
