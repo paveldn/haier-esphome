@@ -58,6 +58,7 @@ class HonClimate : public HaierClimateBase {
   void process_phase(std::chrono::steady_clock::time_point now) override;
   haier_protocol::HaierMessage get_control_message() override;
   void process_pending_action() override;
+  void process_protocol_reset() override;
 
   // Answers handlers
   haier_protocol::HandlerError get_device_version_answer_handler_(haier_protocol::FrameType request_type,

@@ -61,36 +61,25 @@ class HaierClimateBase : public esphome::Component,
     UNKNOWN = -1,
     // INITIALIZATION
     SENDING_INIT_1 = 0,
-    WAITING_INIT_1_ANSWER = 1,
-    SENDING_INIT_2 = 2,
-    WAITING_INIT_2_ANSWER = 3,
-    SENDING_FIRST_STATUS_REQUEST = 4,
-    WAITING_FIRST_STATUS_ANSWER = 5,
-    SENDING_ALARM_STATUS_REQUEST = 6,
-    WAITING_ALARM_STATUS_ANSWER = 7,
+    SENDING_INIT_2 = 1,
+    SENDING_FIRST_STATUS_REQUEST = 2,
+    SENDING_ALARM_STATUS_REQUEST = 3,
     // FUNCTIONAL STATE
-    IDLE = 8,
-    SENDING_STATUS_REQUEST = 10,
-    WAITING_STATUS_ANSWER = 11,
-    SENDING_UPDATE_SIGNAL_REQUEST = 12,
-    WAITING_UPDATE_SIGNAL_ANSWER = 13,
-    SENDING_SIGNAL_LEVEL = 14,
-    WAITING_SIGNAL_LEVEL_ANSWER = 15,
-    SENDING_CONTROL = 16,
-    WAITING_CONTROL_ANSWER = 17,
-    SENDING_POWER_ON_COMMAND = 18,
-    WAITING_POWER_ON_ANSWER = 19,
-    SENDING_POWER_OFF_COMMAND = 20,
-    WAITING_POWER_OFF_ANSWER = 21,
+    IDLE = 4,
+    SENDING_STATUS_REQUEST = 5,
+    SENDING_UPDATE_SIGNAL_REQUEST = 6,
+    SENDING_SIGNAL_LEVEL = 7,
+    SENDING_CONTROL = 8,
+    SENDING_POWER_ON_COMMAND = 9,
+    SENDING_POWER_OFF_COMMAND = 10,
     NUM_PROTOCOL_PHASES
   };
-#if (HAIER_LOG_LEVEL > 4)
   const char *phase_to_string_(ProtocolPhases phase);
-#endif
   virtual void set_handlers() = 0;
   virtual void process_phase(std::chrono::steady_clock::time_point now) = 0;
   virtual haier_protocol::HaierMessage get_control_message() = 0;
   virtual void process_pending_action();
+  virtual void process_protocol_reset();
   esphome::climate::ClimateTraits traits() override;
   // Answer handlers
   haier_protocol::HandlerError answer_preprocess_(haier_protocol::FrameType request_message_type,
@@ -107,6 +96,7 @@ class HaierClimateBase : public esphome::Component,
   void send_message_(const haier_protocol::HaierMessage &command, bool use_crc, uint8_t num_repeats = 0,
                      std::chrono::milliseconds interval = std::chrono::milliseconds::zero());
   virtual void set_phase(ProtocolPhases phase);
+  void reset_phase_();
   void reset_to_idle_();
   bool is_message_interval_exceeded_(std::chrono::steady_clock::time_point now);
   bool is_status_request_interval_exceeded_(std::chrono::steady_clock::time_point now);

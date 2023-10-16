@@ -31,8 +31,7 @@ haier_protocol::HandlerError Smartair2Climate::status_handler_(haier_protocol::F
     result = this->process_status_message_(data, data_size);
     if (result != haier_protocol::HandlerError::HANDLER_OK) {
       ESP_LOGW(TAG, "Error %d while parsing Status packet", (int) result);
-      this->set_phase((this->protocol_phase_ >= ProtocolPhases::IDLE) ? ProtocolPhases::IDLE
-                                                                      : ProtocolPhases::SENDING_INIT_1);
+      this->reset_phase_();
       this->action_request_ = ActionRequest::NO_ACTION;
       this->force_send_control_ = false;
     } else {
@@ -42,14 +41,14 @@ haier_protocol::HandlerError Smartair2Climate::status_handler_(haier_protocol::F
         ESP_LOGW(TAG, "Status packet too small: %d (should be >= %d)", data_size,
                  sizeof(smartair2_protocol::HaierPacketControl));
       }
-      if (this->protocol_phase_ == ProtocolPhases::WAITING_FIRST_STATUS_ANSWER) {
+      if (this->protocol_phase_ == ProtocolPhases::SENDING_FIRST_STATUS_REQUEST) {
         ESP_LOGI(TAG, "First HVAC status received");
         this->set_phase(ProtocolPhases::IDLE);
-      } else if ((this->protocol_phase_ == ProtocolPhases::WAITING_STATUS_ANSWER) ||
-                 (this->protocol_phase_ == ProtocolPhases::WAITING_POWER_ON_ANSWER) ||
-                 (this->protocol_phase_ == ProtocolPhases::WAITING_POWER_OFF_ANSWER)) {
+      } else if ((this->protocol_phase_ == ProtocolPhases::SENDING_STATUS_REQUEST) ||
+                 (this->protocol_phase_ == ProtocolPhases::SENDING_POWER_ON_COMMAND) ||
+                 (this->protocol_phase_ == ProtocolPhases::SENDING_POWER_OFF_COMMAND)) {
         this->set_phase(ProtocolPhases::IDLE);
-      } else if (this->protocol_phase_ == ProtocolPhases::WAITING_CONTROL_ANSWER) {
+      } else if (this->protocol_phase_ == ProtocolPhases::SENDING_CONTROL) {
         this->set_phase(ProtocolPhases::IDLE);
         this->force_send_control_ = false;
         if (this->current_hvac_settings_.valid)
@@ -60,8 +59,7 @@ haier_protocol::HandlerError Smartair2Climate::status_handler_(haier_protocol::F
   } else {
     this->action_request_ = ActionRequest::NO_ACTION;
     this->force_send_control_ = false;
-    this->set_phase((this->protocol_phase_ >= ProtocolPhases::IDLE) ? ProtocolPhases::IDLE
-                                                                    : ProtocolPhases::SENDING_INIT_1);
+    this->reset_phase_();
     return result;
   }
 }
@@ -71,7 +69,7 @@ haier_protocol::HandlerError Smartair2Climate::get_device_version_answer_handler
     size_t data_size) {
   if (request_type != haier_protocol::FrameType::GET_DEVICE_VERSION)
     return haier_protocol::HandlerError::UNSUPPORTED_MESSAGE;
-  if (ProtocolPhases::WAITING_INIT_1_ANSWER != this->protocol_phase_)
+  if (ProtocolPhases::SENDING_INIT_1 != this->protocol_phase_)
     return haier_protocol::HandlerError::UNEXPECTED_MESSAGE;
   // Invalid packet is expected answer
   if ((message_type == haier_protocol::FrameType::GET_DEVICE_VERSION_RESPONSE) && (data_size >= 39) &&
@@ -87,7 +85,7 @@ haier_protocol::HandlerError Smartair2Climate::messages_timeout_handler_with_cyc
     haier_protocol::FrameType message_type) {
   if (this->protocol_phase_ >= ProtocolPhases::IDLE)
     return HaierClimateBase::timeout_default_handler_(message_type);
-  ESP_LOGI(TAG, "Answer timeout for command %02X, phase %d", (uint8_t) message_type, (int) this->protocol_phase_);
+  ESP_LOGI(TAG, "Answer timeout for command %02X, phase %s", (uint8_t) message_type, phase_to_string_(this->protocol_phase_));
   ProtocolPhases new_phase = (ProtocolPhases) ((int) this->protocol_phase_ + 1);
   if (new_phase >= ProtocolPhases::SENDING_ALARM_STATUS_REQUEST)
     new_phase = ProtocolPhases::SENDING_INIT_1;
@@ -132,11 +130,9 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
         static const haier_protocol::HaierMessage DEVICE_VERSION_REQUEST(
             haier_protocol::FrameType::GET_DEVICE_VERSION, module_capabilities, sizeof(module_capabilities));
         this->send_message_(DEVICE_VERSION_REQUEST, this->use_crc_, INIT_REQUESTS_RETRY, INIT_REQUESTS_RETRY_INTERVAL);
-        this->set_phase(ProtocolPhases::WAITING_INIT_1_ANSWER);
       }
       break;
     case ProtocolPhases::SENDING_INIT_2:
-    case ProtocolPhases::WAITING_INIT_2_ANSWER:
       this->set_phase(ProtocolPhases::SENDING_FIRST_STATUS_REQUEST);
       break;
     case ProtocolPhases::SENDING_FIRST_STATUS_REQUEST:
@@ -149,7 +145,6 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
           this->send_message_(STATUS_REQUEST, this->use_crc_);
         }
         this->last_status_request_ = now;
-        this->set_phase((ProtocolPhases) ((uint8_t) this->protocol_phase_ + 1));
       }
       break;
 #ifdef USE_WIFI
@@ -157,24 +152,18 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
       if (this->can_send_message() && this->is_message_interval_exceeded_(now)) {
         this->send_message_(this->get_wifi_signal_message_(haier_protocol::FrameType::REPORT_NETWORK_STATUS),
                             this->use_crc_);
-        this->set_phase(ProtocolPhases::WAITING_SIGNAL_LEVEL_ANSWER);
         this->last_signal_request_ = now;
       }
       break;
-    case ProtocolPhases::WAITING_SIGNAL_LEVEL_ANSWER:
-      break;
 #else
     case ProtocolPhases::SENDING_SIGNAL_LEVEL:
-    case ProtocolPhases::WAITING_SIGNAL_LEVEL_ANSWER:
       this->set_phase(ProtocolPhases::IDLE);
       break;
 #endif
     case ProtocolPhases::SENDING_UPDATE_SIGNAL_REQUEST:
-    case ProtocolPhases::WAITING_UPDATE_SIGNAL_ANSWER:
       this->set_phase(ProtocolPhases::SENDING_SIGNAL_LEVEL);
       break;
     case ProtocolPhases::SENDING_ALARM_STATUS_REQUEST:
-    case ProtocolPhases::WAITING_ALARM_STATUS_ANSWER:
       this->set_phase(ProtocolPhases::SENDING_INIT_1);
       break;
     case ProtocolPhases::SENDING_CONTROL:
@@ -182,7 +171,6 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
         ESP_LOGI(TAG, "Sending control packet");
         this->send_message_(get_control_message(), this->use_crc_, CONTROL_MESSAGE_RETRIES,
                             CONTROL_MESSAGE_RETRIES_INTERVAL);
-        this->set_phase(ProtocolPhases::WAITING_CONTROL_ANSWER);
       }
       break;
     case ProtocolPhases::SENDING_POWER_ON_COMMAND:
@@ -192,17 +180,7 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
             haier_protocol::FrameType::CONTROL,
             this->protocol_phase_ == ProtocolPhases::SENDING_POWER_ON_COMMAND ? 0x4D02 : 0x4D03);
         this->send_message_(power_cmd, this->use_crc_);
-        this->set_phase(this->protocol_phase_ == ProtocolPhases::SENDING_POWER_ON_COMMAND
-                            ? ProtocolPhases::WAITING_POWER_ON_ANSWER
-                            : ProtocolPhases::WAITING_POWER_OFF_ANSWER);
       }
-      break;
-    case ProtocolPhases::WAITING_INIT_1_ANSWER:
-    case ProtocolPhases::WAITING_FIRST_STATUS_ANSWER:
-    case ProtocolPhases::WAITING_STATUS_ANSWER:
-    case ProtocolPhases::WAITING_CONTROL_ANSWER:
-    case ProtocolPhases::WAITING_POWER_ON_ANSWER:
-    case ProtocolPhases::WAITING_POWER_OFF_ANSWER:
       break;
     case ProtocolPhases::IDLE: {
       if (this->forced_request_status_ || this->is_status_request_interval_exceeded_(now)) {
@@ -218,12 +196,8 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
     } break;
     default:
       // Shouldn't get here
-#if (HAIER_LOG_LEVEL > 4)
       ESP_LOGE(TAG, "Wrong protocol handler state: %s (%d), resetting communication",
                phase_to_string_(this->protocol_phase_), (int) this->protocol_phase_);
-#else
-      ESP_LOGE(TAG, "Wrong protocol handler state: %d, resetting communication", (int) this->protocol_phase_);
-#endif
       this->set_phase(ProtocolPhases::SENDING_INIT_1);
       break;
   }
@@ -518,30 +492,17 @@ haier_protocol::HandlerError Smartair2Climate::process_status_message_(const uin
   }
   this->last_valid_status_timestamp_ = std::chrono::steady_clock::now();
   if (should_publish) {
-#if (HAIER_LOG_LEVEL > 4)
-    std::chrono::high_resolution_clock::time_point _publish_start = std::chrono::high_resolution_clock::now();
-#endif
     this->publish_state();
-#if (HAIER_LOG_LEVEL > 4)
-    ESP_LOGV(TAG, "Publish delay: %lld ms",
-             std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() -
-                                                                   _publish_start)
-                 .count());
-#endif
   }
   if (should_publish) {
     ESP_LOGI(TAG, "HVAC values changed");
   }
-  esp_log_printf_((should_publish ? ESPHOME_LOG_LEVEL_INFO : ESPHOME_LOG_LEVEL_DEBUG), TAG, __LINE__,
-                  "HVAC Mode = 0x%X", packet.control.ac_mode);
-  esp_log_printf_((should_publish ? ESPHOME_LOG_LEVEL_INFO : ESPHOME_LOG_LEVEL_DEBUG), TAG, __LINE__,
-                  "Fan speed Status = 0x%X", packet.control.fan_mode);
-  esp_log_printf_((should_publish ? ESPHOME_LOG_LEVEL_INFO : ESPHOME_LOG_LEVEL_DEBUG), TAG, __LINE__,
-                  "Horizontal Swing Status = 0x%X", packet.control.horizontal_swing);
-  esp_log_printf_((should_publish ? ESPHOME_LOG_LEVEL_INFO : ESPHOME_LOG_LEVEL_DEBUG), TAG, __LINE__,
-                  "Vertical Swing Status = 0x%X", packet.control.vertical_swing);
-  esp_log_printf_((should_publish ? ESPHOME_LOG_LEVEL_INFO : ESPHOME_LOG_LEVEL_DEBUG), TAG, __LINE__,
-                  "Set Point Status = 0x%X", packet.control.set_point);
+  int log_level = should_publish ? ESPHOME_LOG_LEVEL_INFO : ESPHOME_LOG_LEVEL_DEBUG;
+  esp_log_printf_(log_level, TAG, __LINE__, "HVAC Mode = 0x%X", packet.control.ac_mode);
+  esp_log_printf_(log_level, TAG, __LINE__, "Fan speed Status = 0x%X", packet.control.fan_mode);
+  esp_log_printf_(log_level, TAG, __LINE__, "Horizontal Swing Status = 0x%X", packet.control.horizontal_swing);
+  esp_log_printf_(log_level, TAG, __LINE__, "Vertical Swing Status = 0x%X", packet.control.vertical_swing);
+  esp_log_printf_(log_level, TAG, __LINE__, "Set Point Status = 0x%X", packet.control.set_point);
   return haier_protocol::HandlerError::HANDLER_OK;
 }
 
