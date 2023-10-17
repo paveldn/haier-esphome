@@ -103,7 +103,7 @@ class HaierClimateBase : public esphome::Component,
   bool is_control_message_interval_exceeded_(std::chrono::steady_clock::time_point now);
   bool is_protocol_initialisation_interval_exceeded_(std::chrono::steady_clock::time_point now);
 #ifdef USE_WIFI
-  haier_protocol::HaierMessage get_wifi_signal_message_(haier_protocol::FrameType message_type);
+  haier_protocol::HaierMessage get_wifi_signal_message_();
 #endif
 
   struct HvacSettings {

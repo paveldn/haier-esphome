@@ -309,7 +309,6 @@ void HonClimate::process_phase(std::chrono::steady_clock::time_point now) {
   switch (this->protocol_phase_) {
     case ProtocolPhases::SENDING_INIT_1:
       if (this->can_send_message() && this->is_protocol_initialisation_interval_exceeded_(now)) {
-        this->hvac_hardware_info_.reset();
         // Indicate device capabilities:
         // bit 0 - if 1 module support interactive mode
         // bit 1 - if 1 module support controller-device mode
@@ -348,8 +347,7 @@ void HonClimate::process_phase(std::chrono::steady_clock::time_point now) {
       break;
     case ProtocolPhases::SENDING_SIGNAL_LEVEL:
       if (this->can_send_message() && this->is_message_interval_exceeded_(now)) {
-        this->send_message_(this->get_wifi_signal_message_(haier_protocol::FrameType::REPORT_NETWORK_STATUS),
-                            this->use_crc_);
+        this->send_message_(this->get_wifi_signal_message_(), this->use_crc_);
       }
       break;
 #else
@@ -989,6 +987,7 @@ void HonClimate::process_protocol_reset() {
     this->outdoor_sensor_->publish_state(NAN);
   } 
   this->got_valid_outdoor_temp_ = false;
+  this->hvac_hardware_info_.reset();
 }
 
 }  // namespace haier

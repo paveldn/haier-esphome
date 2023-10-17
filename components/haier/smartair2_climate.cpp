@@ -150,8 +150,7 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
 #ifdef USE_WIFI
     case ProtocolPhases::SENDING_SIGNAL_LEVEL:
       if (this->can_send_message() && this->is_message_interval_exceeded_(now)) {
-        this->send_message_(this->get_wifi_signal_message_(haier_protocol::FrameType::REPORT_NETWORK_STATUS),
-                            this->use_crc_);
+        this->send_message_(this->get_wifi_signal_message_(), this->use_crc_);
         this->last_signal_request_ = now;
       }
       break;
