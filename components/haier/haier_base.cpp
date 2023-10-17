@@ -109,7 +109,7 @@ bool HaierClimateBase::is_protocol_initialisation_interval_exceeded_(std::chrono
 }
 
 #ifdef USE_WIFI
-haier_protocol::HaierMessage HaierClimateBase::get_wifi_signal_message_(haier_protocol::FrameType message_type) {
+haier_protocol::HaierMessage HaierClimateBase::get_wifi_signal_message_() {
   static uint8_t wifi_status_data[4] = {0x00, 0x00, 0x00, 0x00};
   if (wifi::global_wifi_component->is_connected()) {
     wifi_status_data[1] = 0;
@@ -121,7 +121,7 @@ haier_protocol::HaierMessage HaierClimateBase::get_wifi_signal_message_(haier_pr
     wifi_status_data[1] = 1;
     wifi_status_data[3] = 0;
   }
-  return haier_protocol::HaierMessage(message_type, wifi_status_data, sizeof(wifi_status_data));
+  return haier_protocol::HaierMessage(haier_protocol::FrameType::REPORT_NETWORK_STATUS, wifi_status_data, sizeof(wifi_status_data));
 }
 #endif
 
@@ -229,27 +229,25 @@ void HaierClimateBase::loop() {
   std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
   if ((std::chrono::duration_cast<std::chrono::milliseconds>(now - this->last_valid_status_timestamp_).count() >
        COMMUNICATION_TIMEOUT_MS) ||
-      (this->reset_protocol_request_)) {
+      (this->reset_protocol_request_ && (!this->haier_protocol_.is_waiting_for_answer()))) {
+    this->last_valid_status_timestamp_ = now;
     if (this->protocol_phase_ >= ProtocolPhases::IDLE) {
       // No status too long, reseting protocol
+      // No need to reset protocol if we didn't pass initialization phase
       if (this->reset_protocol_request_) {
         this->reset_protocol_request_ = false;
         ESP_LOGW(TAG, "Protocol reset requested");
       } else {
         ESP_LOGW(TAG, "Communication timeout, reseting protocol");
       }
-      this->last_valid_status_timestamp_ = now;
       this->process_protocol_reset();
       return;
-    } else {
-      // No need to reset protocol if we didn't pass initialization phase
-      this->last_valid_status_timestamp_ = now;
     }
   };
-  if ((this->protocol_phase_ == ProtocolPhases::IDLE) ||
-      (this->protocol_phase_ == ProtocolPhases::SENDING_STATUS_REQUEST) ||
-      (this->protocol_phase_ == ProtocolPhases::SENDING_UPDATE_SIGNAL_REQUEST) ||
-      (this->protocol_phase_ == ProtocolPhases::SENDING_SIGNAL_LEVEL)) {
+  if ((this->protocol_phase_ == ProtocolPhases::IDLE) || (!this->haier_protocol_.is_waiting_for_answer() &&
+      ((this->protocol_phase_ == ProtocolPhases::SENDING_STATUS_REQUEST) ||
+       (this->protocol_phase_ == ProtocolPhases::SENDING_UPDATE_SIGNAL_REQUEST) ||
+       (this->protocol_phase_ == ProtocolPhases::SENDING_SIGNAL_LEVEL)))) {
     // If control message or action is pending we should send it ASAP unless we are in initialisation
     // procedure or waiting for an answer
     if (this->action_request_ != ActionRequest::NO_ACTION) {
