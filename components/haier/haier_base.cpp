@@ -35,7 +35,9 @@ const char *HaierClimateBase::phase_to_string_(ProtocolPhases phase) {
       "SENDING_POWER_OFF_COMMAND",
       "UNKNOWN"  // Should be the last!
   };
-  static_assert((sizeof(phase_names) / sizeof(char*)) == (((int)ProtocolPhases::NUM_PROTOCOL_PHASES) + 1), "Wrong phase_names array size. Please, make sure that this array is aligned with the enum ProtocolPhases");
+  static_assert(
+      (sizeof(phase_names) / sizeof(char *)) == (((int) ProtocolPhases::NUM_PROTOCOL_PHASES) + 1),
+      "Wrong phase_names array size. Please, make sure that this array is aligned with the enum ProtocolPhases");
   int phase_index = (int) phase;
   if ((phase_index > (int) ProtocolPhases::NUM_PROTOCOL_PHASES) || (phase_index < 0))
     phase_index = (int) ProtocolPhases::NUM_PROTOCOL_PHASES;
@@ -121,7 +123,8 @@ haier_protocol::HaierMessage HaierClimateBase::get_wifi_signal_message_() {
     wifi_status_data[1] = 1;
     wifi_status_data[3] = 0;
   }
-  return haier_protocol::HaierMessage(haier_protocol::FrameType::REPORT_NETWORK_STATUS, wifi_status_data, sizeof(wifi_status_data));
+  return haier_protocol::HaierMessage(haier_protocol::FrameType::REPORT_NETWORK_STATUS, wifi_status_data,
+                                      sizeof(wifi_status_data));
 }
 #endif
 
@@ -182,7 +185,8 @@ haier_protocol::HandlerError HaierClimateBase::answer_preprocess_(
   if ((expected_answer_message_type != haier_protocol::FrameType::UNKNOWN_FRAME_TYPE) &&
       (answer_message_type != expected_answer_message_type))
     result = haier_protocol::HandlerError::UNSUPPORTED_MESSAGE;
-  if (!this->haier_protocol_.is_waiting_for_answer() || ((expected_phase != ProtocolPhases::UNKNOWN) && (expected_phase != this->protocol_phase_)))
+  if (!this->haier_protocol_.is_waiting_for_answer() ||
+      ((expected_phase != ProtocolPhases::UNKNOWN) && (expected_phase != this->protocol_phase_)))
     result = haier_protocol::HandlerError::UNEXPECTED_MESSAGE;
   if (answer_message_type == haier_protocol::FrameType::INVALID)
     result = haier_protocol::HandlerError::INVALID_ANSWER;
@@ -244,10 +248,11 @@ void HaierClimateBase::loop() {
       return;
     }
   };
-  if ((this->protocol_phase_ == ProtocolPhases::IDLE) || (!this->haier_protocol_.is_waiting_for_answer() &&
-      ((this->protocol_phase_ == ProtocolPhases::SENDING_STATUS_REQUEST) ||
-       (this->protocol_phase_ == ProtocolPhases::SENDING_UPDATE_SIGNAL_REQUEST) ||
-       (this->protocol_phase_ == ProtocolPhases::SENDING_SIGNAL_LEVEL)))) {
+  if ((this->protocol_phase_ == ProtocolPhases::IDLE) ||
+      (!this->haier_protocol_.is_waiting_for_answer() &&
+       ((this->protocol_phase_ == ProtocolPhases::SENDING_STATUS_REQUEST) ||
+        (this->protocol_phase_ == ProtocolPhases::SENDING_UPDATE_SIGNAL_REQUEST) ||
+        (this->protocol_phase_ == ProtocolPhases::SENDING_SIGNAL_LEVEL)))) {
     // If control message or action is pending we should send it ASAP unless we are in initialisation
     // procedure or waiting for an answer
     if (this->action_request_ != ActionRequest::NO_ACTION) {

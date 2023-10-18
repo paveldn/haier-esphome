@@ -85,7 +85,8 @@ haier_protocol::HandlerError Smartair2Climate::messages_timeout_handler_with_cyc
     haier_protocol::FrameType message_type) {
   if (this->protocol_phase_ >= ProtocolPhases::IDLE)
     return HaierClimateBase::timeout_default_handler_(message_type);
-  ESP_LOGI(TAG, "Answer timeout for command %02X, phase %s", (uint8_t) message_type, phase_to_string_(this->protocol_phase_));
+  ESP_LOGI(TAG, "Answer timeout for command %02X, phase %s", (uint8_t) message_type,
+           phase_to_string_(this->protocol_phase_));
   ProtocolPhases new_phase = (ProtocolPhases) ((int) this->protocol_phase_ + 1);
   if (new_phase >= ProtocolPhases::SENDING_ALARM_STATUS_REQUEST)
     new_phase = ProtocolPhases::SENDING_INIT_1;

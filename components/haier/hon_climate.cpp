@@ -120,9 +120,9 @@ haier_protocol::HandlerError HonClimate::get_device_version_answer_handler_(haie
     this->set_phase(ProtocolPhases::SENDING_INIT_1);
     return haier_protocol::HandlerError::INVALID_ANSWER;
   }
-  haier_protocol::HandlerError result = this->answer_preprocess_(
-      request_type, haier_protocol::FrameType::GET_DEVICE_VERSION, message_type,
-      haier_protocol::FrameType::GET_DEVICE_VERSION_RESPONSE, ProtocolPhases::SENDING_INIT_1);
+  haier_protocol::HandlerError result =
+      this->answer_preprocess_(request_type, haier_protocol::FrameType::GET_DEVICE_VERSION, message_type,
+                               haier_protocol::FrameType::GET_DEVICE_VERSION_RESPONSE, ProtocolPhases::SENDING_INIT_1);
   if (result == haier_protocol::HandlerError::HANDLER_OK) {
     if (data_size < sizeof(hon_protocol::DeviceVersionAnswer)) {
       // Wrong structure
@@ -159,9 +159,9 @@ haier_protocol::HandlerError HonClimate::get_device_version_answer_handler_(haie
 haier_protocol::HandlerError HonClimate::get_device_id_answer_handler_(haier_protocol::FrameType request_type,
                                                                        haier_protocol::FrameType message_type,
                                                                        const uint8_t *data, size_t data_size) {
-  haier_protocol::HandlerError result = this->answer_preprocess_(
-      request_type, haier_protocol::FrameType::GET_DEVICE_ID, message_type,
-      haier_protocol::FrameType::GET_DEVICE_ID_RESPONSE, ProtocolPhases::SENDING_INIT_2);
+  haier_protocol::HandlerError result =
+      this->answer_preprocess_(request_type, haier_protocol::FrameType::GET_DEVICE_ID, message_type,
+                               haier_protocol::FrameType::GET_DEVICE_ID_RESPONSE, ProtocolPhases::SENDING_INIT_2);
   if (result == haier_protocol::HandlerError::HANDLER_OK) {
     this->set_phase(ProtocolPhases::SENDING_FIRST_STATUS_REQUEST);
     return result;
@@ -612,7 +612,8 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
   if (packet.sensors.error_status != 0) {
     ESP_LOGW(TAG, "HVAC error, code=0x%02X", packet.sensors.error_status);
   }
-  if ((this->outdoor_sensor_ != nullptr) && (this->got_valid_outdoor_temp_ || (packet.sensors.outdoor_temperature > 0))) {
+  if ((this->outdoor_sensor_ != nullptr) &&
+      (this->got_valid_outdoor_temp_ || (packet.sensors.outdoor_temperature > 0))) {
     this->got_valid_outdoor_temp_ = true;
     float otemp = (float) (packet.sensors.outdoor_temperature + PROTOCOL_OUTDOOR_TEMPERATURE_OFFSET);
     if ((!this->outdoor_sensor_->has_state()) || (this->outdoor_sensor_->get_raw_state() != otemp))
@@ -985,7 +986,7 @@ void HonClimate::process_protocol_reset() {
   HaierClimateBase::process_protocol_reset();
   if (this->outdoor_sensor_ != nullptr) {
     this->outdoor_sensor_->publish_state(NAN);
-  } 
+  }
   this->got_valid_outdoor_temp_ = false;
   this->hvac_hardware_info_.reset();
 }
