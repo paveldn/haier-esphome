@@ -97,14 +97,14 @@ CleaningState HonClimate::get_cleaning_status() const { return this->cleaning_st
 void HonClimate::start_self_cleaning() {
   if (this->cleaning_status_ == CleaningState::NO_CLEANING) {
     ESP_LOGI(TAG, "Sending self cleaning start request");
-    this->action_request_= PendingAction({ActionRequest::START_SELF_CLEAN});
+    this->action_request_= PendingAction({ActionRequest::START_SELF_CLEAN, esphome::optional<haier_protocol::HaierMessage>()});
   }
 }
 
 void HonClimate::start_steri_cleaning() {
   if (this->cleaning_status_ == CleaningState::NO_CLEANING) {
     ESP_LOGI(TAG, "Sending steri cleaning start request");
-    this->action_request_ = PendingAction({ActionRequest::START_STERI_CLEAN});
+    this->action_request_ = PendingAction({ActionRequest::START_STERI_CLEAN, esphome::optional<haier_protocol::HaierMessage>()});
   }
 }
 
@@ -211,6 +211,8 @@ haier_protocol::HandlerError HonClimate::status_handler_(haier_protocol::FrameTy
           } else {
             this->set_phase(ProtocolPhases::SENDING_CONTROL);
           }
+          break;
+        default:
           break;
       }
     }
@@ -710,7 +712,7 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
       ESP_LOGD(TAG, "Cleaning status change: %d => %d", (uint8_t) this->cleaning_status_, (uint8_t) new_cleaning);
       if (new_cleaning == CleaningState::NO_CLEANING) {
         // Turning AC off after cleaning
-        this->action_request_ = PendingAction({ActionRequest::TURN_POWER_OFF});
+        this->action_request_ = PendingAction({ActionRequest::TURN_POWER_OFF, esphome::optional<haier_protocol::HaierMessage>()});
       }
       this->cleaning_status_ = new_cleaning;
     }

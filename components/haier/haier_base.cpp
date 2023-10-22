@@ -144,11 +144,11 @@ void HaierClimateBase::set_health_mode(bool state) {
   }
 }
 
-void HaierClimateBase::send_power_on_command() { this->action_request_ = PendingAction({ActionRequest::TURN_POWER_ON}); }
+void HaierClimateBase::send_power_on_command() { this->action_request_ = PendingAction({ActionRequest::TURN_POWER_ON, esphome::optional<haier_protocol::HaierMessage>()}); }
 
-void HaierClimateBase::send_power_off_command() { this->action_request_ = PendingAction({ActionRequest::TURN_POWER_OFF}); }
+void HaierClimateBase::send_power_off_command() { this->action_request_ = PendingAction({ActionRequest::TURN_POWER_OFF, esphome::optional<haier_protocol::HaierMessage>()}); }
 
-void HaierClimateBase::toggle_power() { this->action_request_ = PendingAction({ActionRequest::TOGGLE_POWER}); }
+void HaierClimateBase::toggle_power() { this->action_request_ = PendingAction({ActionRequest::TOGGLE_POWER, esphome::optional<haier_protocol::HaierMessage>()}); }
 
 void HaierClimateBase::set_supported_swing_modes(const std::set<climate::ClimateSwingMode> &modes) {
   this->traits_.set_supported_swing_modes(modes);
