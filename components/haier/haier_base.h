@@ -11,7 +11,7 @@ namespace esphome {
 namespace haier {
 
 enum class ActionRequest : uint8_t {
-  NO_ACTION = 0,
+  SEND_CUSTOM_COMMAND = 0,
   TURN_POWER_ON = 1,
   TURN_POWER_OFF = 2,
   TOGGLE_POWER = 3,
@@ -55,30 +55,32 @@ class HaierClimateBase : public esphome::Component,
   bool can_send_message() const { return haier_protocol_.get_outgoing_queue_size() == 0; };
   void set_answer_timeout(uint32_t timeout);
   void set_send_wifi(bool send_wifi);
+  void send_custom_command(const haier_protocol::HaierMessage& message);
+  //void send_custom_command(haier_protocol::HaierMessage&& message);
 
  protected:
   enum class ProtocolPhases {
     UNKNOWN = -1,
     // INITIALIZATION
     SENDING_INIT_1 = 0,
-    SENDING_INIT_2 = 1,
-    SENDING_FIRST_STATUS_REQUEST = 2,
-    SENDING_ALARM_STATUS_REQUEST = 3,
+    SENDING_INIT_2,
+    SENDING_FIRST_STATUS_REQUEST,
+    SENDING_ALARM_STATUS_REQUEST,
     // FUNCTIONAL STATE
-    IDLE = 4,
-    SENDING_STATUS_REQUEST = 5,
-    SENDING_UPDATE_SIGNAL_REQUEST = 6,
-    SENDING_SIGNAL_LEVEL = 7,
-    SENDING_CONTROL = 8,
-    SENDING_POWER_ON_COMMAND = 9,
-    SENDING_POWER_OFF_COMMAND = 10,
+    IDLE,
+    SENDING_STATUS_REQUEST,
+    SENDING_UPDATE_SIGNAL_REQUEST,
+    SENDING_SIGNAL_LEVEL,
+    SENDING_CONTROL,
+    SENDING_ACTION_COMMAND,
     NUM_PROTOCOL_PHASES
   };
   const char *phase_to_string_(ProtocolPhases phase);
   virtual void set_handlers() = 0;
   virtual void process_phase(std::chrono::steady_clock::time_point now) = 0;
   virtual haier_protocol::HaierMessage get_control_message() = 0;
-  virtual void process_pending_action();
+  virtual haier_protocol::HaierMessage get_power_message(bool state) = 0;
+  virtual bool prepare_pending_action();
   virtual void process_protocol_reset();
   esphome::climate::ClimateTraits traits() override;
   // Answer handlers
@@ -118,9 +120,13 @@ class HaierClimateBase : public esphome::Component,
     HvacSettings &operator=(const HvacSettings &) = default;
     void reset();
   };
+  struct PendingAction {
+    ActionRequest action;
+    esphome::optional<haier_protocol::HaierMessage> message;
+  }; 
   haier_protocol::ProtocolHandler haier_protocol_;
   ProtocolPhases protocol_phase_;
-  ActionRequest action_request_;
+  esphome::optional<PendingAction> action_request_;
   uint8_t fan_mode_speed_;
   uint8_t other_modes_fan_speed_;
   bool display_status_;
