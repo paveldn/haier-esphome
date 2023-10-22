@@ -31,8 +31,7 @@ const char *HaierClimateBase::phase_to_string_(ProtocolPhases phase) {
       "SENDING_UPDATE_SIGNAL_REQUEST",
       "SENDING_SIGNAL_LEVEL",
       "SENDING_CONTROL",
-      "SENDING_POWER_ON_COMMAND",
-      "SENDING_POWER_OFF_COMMAND",
+      "SENDING_ACTION_COMMAND",
       "UNKNOWN"  // Should be the last!
   };
   static_assert(
@@ -52,7 +51,6 @@ bool check_timeout(std::chrono::steady_clock::time_point now, std::chrono::stead
 HaierClimateBase::HaierClimateBase()
     : haier_protocol_(*this),
       protocol_phase_(ProtocolPhases::SENDING_INIT_1),
-      action_request_(ActionRequest::NO_ACTION),
       display_status_(true),
       health_mode_(false),
       force_send_control_(false),
@@ -91,7 +89,7 @@ void HaierClimateBase::reset_to_idle_() {
     this->current_hvac_settings_.reset();
   this->forced_request_status_ = true;
   this->set_phase(ProtocolPhases::IDLE);
-  this->action_request_ = ActionRequest::NO_ACTION;
+  this->action_request_.reset();
 }
 
 bool HaierClimateBase::is_message_interval_exceeded_(std::chrono::steady_clock::time_point now) {
@@ -146,11 +144,11 @@ void HaierClimateBase::set_health_mode(bool state) {
   }
 }
 
-void HaierClimateBase::send_power_on_command() { this->action_request_ = ActionRequest::TURN_POWER_ON; }
+void HaierClimateBase::send_power_on_command() { this->action_request_ = PendingAction({ActionRequest::TURN_POWER_ON}); }
 
-void HaierClimateBase::send_power_off_command() { this->action_request_ = ActionRequest::TURN_POWER_OFF; }
+void HaierClimateBase::send_power_off_command() { this->action_request_ = PendingAction({ActionRequest::TURN_POWER_OFF}); }
 
-void HaierClimateBase::toggle_power() { this->action_request_ = ActionRequest::TOGGLE_POWER; }
+void HaierClimateBase::toggle_power() { this->action_request_ = PendingAction({ActionRequest::TOGGLE_POWER}); }
 
 void HaierClimateBase::set_supported_swing_modes(const std::set<climate::ClimateSwingMode> &modes) {
   this->traits_.set_supported_swing_modes(modes);
@@ -173,6 +171,10 @@ void HaierClimateBase::set_supported_presets(const std::set<climate::ClimatePres
 }
 
 void HaierClimateBase::set_send_wifi(bool send_wifi) { this->send_wifi_signal_ = send_wifi; }
+
+void HaierClimateBase::send_custom_command(const haier_protocol::HaierMessage& message) {
+  this->action_request_ = PendingAction({ActionRequest::SEND_CUSTOM_COMMAND, message});
+}
 
 haier_protocol::HandlerError HaierClimateBase::answer_preprocess_(
     haier_protocol::FrameType request_message_type, haier_protocol::FrameType expected_request_message_type,
@@ -248,15 +250,15 @@ void HaierClimateBase::loop() {
       return;
     }
   };
-  if ((this->protocol_phase_ == ProtocolPhases::IDLE) ||
-      (!this->haier_protocol_.is_waiting_for_answer() &&
-       ((this->protocol_phase_ == ProtocolPhases::SENDING_STATUS_REQUEST) ||
+  if ((!this->haier_protocol_.is_waiting_for_answer()) && ( 
+        (this->protocol_phase_ == ProtocolPhases::IDLE) ||
+        (this->protocol_phase_ == ProtocolPhases::SENDING_STATUS_REQUEST) ||
         (this->protocol_phase_ == ProtocolPhases::SENDING_UPDATE_SIGNAL_REQUEST) ||
-        (this->protocol_phase_ == ProtocolPhases::SENDING_SIGNAL_LEVEL)))) {
+        (this->protocol_phase_ == ProtocolPhases::SENDING_SIGNAL_LEVEL))) {
     // If control message or action is pending we should send it ASAP unless we are in initialisation
     // procedure or waiting for an answer
-    if (this->action_request_ != ActionRequest::NO_ACTION) {
-      this->process_pending_action();
+    if (this->action_request_.has_value() && this->prepare_pending_action()) {
+      this->set_phase(ProtocolPhases::SENDING_ACTION_COMMAND);
     } else if (this->next_hvac_settings_.valid || this->force_send_control_) {
       ESP_LOGV(TAG, "Control packet is pending...");
       this->set_phase(ProtocolPhases::SENDING_CONTROL);
@@ -287,27 +289,27 @@ void HaierClimateBase::process_protocol_reset() {
   this->set_phase(ProtocolPhases::SENDING_INIT_1);
 }
 
-void HaierClimateBase::process_pending_action() {
-  ActionRequest request = this->action_request_;
-  if (this->action_request_ == ActionRequest::TOGGLE_POWER) {
-    request = this->mode == CLIMATE_MODE_OFF ? ActionRequest::TURN_POWER_ON : ActionRequest::TURN_POWER_OFF;
-  }
-  switch (request) {
-    case ActionRequest::TURN_POWER_ON:
-      this->set_phase(ProtocolPhases::SENDING_POWER_ON_COMMAND);
-      break;
-    case ActionRequest::TURN_POWER_OFF:
-      this->set_phase(ProtocolPhases::SENDING_POWER_OFF_COMMAND);
-      break;
-    case ActionRequest::TOGGLE_POWER:
-    case ActionRequest::NO_ACTION:
-      // shouldn't get here, do nothing
-      break;
-    default:
-      ESP_LOGW(TAG, "Unsupported action: %d", (uint8_t) this->action_request_);
-      break;
-  }
-  this->action_request_ = ActionRequest::NO_ACTION;
+bool HaierClimateBase::prepare_pending_action() {
+  if (this->action_request_.has_value()) {
+    switch (this->action_request_.value().action) {
+      case ActionRequest::SEND_CUSTOM_COMMAND:
+        return true;
+      case ActionRequest::TURN_POWER_ON:
+        this->action_request_.value().message = this->get_power_message(true);
+        return true;
+      case ActionRequest::TURN_POWER_OFF:
+        this->action_request_.value().message = this->get_power_message(false);
+        return true;
+      case ActionRequest::TOGGLE_POWER:
+        this->action_request_.value().message = this->get_power_message(this->mode == ClimateMode::CLIMATE_MODE_OFF);
+        return true;
+      default:
+        ESP_LOGW(TAG, "Unsupported action: %d", (uint8_t) this->action_request_.value().action);
+        this->action_request_.reset();
+        return false;
+    }
+  } else
+    return false;
 }
 
 ClimateTraits HaierClimateBase::traits() { return traits_; }

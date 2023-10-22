@@ -32,7 +32,7 @@ haier_protocol::HandlerError Smartair2Climate::status_handler_(haier_protocol::F
     if (result != haier_protocol::HandlerError::HANDLER_OK) {
       ESP_LOGW(TAG, "Error %d while parsing Status packet", (int) result);
       this->reset_phase_();
-      this->action_request_ = ActionRequest::NO_ACTION;
+      this->action_request_.reset();
       this->force_send_control_ = false;
     } else {
       if (data_size >= sizeof(smartair2_protocol::HaierPacketControl) + 2) {
@@ -41,23 +41,28 @@ haier_protocol::HandlerError Smartair2Climate::status_handler_(haier_protocol::F
         ESP_LOGW(TAG, "Status packet too small: %d (should be >= %d)", data_size,
                  sizeof(smartair2_protocol::HaierPacketControl));
       }
-      if (this->protocol_phase_ == ProtocolPhases::SENDING_FIRST_STATUS_REQUEST) {
-        ESP_LOGI(TAG, "First HVAC status received");
-        this->set_phase(ProtocolPhases::IDLE);
-      } else if ((this->protocol_phase_ == ProtocolPhases::SENDING_STATUS_REQUEST) ||
-                 (this->protocol_phase_ == ProtocolPhases::SENDING_POWER_ON_COMMAND) ||
-                 (this->protocol_phase_ == ProtocolPhases::SENDING_POWER_OFF_COMMAND)) {
-        this->set_phase(ProtocolPhases::IDLE);
-      } else if (this->protocol_phase_ == ProtocolPhases::SENDING_CONTROL) {
-        this->set_phase(ProtocolPhases::IDLE);
-        this->force_send_control_ = false;
-        if (this->current_hvac_settings_.valid)
-          this->current_hvac_settings_.reset();
+      switch (this->protocol_phase_) {
+        case ProtocolPhases::SENDING_FIRST_STATUS_REQUEST:
+          ESP_LOGI(TAG, "First HVAC status received");
+          this->set_phase(ProtocolPhases::IDLE);
+          break;
+        case ProtocolPhases::SENDING_ACTION_COMMAND:
+          // Do nothing, phase will be changed in process_phase
+          break;
+        case ProtocolPhases::SENDING_STATUS_REQUEST:
+          this->set_phase(ProtocolPhases::IDLE);
+          break;
+        case ProtocolPhases::SENDING_CONTROL:
+          this->set_phase(ProtocolPhases::IDLE);
+          this->force_send_control_ = false;
+          if (this->current_hvac_settings_.valid)
+            this->current_hvac_settings_.reset();
+          break;
       }
     }
     return result;
   } else {
-    this->action_request_ = ActionRequest::NO_ACTION;
+    this->action_request_.reset();
     this->force_send_control_ = false;
     this->reset_phase_();
     return result;
@@ -173,14 +178,20 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
                             CONTROL_MESSAGE_RETRIES_INTERVAL);
       }
       break;
-    case ProtocolPhases::SENDING_POWER_ON_COMMAND:
-    case ProtocolPhases::SENDING_POWER_OFF_COMMAND:
-      if (this->can_send_message() && this->is_message_interval_exceeded_(now)) {
-        haier_protocol::HaierMessage power_cmd(
-            haier_protocol::FrameType::CONTROL,
-            this->protocol_phase_ == ProtocolPhases::SENDING_POWER_ON_COMMAND ? 0x4D02 : 0x4D03);
-        this->send_message_(power_cmd, this->use_crc_);
-      }
+    case ProtocolPhases::SENDING_ACTION_COMMAND:
+        if (this->action_request_.has_value()) {
+          if (this->action_request_.value().message.has_value()) {
+            this->send_message_(this->action_request_.value().message.value(), this->use_crc_);
+            this->action_request_.value().message.reset();
+          } else {
+            // Message already sent, reseting request and return to idle
+            this->action_request_.reset();
+            this->set_phase(ProtocolPhases::IDLE);
+          }
+        } else {
+          ESP_LOGW(TAG, "SENDING_ACTION_COMMAND phase without action request!");
+          this->set_phase(ProtocolPhases::IDLE);
+        }
       break;
     case ProtocolPhases::IDLE: {
       if (this->forced_request_status_ || this->is_status_request_interval_exceeded_(now)) {
@@ -200,6 +211,16 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
                phase_to_string_(this->protocol_phase_), (int) this->protocol_phase_);
       this->set_phase(ProtocolPhases::SENDING_INIT_1);
       break;
+  }
+}
+
+haier_protocol::HaierMessage Smartair2Climate::get_power_message(bool state) {
+  if (state) {
+    static haier_protocol::HaierMessage POWER_ON_MESSAGE(haier_protocol::FrameType::CONTROL, 0x4D02);
+    return POWER_ON_MESSAGE;
+  } else {
+    static haier_protocol::HaierMessage POWER_OFF_MESSAGE(haier_protocol::FrameType::CONTROL, 0x4D03);
+    return POWER_OFF_MESSAGE;
   }
 }
 
