@@ -58,6 +58,8 @@ haier_protocol::HandlerError Smartair2Climate::status_handler_(haier_protocol::F
           if (this->current_hvac_settings_.valid)
             this->current_hvac_settings_.reset();
           break;
+        default:
+          break;
       }
     }
     return result;
