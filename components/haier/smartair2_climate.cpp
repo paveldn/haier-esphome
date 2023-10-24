@@ -181,19 +181,19 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
       }
       break;
     case ProtocolPhases::SENDING_ACTION_COMMAND:
-        if (this->action_request_.has_value()) {
-          if (this->action_request_.value().message.has_value()) {
-            this->send_message_(this->action_request_.value().message.value(), this->use_crc_);
-            this->action_request_.value().message.reset();
-          } else {
-            // Message already sent, reseting request and return to idle
-            this->action_request_.reset();
-            this->set_phase(ProtocolPhases::IDLE);
-          }
+      if (this->action_request_.has_value()) {
+        if (this->action_request_.value().message.has_value()) {
+          this->send_message_(this->action_request_.value().message.value(), this->use_crc_);
+          this->action_request_.value().message.reset();
         } else {
-          ESP_LOGW(TAG, "SENDING_ACTION_COMMAND phase without action request!");
+          // Message already sent, reseting request and return to idle
+          this->action_request_.reset();
           this->set_phase(ProtocolPhases::IDLE);
         }
+      } else {
+        ESP_LOGW(TAG, "SENDING_ACTION_COMMAND phase without action request!");
+        this->set_phase(ProtocolPhases::IDLE);
+      }
       break;
     case ProtocolPhases::IDLE: {
       if (this->forced_request_status_ || this->is_status_request_interval_exceeded_(now)) {
@@ -218,11 +218,11 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
 
 haier_protocol::HaierMessage Smartair2Climate::get_power_message(bool state) {
   if (state) {
-    static haier_protocol::HaierMessage POWER_ON_MESSAGE(haier_protocol::FrameType::CONTROL, 0x4D02);
-    return POWER_ON_MESSAGE;
+    static haier_protocol::HaierMessage power_on_message(haier_protocol::FrameType::CONTROL, 0x4D02);
+    return power_on_message;
   } else {
-    static haier_protocol::HaierMessage POWER_OFF_MESSAGE(haier_protocol::FrameType::CONTROL, 0x4D03);
-    return POWER_OFF_MESSAGE;
+    static haier_protocol::HaierMessage power_off_message(haier_protocol::FrameType::CONTROL, 0x4D03);
+    return power_off_message;
   }
 }
 

@@ -97,14 +97,16 @@ CleaningState HonClimate::get_cleaning_status() const { return this->cleaning_st
 void HonClimate::start_self_cleaning() {
   if (this->cleaning_status_ == CleaningState::NO_CLEANING) {
     ESP_LOGI(TAG, "Sending self cleaning start request");
-    this->action_request_= PendingAction({ActionRequest::START_SELF_CLEAN, esphome::optional<haier_protocol::HaierMessage>()});
+    this->action_request_ =
+        PendingAction({ActionRequest::START_SELF_CLEAN, esphome::optional<haier_protocol::HaierMessage>()});
   }
 }
 
 void HonClimate::start_steri_cleaning() {
   if (this->cleaning_status_ == CleaningState::NO_CLEANING) {
     ESP_LOGI(TAG, "Sending steri cleaning start request");
-    this->action_request_ = PendingAction({ActionRequest::START_STERI_CLEAN, esphome::optional<haier_protocol::HaierMessage>()});
+    this->action_request_ =
+        PendingAction({ActionRequest::START_STERI_CLEAN, esphome::optional<haier_protocol::HaierMessage>()});
   }
 }
 
@@ -396,20 +398,20 @@ void HonClimate::process_phase(std::chrono::steady_clock::time_point now) {
                             CONTROL_MESSAGE_RETRIES_INTERVAL);
       }
       break;
-      case ProtocolPhases::SENDING_ACTION_COMMAND:
-        if (this->action_request_.has_value()) {
-          if (this->action_request_.value().message.has_value()) {
-            this->send_message_(this->action_request_.value().message.value(), this->use_crc_);
-            this->action_request_.value().message.reset();
-          } else {
-            // Message already sent, reseting request and return to idle
-            this->action_request_.reset();
-            this->set_phase(ProtocolPhases::IDLE);
-          }
+    case ProtocolPhases::SENDING_ACTION_COMMAND:
+      if (this->action_request_.has_value()) {
+        if (this->action_request_.value().message.has_value()) {
+          this->send_message_(this->action_request_.value().message.value(), this->use_crc_);
+          this->action_request_.value().message.reset();
         } else {
-          ESP_LOGW(TAG, "SENDING_ACTION_COMMAND phase without action request!");
+          // Message already sent, reseting request and return to idle
+          this->action_request_.reset();
           this->set_phase(ProtocolPhases::IDLE);
         }
+      } else {
+        ESP_LOGW(TAG, "SENDING_ACTION_COMMAND phase without action request!");
+        this->set_phase(ProtocolPhases::IDLE);
+      }
       break;
     case ProtocolPhases::IDLE: {
       if (this->forced_request_status_ || this->is_status_request_interval_exceeded_(now)) {
@@ -434,16 +436,15 @@ void HonClimate::process_phase(std::chrono::steady_clock::time_point now) {
 
 haier_protocol::HaierMessage HonClimate::get_power_message(bool state) {
   if (state) {
-    static haier_protocol::HaierMessage POWER_ON_MESSAGE(haier_protocol::FrameType::CONTROL,
-                                                 ((uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER) + 1,
-                                                 std::initializer_list<uint8_t>({0x00, 0x01}).begin(), 2);
-    return POWER_ON_MESSAGE;
+    static haier_protocol::HaierMessage power_on_message(
+        haier_protocol::FrameType::CONTROL, ((uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER) + 1,
+        std::initializer_list<uint8_t>({0x00, 0x01}).begin(), 2);
+    return power_on_message;
   } else {
-    static haier_protocol::HaierMessage POWER_OFF_MESSAGE(haier_protocol::FrameType::CONTROL,
-                                                 ((uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER) + 1,
-                                                 std::initializer_list<uint8_t>({0x00, 0x00}).begin(), 2);
-    return POWER_OFF_MESSAGE;
-
+    static haier_protocol::HaierMessage power_off_message(
+        haier_protocol::FrameType::CONTROL, ((uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER) + 1,
+        std::initializer_list<uint8_t>({0x00, 0x00}).begin(), 2);
+    return power_off_message;
   }
 }
 
@@ -712,7 +713,8 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
       ESP_LOGD(TAG, "Cleaning status change: %d => %d", (uint8_t) this->cleaning_status_, (uint8_t) new_cleaning);
       if (new_cleaning == CleaningState::NO_CLEANING) {
         // Turning AC off after cleaning
-        this->action_request_ = PendingAction({ActionRequest::TURN_POWER_OFF, esphome::optional<haier_protocol::HaierMessage>()});
+        this->action_request_ =
+            PendingAction({ActionRequest::TURN_POWER_OFF, esphome::optional<haier_protocol::HaierMessage>()});
       }
       this->cleaning_status_ = new_cleaning;
     }
@@ -968,38 +970,38 @@ void HonClimate::clear_control_messages_queue_() {
 bool HonClimate::prepare_pending_action() {
   switch (this->action_request_.value().action) {
     case ActionRequest::START_SELF_CLEAN: {
-        uint8_t control_out_buffer[sizeof(hon_protocol::HaierPacketControl)];
-        memcpy(control_out_buffer, this->last_status_message_.get(), sizeof(hon_protocol::HaierPacketControl));
-        hon_protocol::HaierPacketControl *out_data = (hon_protocol::HaierPacketControl *) control_out_buffer;    
-        out_data->self_cleaning_status = 1;
-        out_data->steri_clean = 0;
-        out_data->set_point = 0x06;
-        out_data->vertical_swing_mode = (uint8_t) hon_protocol::VerticalSwingMode::CENTER;
-        out_data->horizontal_swing_mode = (uint8_t) hon_protocol::HorizontalSwingMode::CENTER;
-        out_data->ac_power = 1;
-        out_data->ac_mode = (uint8_t) hon_protocol::ConditioningMode::DRY;
-        out_data->light_status = 0;
-        this->action_request_.value().message = haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
-                                      (uint16_t) hon_protocol::SubcommandsControl::SET_GROUP_PARAMETERS,
-                                      control_out_buffer, sizeof(hon_protocol::HaierPacketControl));
-      }
+      uint8_t control_out_buffer[sizeof(hon_protocol::HaierPacketControl)];
+      memcpy(control_out_buffer, this->last_status_message_.get(), sizeof(hon_protocol::HaierPacketControl));
+      hon_protocol::HaierPacketControl *out_data = (hon_protocol::HaierPacketControl *) control_out_buffer;
+      out_data->self_cleaning_status = 1;
+      out_data->steri_clean = 0;
+      out_data->set_point = 0x06;
+      out_data->vertical_swing_mode = (uint8_t) hon_protocol::VerticalSwingMode::CENTER;
+      out_data->horizontal_swing_mode = (uint8_t) hon_protocol::HorizontalSwingMode::CENTER;
+      out_data->ac_power = 1;
+      out_data->ac_mode = (uint8_t) hon_protocol::ConditioningMode::DRY;
+      out_data->light_status = 0;
+      this->action_request_.value().message = haier_protocol::HaierMessage(
+          haier_protocol::FrameType::CONTROL, (uint16_t) hon_protocol::SubcommandsControl::SET_GROUP_PARAMETERS,
+          control_out_buffer, sizeof(hon_protocol::HaierPacketControl));
+    }
       return true;
     case ActionRequest::START_STERI_CLEAN: {
-        uint8_t control_out_buffer[sizeof(hon_protocol::HaierPacketControl)];
-        memcpy(control_out_buffer, this->last_status_message_.get(), sizeof(hon_protocol::HaierPacketControl));
-        hon_protocol::HaierPacketControl *out_data = (hon_protocol::HaierPacketControl *) control_out_buffer;    
-        out_data->self_cleaning_status = 0;
-        out_data->steri_clean = 1;
-        out_data->set_point = 0x06;
-        out_data->vertical_swing_mode = (uint8_t) hon_protocol::VerticalSwingMode::CENTER;
-        out_data->horizontal_swing_mode = (uint8_t) hon_protocol::HorizontalSwingMode::CENTER;
-        out_data->ac_power = 1;
-        out_data->ac_mode = (uint8_t) hon_protocol::ConditioningMode::DRY;
-        out_data->light_status = 0;
-        this->action_request_.value().message = haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
-                                      (uint16_t) hon_protocol::SubcommandsControl::SET_GROUP_PARAMETERS,
-                                      control_out_buffer, sizeof(hon_protocol::HaierPacketControl));
-      }
+      uint8_t control_out_buffer[sizeof(hon_protocol::HaierPacketControl)];
+      memcpy(control_out_buffer, this->last_status_message_.get(), sizeof(hon_protocol::HaierPacketControl));
+      hon_protocol::HaierPacketControl *out_data = (hon_protocol::HaierPacketControl *) control_out_buffer;
+      out_data->self_cleaning_status = 0;
+      out_data->steri_clean = 1;
+      out_data->set_point = 0x06;
+      out_data->vertical_swing_mode = (uint8_t) hon_protocol::VerticalSwingMode::CENTER;
+      out_data->horizontal_swing_mode = (uint8_t) hon_protocol::HorizontalSwingMode::CENTER;
+      out_data->ac_power = 1;
+      out_data->ac_mode = (uint8_t) hon_protocol::ConditioningMode::DRY;
+      out_data->light_status = 0;
+      this->action_request_.value().message = haier_protocol::HaierMessage(
+          haier_protocol::FrameType::CONTROL, (uint16_t) hon_protocol::SubcommandsControl::SET_GROUP_PARAMETERS,
+          control_out_buffer, sizeof(hon_protocol::HaierPacketControl));
+    }
       return true;
     default:
       return HaierClimateBase::prepare_pending_action();

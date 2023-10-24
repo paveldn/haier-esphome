@@ -144,11 +144,20 @@ void HaierClimateBase::set_health_mode(bool state) {
   }
 }
 
-void HaierClimateBase::send_power_on_command() { this->action_request_ = PendingAction({ActionRequest::TURN_POWER_ON, esphome::optional<haier_protocol::HaierMessage>()}); }
+void HaierClimateBase::send_power_on_command() {
+  this->action_request_ =
+      PendingAction({ActionRequest::TURN_POWER_ON, esphome::optional<haier_protocol::HaierMessage>()});
+}
 
-void HaierClimateBase::send_power_off_command() { this->action_request_ = PendingAction({ActionRequest::TURN_POWER_OFF, esphome::optional<haier_protocol::HaierMessage>()}); }
+void HaierClimateBase::send_power_off_command() {
+  this->action_request_ =
+      PendingAction({ActionRequest::TURN_POWER_OFF, esphome::optional<haier_protocol::HaierMessage>()});
+}
 
-void HaierClimateBase::toggle_power() { this->action_request_ = PendingAction({ActionRequest::TOGGLE_POWER, esphome::optional<haier_protocol::HaierMessage>()}); }
+void HaierClimateBase::toggle_power() {
+  this->action_request_ =
+      PendingAction({ActionRequest::TOGGLE_POWER, esphome::optional<haier_protocol::HaierMessage>()});
+}
 
 void HaierClimateBase::set_supported_swing_modes(const std::set<climate::ClimateSwingMode> &modes) {
   this->traits_.set_supported_swing_modes(modes);
@@ -172,7 +181,7 @@ void HaierClimateBase::set_supported_presets(const std::set<climate::ClimatePres
 
 void HaierClimateBase::set_send_wifi(bool send_wifi) { this->send_wifi_signal_ = send_wifi; }
 
-void HaierClimateBase::send_custom_command(const haier_protocol::HaierMessage& message) {
+void HaierClimateBase::send_custom_command(const haier_protocol::HaierMessage &message) {
   this->action_request_ = PendingAction({ActionRequest::SEND_CUSTOM_COMMAND, message});
 }
 
@@ -250,11 +259,11 @@ void HaierClimateBase::loop() {
       return;
     }
   };
-  if ((!this->haier_protocol_.is_waiting_for_answer()) && ( 
-        (this->protocol_phase_ == ProtocolPhases::IDLE) ||
-        (this->protocol_phase_ == ProtocolPhases::SENDING_STATUS_REQUEST) ||
-        (this->protocol_phase_ == ProtocolPhases::SENDING_UPDATE_SIGNAL_REQUEST) ||
-        (this->protocol_phase_ == ProtocolPhases::SENDING_SIGNAL_LEVEL))) {
+  if ((!this->haier_protocol_.is_waiting_for_answer()) &&
+      ((this->protocol_phase_ == ProtocolPhases::IDLE) ||
+       (this->protocol_phase_ == ProtocolPhases::SENDING_STATUS_REQUEST) ||
+       (this->protocol_phase_ == ProtocolPhases::SENDING_UPDATE_SIGNAL_REQUEST) ||
+       (this->protocol_phase_ == ProtocolPhases::SENDING_SIGNAL_LEVEL))) {
     // If control message or action is pending we should send it ASAP unless we are in initialisation
     // procedure or waiting for an answer
     if (this->action_request_.has_value() && this->prepare_pending_action()) {
