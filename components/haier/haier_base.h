@@ -55,8 +55,7 @@ class HaierClimateBase : public esphome::Component,
   bool can_send_message() const { return haier_protocol_.get_outgoing_queue_size() == 0; };
   void set_answer_timeout(uint32_t timeout);
   void set_send_wifi(bool send_wifi);
-  void send_custom_command(const haier_protocol::HaierMessage& message);
-  //void send_custom_command(haier_protocol::HaierMessage&& message);
+  void send_custom_command(const haier_protocol::HaierMessage &message);
 
  protected:
   enum class ProtocolPhases {
@@ -123,7 +122,7 @@ class HaierClimateBase : public esphome::Component,
   struct PendingAction {
     ActionRequest action;
     esphome::optional<haier_protocol::HaierMessage> message;
-  }; 
+  };
   haier_protocol::ProtocolHandler haier_protocol_;
   ProtocolPhases protocol_phase_;
   esphome::optional<PendingAction> action_request_;
