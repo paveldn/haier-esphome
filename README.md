@@ -142,7 +142,10 @@ climate:
 - **name (Required, string):** The name of the climate device
 - **wifi_signal (Optional, boolean):** If true - send wifi signal level to AC (Olny for devices that support this feature)
 - **beeper (Optional, boolean):** (supported only by hOn) Can be used to disable beeping on commands from AC
-- **answer_timeout (Optional, [Time](https://esphome.io/guides/configuration-types.html#config-time)):** Can be used to change default answer timeout. Can help in case AC takes longer to answer requests (some Candy models).
+- **answer_timeout (Optional, [Time](https://esphome.io/guides/configuration-types.html#config-time)):** Can be used to change default answer timeout. It helps in case AC takes longer to answer requests.
+- **alternative_swing_control (Optional, boolean):** (supported by smartAir2 only) If true - use alternative values to control swing mode. Use only if the original control method is not working for your AC.
+- **control_packet_size (Optional, int):** (supported only by hOn) Define the size of the control packet. Can help with some newer models of ACs that use bigger packets. Default value: 10.
+- **control_method (Optional, list):** (supported only by hOn) Defines control method (should be supported by AC). Supported values: monitor_only - no control, just monitor status, set_group_parameters - set all AC parameters with one command (default method), set_single_parameter - set each parameter individually (this method is supported by some new ceiling ACs like AD71S2SM3FA) 
 - **outdoor_temperature (Optional):** (supported only by hOn) Temperature sensor for outdoor temperature
   - **name (Required, string):** The name of the sensor.
   - **id (Optional, [ID](https://esphome.io/guides/configuration-types.html#config-id)):** ID of the sensor, can be used for code generation
