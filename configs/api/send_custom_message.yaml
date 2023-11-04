@@ -1,0 +1,21 @@
+api:
+  services:
+    - service: send_custom_message
+      variables:
+        message_type: int
+        message_data: int[]
+      then:
+        - lambda: |-
+            if ((message_type < 0) || (message_type > 255)) {
+              ESP_LOGE("send_custom_command", "Wrong custom message type (should be byte)");
+              return;  
+            }
+            if (message_data.size() == 0) {
+              id(${device_id}).send_custom_command(haier_protocol::HaierMessage((haier_protocol::FrameType) message_type));
+            } else {
+              size_t sz = message_data.size();
+              std::unique_ptr<uint8_t[]> msg_buffer(new uint8_t [sz]); 
+              for (unsigned int i = 0; i < sz; i++)
+                msg_buffer[i] = message_data[i];
+              id(${device_id}).send_custom_command(haier_protocol::HaierMessage((haier_protocol::FrameType) message_type, msg_buffer.get(), sz));
+            }
