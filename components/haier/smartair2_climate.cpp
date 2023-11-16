@@ -343,19 +343,28 @@ haier_protocol::HaierMessage Smartair2Climate::get_control_message() {
     } else if (climate_control.preset.has_value()) {
       switch (climate_control.preset.value()) {
         case CLIMATE_PRESET_NONE:
+          out_data->ten_degree = 0;
           out_data->turbo_mode = 0;
           out_data->quiet_mode = 0;
           break;
         case CLIMATE_PRESET_BOOST:
+          out_data->ten_degree = 0;
           out_data->turbo_mode = 1;
           out_data->quiet_mode = 0;
           break;
         case CLIMATE_PRESET_COMFORT:
+          out_data->ten_degree = 0;
           out_data->turbo_mode = 0;
           out_data->quiet_mode = 1;
           break;
+        case CLIMATE_PRESET_AWAY:
+          out_data->ten_degree = 1;
+          out_data->turbo_mode = 0;
+          out_data->quiet_mode = 0;
+          break;
         default:
           ESP_LOGE("Control", "Unsupported preset");
+          out_data->ten_degree = 0;
           out_data->turbo_mode = 0;
           out_data->quiet_mode = 0;
           break;
@@ -381,6 +390,8 @@ haier_protocol::HandlerError Smartair2Climate::process_status_message_(const uin
       this->preset = CLIMATE_PRESET_BOOST;
     } else if (packet.control.quiet_mode != 0) {
       this->preset = CLIMATE_PRESET_COMFORT;
+    } else if (packet.control.ten_degree != 0) {
+      this->preset = CLIMATE_PRESET_AWAY;
     } else {
       this->preset = CLIMATE_PRESET_NONE;
     }
