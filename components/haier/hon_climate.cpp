@@ -573,8 +573,7 @@ haier_protocol::HaierMessage HonClimate::get_control_message() {
           out_data->quiet_mode = 0;
           out_data->fast_mode = 0;
           out_data->sleep_mode = 0;
-          // 10 degrees allowed only in heat mode
-          out_data->ten_degree = (this->mode == CLIMATE_MODE_HEAT) ? 1 : 0;
+          out_data->ten_degree = 1;
           break;
         case CLIMATE_PRESET_SLEEP:
           out_data->quiet_mode = 0;
@@ -922,7 +921,7 @@ void HonClimate::fill_control_messages_queue_() {
         case CLIMATE_PRESET_AWAY:
           quiet_mode_buf[1] = 0x00;
           fast_mode_buf[1] = 0x00;
-          away_mode_buf[1] = (this->mode == CLIMATE_MODE_HEAT) ? 0x01 : 0x00;
+          away_mode_buf[1] = 0x01;
           break;
         default:
           ESP_LOGE("Control", "Unsupported preset");

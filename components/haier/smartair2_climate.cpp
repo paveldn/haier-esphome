@@ -358,8 +358,7 @@ haier_protocol::HaierMessage Smartair2Climate::get_control_message() {
           out_data->quiet_mode = 1;
           break;
         case CLIMATE_PRESET_AWAY:
-          // Only allowed in heat mode
-          out_data->ten_degree = (this->mode == CLIMATE_MODE_HEAT) ? 1 : 0;
+          out_data->ten_degree = 1;
           out_data->turbo_mode = 0;
           out_data->quiet_mode = 0;
           break;
