@@ -1,6 +1,6 @@
 # ESPHome Haier component
 
-This is an implementation of the ESPHoime component to control HVAC on the base of the SmartAir2 and hOn Haier protocols (AC that is controlled by the hOn or SmartAir2 application).
+This is an implementation of the ESPHome component to control HVAC on the base of the SmartAir2 and hOn Haier protocols (AC that is controlled by the hOn or SmartAir2 application).
 
 ## Short description
 
