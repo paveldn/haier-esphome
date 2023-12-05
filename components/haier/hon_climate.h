@@ -43,6 +43,11 @@ class HonClimate : public HaierClimateBase {
   void set_beeper_state(bool state);
   bool get_beeper_state() const;
   void set_outdoor_temperature_sensor(esphome::sensor::Sensor *sensor);
+  void set_indoor_coil_temperature_sensor(esphome::sensor::Sensor *sensor);
+  void set_outdoor_coil_temperature_sensor(esphome::sensor::Sensor *sensor);
+  void set_outdoor_defrost_temperature_sensor(esphome::sensor::Sensor *sensor);
+  void set_outdoor_in_air_temperature_sensor(esphome::sensor::Sensor *sensor);
+  void set_outdoor_out_air_temperature_sensor(esphome::sensor::Sensor *sensor);
   AirflowVerticalDirection get_vertical_airflow() const;
   void set_vertical_airflow(AirflowVerticalDirection direction);
   AirflowHorizontalDirection get_horizontal_airflow() const;
@@ -64,6 +69,7 @@ class HonClimate : public HaierClimateBase {
   haier_protocol::HaierMessage get_power_message(bool state) override;
   bool prepare_pending_action() override;
   void process_protocol_reset() override;
+  bool should_get_big_data_();
 
   // Answers handlers
   haier_protocol::HandlerError get_device_version_answer_handler_(haier_protocol::FrameType request_type,
@@ -106,7 +112,12 @@ class HonClimate : public HaierClimateBase {
   uint8_t active_alarms_[8];
   int extra_control_packet_bytes_;
   HonControlMethod control_method_;
-  esphome::sensor::Sensor *outdoor_sensor_;
+  esphome::sensor::Sensor *outdoor_temperature_sensor_{nullptr};
+  esphome::sensor::Sensor *indoor_coil_temperature_sensor_{nullptr};
+  esphome::sensor::Sensor *outdoor_coil_temperature_sensor_{nullptr};
+  esphome::sensor::Sensor *outdoor_defrost_temperature_sensor_{nullptr};
+  esphome::sensor::Sensor *outdoor_in_air_temperature_sensor_{nullptr};
+  esphome::sensor::Sensor *outdoor_out_air_temperature_sensor_{nullptr};
   std::queue<haier_protocol::HaierMessage> control_messages_queue_;
   CallbackManager<void(uint8_t, const char *)> alarm_start_callback_{};
   CallbackManager<void(uint8_t, const char *)> alarm_end_callback_{};

@@ -22,7 +22,10 @@ from esphome.const import (
     CONF_VISUAL,
     CONF_WIFI,
     DEVICE_CLASS_TEMPERATURE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+    ICON_HEATING_COIL,
     ICON_THERMOMETER,
+    ICON_WEATHER_WINDY,
     STATE_CLASS_MEASUREMENT,
     UNIT_CELSIUS,
 )
@@ -50,11 +53,17 @@ CONF_CONTROL_METHOD = "control_method"
 CONF_CONTROL_PACKET_SIZE = "control_packet_size"
 CONF_DISPLAY = "display"
 CONF_HORIZONTAL_AIRFLOW = "horizontal_airflow"
-CONF_ON_ALARM_START = "on_alarm_start"
+CONF_INDOOR_COIL_TEMPERATURE = "indoor_coil_temperature"
 CONF_ON_ALARM_END = "on_alarm_end"
+CONF_ON_ALARM_START = "on_alarm_start"
+CONF_OUTDOOR_COIL_TEMPERATURE = "outdoor_coil_temperature"
+CONF_OUTDOOR_DEFROST_TEMPERATURE = "outdoor_defrost_temperature"
+CONF_OUTDOOR_IN_AIR_TEMPERATURE = "outdoor_in_air_temperature"
+CONF_OUTDOOR_OUT_AIR_TEMPERATURE = "outdoor_out_air_temperature"
 CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
 CONF_VERTICAL_AIRFLOW = "vertical_airflow"
 CONF_WIFI_SIGNAL = "wifi_signal"
+ICON_SNOWFLAKE_THERMOMETER = "mdi:snowflake-thermometer"
 
 PROTOCOL_HON = "HON"
 PROTOCOL_SMARTAIR2 = "SMARTAIR2"
@@ -260,6 +269,46 @@ CONFIG_SCHEMA = cv.All(
                             ),
                         }
                     ),
+                    cv.Optional(CONF_INDOOR_COIL_TEMPERATURE): sensor.sensor_schema(
+                        unit_of_measurement=UNIT_CELSIUS,
+                        icon=ICON_HEATING_COIL,
+                        accuracy_decimals=0,
+                        device_class=DEVICE_CLASS_TEMPERATURE,
+                        state_class=STATE_CLASS_MEASUREMENT,
+                        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+                    ),
+                    cv.Optional(CONF_OUTDOOR_COIL_TEMPERATURE): sensor.sensor_schema(
+                        unit_of_measurement=UNIT_CELSIUS,
+                        icon=ICON_HEATING_COIL,
+                        accuracy_decimals=0,
+                        device_class=DEVICE_CLASS_TEMPERATURE,
+                        state_class=STATE_CLASS_MEASUREMENT,
+                        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+                    ),
+                    cv.Optional(CONF_OUTDOOR_DEFROST_TEMPERATURE): sensor.sensor_schema(
+                        unit_of_measurement=UNIT_CELSIUS,
+                        icon=ICON_SNOWFLAKE_THERMOMETER,
+                        accuracy_decimals=0,
+                        device_class=DEVICE_CLASS_TEMPERATURE,
+                        state_class=STATE_CLASS_MEASUREMENT,
+                        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+                    ),              
+                    cv.Optional(CONF_OUTDOOR_IN_AIR_TEMPERATURE): sensor.sensor_schema(
+                        unit_of_measurement=UNIT_CELSIUS,
+                        icon=ICON_WEATHER_WINDY,
+                        accuracy_decimals=0,
+                        device_class=DEVICE_CLASS_TEMPERATURE,
+                        state_class=STATE_CLASS_MEASUREMENT,
+                        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+                    ),         
+                    cv.Optional(CONF_OUTDOOR_OUT_AIR_TEMPERATURE): sensor.sensor_schema(
+                        unit_of_measurement=UNIT_CELSIUS,
+                        icon=ICON_WEATHER_WINDY,
+                        accuracy_decimals=0,
+                        device_class=DEVICE_CLASS_TEMPERATURE,
+                        state_class=STATE_CLASS_MEASUREMENT,
+                        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+                    ),         
                 }
             ),
         },
@@ -466,6 +515,21 @@ async def to_code(config):
     if CONF_OUTDOOR_TEMPERATURE in config:
         sens = await sensor.new_sensor(config[CONF_OUTDOOR_TEMPERATURE])
         cg.add(var.set_outdoor_temperature_sensor(sens))
+    if CONF_INDOOR_COIL_TEMPERATURE in config:
+        sens = await sensor.new_sensor(config[CONF_INDOOR_COIL_TEMPERATURE])
+        cg.add(var.set_indoor_coil_temperature_sensor(sens))
+    if CONF_OUTDOOR_COIL_TEMPERATURE in config:
+        sens = await sensor.new_sensor(config[CONF_OUTDOOR_COIL_TEMPERATURE])
+        cg.add(var.set_outdoor_coil_temperature_sensor(sens))
+    if CONF_OUTDOOR_DEFROST_TEMPERATURE in config:
+        sens = await sensor.new_sensor(config[CONF_OUTDOOR_DEFROST_TEMPERATURE])
+        cg.add(var.set_outdoor_defrost_temperature_sensor(sens))
+    if CONF_OUTDOOR_IN_AIR_TEMPERATURE in config:
+        sens = await sensor.new_sensor(config[CONF_OUTDOOR_IN_AIR_TEMPERATURE])
+        cg.add(var.set_outdoor_in_air_temperature_sensor(sens))
+    if CONF_OUTDOOR_OUT_AIR_TEMPERATURE in config:
+        sens = await sensor.new_sensor(config[CONF_OUTDOOR_OUT_AIR_TEMPERATURE])
+        cg.add(var.set_outdoor_out_air_temperature_sensor(sens))
     if CONF_SUPPORTED_MODES in config:
         cg.add(var.set_supported_modes(config[CONF_SUPPORTED_MODES]))
     if CONF_SUPPORTED_SWING_MODES in config:
