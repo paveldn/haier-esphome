@@ -67,16 +67,6 @@ bool HonClimate::get_beeper_state() const { return this->beeper_status_; }
 
 void HonClimate::set_outdoor_temperature_sensor(esphome::sensor::Sensor *sensor) { this->outdoor_temperature_sensor_ = sensor; }
 
-void HonClimate::set_indoor_coil_temperature_sensor(esphome::sensor::Sensor *sensor) { this->indoor_coil_temperature_sensor_ = sensor; }
-
-void HonClimate::set_outdoor_coil_temperature_sensor(esphome::sensor::Sensor *sensor) { this->outdoor_coil_temperature_sensor_ = sensor; }
-
-void HonClimate::set_outdoor_defrost_temperature_sensor(esphome::sensor::Sensor *sensor) { this->outdoor_defrost_temperature_sensor_ = sensor; }
-
-void HonClimate::set_outdoor_in_air_temperature_sensor(esphome::sensor::Sensor *sensor) { this->outdoor_in_air_temperature_sensor_ = sensor; }
-
-void HonClimate::set_outdoor_out_air_temperature_sensor(esphome::sensor::Sensor *sensor) { this->outdoor_out_air_temperature_sensor_ = sensor; }
-
 AirflowVerticalDirection HonClimate::get_vertical_airflow() const { return this->vertical_direction_; };
 
 void HonClimate::set_vertical_airflow(AirflowVerticalDirection direction) {
@@ -723,17 +713,37 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
     if (this->outdoor_out_air_temperature_sensor_ != nullptr) {
       this->outdoor_out_air_temperature_sensor_->publish_state(bd_packet->outdoor_out_air_temperature - 64);
     }
-    ESP_LOGI(TAG, "  Power consumption: %d", bd_packet->power_consumption);
-    ESP_LOGI(TAG, "  Compressor frequency: %d", bd_packet->compressor_frequency);
-    ESP_LOGI(TAG, "  Compressor current: %d", bd_packet->compressor_current);
-    ESP_LOGI(TAG, "  Outdoor fan status: %d", bd_packet->outdoor_fan_status);
-    ESP_LOGI(TAG, "  Compressor status: %d", bd_packet->compressor_status);
-    ESP_LOGI(TAG, "  Defrost status: %d", bd_packet->defrost_status);
-    ESP_LOGI(TAG, "  Compressor status: %d", bd_packet->compressor_status);
-    ESP_LOGI(TAG, "  Indoor fan status: %d", bd_packet->indoor_fan_status);
-    ESP_LOGI(TAG, "  Four way valve status: %d", bd_packet->four_way_valve_status);
-    ESP_LOGI(TAG, "  Indoor electric heating status: %d", bd_packet->indoor_electric_heating_status);
-    ESP_LOGI(TAG, "  Expansion valve open degree: %d", UINT16_BE(bd_packet->expansion_valve_open_degree));
+    if (this->power_sensor_ != nullptr) {
+      this->power_sensor_->publish_state(UINT16_BE(bd_packet->power));
+    }
+    if (this->compressor_frequency_sensor_ != nullptr) {
+      this->compressor_frequency_sensor_->publish_state(bd_packet->compressor_frequency);
+    }
+    if (this->compressor_current_sensor_ != nullptr) {
+      this->compressor_current_sensor_->publish_state(UINT16_BE(bd_packet->compressor_current) / 10.0);
+    }
+    if (this->expansion_valve_open_degree_sensor_ != nullptr) {
+      this->expansion_valve_open_degree_sensor_->publish_state(UINT16_BE(bd_packet->expansion_valve_open_degree) / 4095.0);
+    }
+    #define UPDATE_BINARY_SENSOR(value) {\
+      if (this->value##_binary_sensor_ != nullptr) {\
+        switch (bd_packet->value) {\
+          case 0:\
+          case 1:\
+            this->value##_binary_sensor_->publish_state(bd_packet->value == 1);\
+            break;\
+          default:\
+            break;\
+        }\
+      }\
+    } while (0)
+    UPDATE_BINARY_SENSOR(outdoor_fan_status);
+    UPDATE_BINARY_SENSOR(compressor_status);
+    UPDATE_BINARY_SENSOR(defrost_status);
+    UPDATE_BINARY_SENSOR(indoor_fan_status);
+    UPDATE_BINARY_SENSOR(four_way_valve_status);
+    UPDATE_BINARY_SENSOR(indoor_electric_heating_status);
+    #undef UPDATE_BINARY_SENSOR
   }
   struct {
     hon_protocol::HaierPacketControl control;

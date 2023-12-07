@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include "esphome/components/sensor/sensor.h"
+#include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/core/automation.h"
 #include "haier_base.h"
 
@@ -34,7 +35,22 @@ enum class CleaningState : uint8_t {
 enum class HonControlMethod { MONITOR_ONLY = 0, SET_GROUP_PARAMETERS, SET_SINGLE_PARAMETER };
 
 class HonClimate : public HaierClimateBase {
- public:
+  SUB_SENSOR(indoor_coil_temperature)
+  SUB_SENSOR(outdoor_coil_temperature)
+  SUB_SENSOR(outdoor_defrost_temperature)
+  SUB_SENSOR(outdoor_in_air_temperature)
+  SUB_SENSOR(outdoor_out_air_temperature)
+  SUB_SENSOR(power)
+  SUB_SENSOR(compressor_frequency)
+  SUB_SENSOR(compressor_current)
+  SUB_SENSOR(expansion_valve_open_degree)
+  SUB_BINARY_SENSOR(outdoor_fan_status)
+  SUB_BINARY_SENSOR(defrost_status)
+  SUB_BINARY_SENSOR(compressor_status)
+  SUB_BINARY_SENSOR(indoor_fan_status)
+  SUB_BINARY_SENSOR(four_way_valve_status)
+  SUB_BINARY_SENSOR(indoor_electric_heating_status)
+public:
   HonClimate();
   HonClimate(const HonClimate &) = delete;
   HonClimate &operator=(const HonClimate &) = delete;
@@ -43,11 +59,6 @@ class HonClimate : public HaierClimateBase {
   void set_beeper_state(bool state);
   bool get_beeper_state() const;
   void set_outdoor_temperature_sensor(esphome::sensor::Sensor *sensor);
-  void set_indoor_coil_temperature_sensor(esphome::sensor::Sensor *sensor);
-  void set_outdoor_coil_temperature_sensor(esphome::sensor::Sensor *sensor);
-  void set_outdoor_defrost_temperature_sensor(esphome::sensor::Sensor *sensor);
-  void set_outdoor_in_air_temperature_sensor(esphome::sensor::Sensor *sensor);
-  void set_outdoor_out_air_temperature_sensor(esphome::sensor::Sensor *sensor);
   AirflowVerticalDirection get_vertical_airflow() const;
   void set_vertical_airflow(AirflowVerticalDirection direction);
   AirflowHorizontalDirection get_horizontal_airflow() const;
@@ -113,11 +124,6 @@ class HonClimate : public HaierClimateBase {
   int extra_control_packet_bytes_;
   HonControlMethod control_method_;
   esphome::sensor::Sensor *outdoor_temperature_sensor_{nullptr};
-  esphome::sensor::Sensor *indoor_coil_temperature_sensor_{nullptr};
-  esphome::sensor::Sensor *outdoor_coil_temperature_sensor_{nullptr};
-  esphome::sensor::Sensor *outdoor_defrost_temperature_sensor_{nullptr};
-  esphome::sensor::Sensor *outdoor_in_air_temperature_sensor_{nullptr};
-  esphome::sensor::Sensor *outdoor_out_air_temperature_sensor_{nullptr};
   std::queue<haier_protocol::HaierMessage> control_messages_queue_;
   CallbackManager<void(uint8_t, const char *)> alarm_start_callback_{};
   CallbackManager<void(uint8_t, const char *)> alarm_end_callback_{};

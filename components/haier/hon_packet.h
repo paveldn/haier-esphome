@@ -140,7 +140,7 @@ struct HaierPacketSensors {
 
 struct HaierPacketBigData {
   // 29
-  uint16_t power_consumption; // AC power consumption (0W - 65535W, 1W step)
+  uint8_t power[2]; // AC power consumption (0W - 65535W, 1W step)
   // 31
   uint8_t indoor_coil_temperature;  // 0.5°C step, -20°C offset (0=-20°C)
   // 32
@@ -154,7 +154,7 @@ struct HaierPacketBigData {
   // 36
   uint8_t compressor_frequency; // 1Hz step, 0Hz - 127Hz
   // 37
-  uint16_t compressor_current;  // 0.1A step, 0.0A - 51.1A (0x0000 - 0x01FF)
+  uint8_t compressor_current[2];  // 0.1A step, 0.0A - 51.1A (0x0000 - 0x01FF)
   // 39
   uint8_t outdoor_fan_status : 2; // 0 - off, 1 - on,  2 - information not available
   uint8_t defrost_status : 2; // 0 - off, 1 - on,  2 - information not available
