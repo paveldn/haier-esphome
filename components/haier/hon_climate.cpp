@@ -256,7 +256,9 @@ haier_protocol::HandlerError HonClimate::get_alarm_status_answer_handler_(haier_
       this->set_phase(ProtocolPhases::IDLE);
       return haier_protocol::HandlerError::UNEXPECTED_MESSAGE;
     }
-    memcpy(this->active_alarms_, data + 2, 8);
+    if (data_size < sizeof(active_alarms_) + 2)
+      return haier_protocol::HandlerError::WRONG_MESSAGE_STRUCTURE;
+    this->process_alarm_message_(data, data_size);
     this->set_phase(ProtocolPhases::IDLE);
     return haier_protocol::HandlerError::HANDLER_OK;
   } else {
@@ -291,6 +293,11 @@ void HonClimate::set_handlers() {
       haier_protocol::FrameType::REPORT_NETWORK_STATUS,
       std::bind(&HonClimate::report_network_status_answer_handler_, this, std::placeholders::_1, std::placeholders::_2,
                 std::placeholders::_3, std::placeholders::_4));
+
+  this->haier_protocol_.set_message_handler(haier_protocol::FrameType::ALARM_STATUS, [this] (haier_protocol::FrameType type, const uint8_t* buffer, size_t size) -> haier_protocol::HandlerError {
+    this->haier_protocol_.send_answer(haier_protocol::HaierMessage(haier_protocol::FrameType::CONFIRM));
+    return haier_protocol::HandlerError::HANDLER_OK;
+  } );
 }
 
 void HonClimate::dump_config() {
@@ -602,6 +609,14 @@ haier_protocol::HaierMessage HonClimate::get_control_message() {
   return haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
                                       (uint16_t) hon_protocol::SubcommandsControl::SET_GROUP_PARAMETERS,
                                       control_out_buffer, sizeof(hon_protocol::HaierPacketControl));
+}
+
+void HonClimate::process_alarm_message_(const uint8_t *packet, uint8_t size) {
+  if (size >= sizeof(this->active_alarms_) + 2) {
+    memcpy(this->active_alarms_, packet + 2, sizeof(this->active_alarms_));
+    int alarms_counter = 0;
+    
+  }
 }
 
 haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *packet_buffer, uint8_t size) {

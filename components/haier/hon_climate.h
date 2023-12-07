@@ -79,6 +79,7 @@ class HonClimate : public HaierClimateBase {
                                                                 const uint8_t *data, size_t data_size);
   // Helper functions
   haier_protocol::HandlerError process_status_message_(const uint8_t *packet, uint8_t size);
+  void process_alarm_message_(const uint8_t *packet, uint8_t size);
   void fill_control_messages_queue_();
   void clear_control_messages_queue_();
 
