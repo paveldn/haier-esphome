@@ -110,6 +110,10 @@ void HonClimate::start_steri_cleaning() {
   }
 }
 
+void HonClimate::add_alarm_callback(std::function<void(bool, uint8_t, const char*)> &&callback) {
+  this->alarm_callback_.add(std::move(callback));
+}
+
 haier_protocol::HandlerError HonClimate::get_device_version_answer_handler_(haier_protocol::FrameType request_type,
                                                                             haier_protocol::FrameType message_type,
                                                                             const uint8_t *data, size_t data_size) {
@@ -630,10 +634,13 @@ void HonClimate::process_alarm_message_(const uint8_t *packet, uint8_t size, boo
             if ((packet[2 + i] & alarm_bit) != (this->active_alarms_[i] & alarm_bit)) {
               bool alarm_status = (packet[2 + i] & alarm_bit) != 0;
               int log_level = alarm_status ? ESPHOME_LOG_LEVEL_WARN : ESPHOME_LOG_LEVEL_INFO;
+              const char* alarm_message = alarm_code < esphome::haier::hon_protocol::HON_ALARMS_COUNT ? esphome::haier::hon_protocol::hon_alarm_messages[alarm_code].c_str() : "Unknown";
               esp_log_printf_(log_level, TAG, __LINE__, "Alarm %s (%d): %s",
                               alarm_status ? "activated" : "deactivated",
                               alarm_code,
-                              (alarm_code < esphome::haier::hon_protocol::HON_ALARMS_COUNT ? esphome::haier::hon_protocol::hon_alarm_messages[alarm_code].c_str() : "Unknown"));
+                              alarm_message
+                              );
+              this->alarm_callback_.call(alarm_status, alarm_code, alarm_message);
             }
             alarm_bit <<= 1;
             alarm_code++;

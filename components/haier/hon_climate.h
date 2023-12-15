@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include "esphome/components/sensor/sensor.h"
+#include "esphome/core/automation.h"
 #include "haier_base.h"
 
 namespace esphome {
@@ -52,6 +53,7 @@ class HonClimate : public HaierClimateBase {
   void start_steri_cleaning();
   void set_extra_control_packet_bytes_size(size_t size) { this->extra_control_packet_bytes_ = size; };
   void set_control_method(HonControlMethod method) { this->control_method_ = method; };
+  void add_alarm_callback(std::function<void(bool, uint8_t, const char*)> &&callback);
 
  protected:
   void set_handlers() override;
@@ -105,6 +107,16 @@ class HonClimate : public HaierClimateBase {
   HonControlMethod control_method_;
   esphome::sensor::Sensor *outdoor_sensor_;
   std::queue<haier_protocol::HaierMessage> control_messages_queue_;
+  CallbackManager<void(bool, uint8_t, const char*)> alarm_callback_{};
+};
+
+class HaierAlarmTrigger : public Trigger<bool, uint8_t, const char *> {
+ public:
+  explicit HaierAlarmTrigger(HonClimate *parent) {
+    parent->add_alarm_callback([this](bool status, uint8_t alarm_code, const char *alarm_message) {
+      this->trigger(status, alarm_code, alarm_message);
+    });
+  }
 };
 
 }  // namespace haier

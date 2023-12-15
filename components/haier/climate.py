@@ -18,6 +18,7 @@ from esphome.const import (
     CONF_SUPPORTED_SWING_MODES,
     CONF_TARGET_TEMPERATURE,
     CONF_TEMPERATURE_STEP,
+    CONF_TRIGGER_ID,
     CONF_VISUAL,
     CONF_WIFI,
     DEVICE_CLASS_TEMPERATURE,
@@ -48,6 +49,7 @@ CONF_ANSWER_TIMEOUT = "answer_timeout"
 CONF_CONTROL_PACKET_SIZE = "control_packet_size"
 CONF_DISPLAY = "display"
 CONF_HORIZONTAL_AIRFLOW = "horizontal_airflow"
+CONF_ON_ALARM = "on_alarm"
 CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
 CONF_VERTICAL_AIRFLOW = "vertical_airflow"
 CONF_WIFI_SIGNAL = "wifi_signal"
@@ -120,6 +122,10 @@ SUPPORTED_HON_CONTROL_METHODS = {
     "SET_SINGLE_PARAMETER": HonControlMethod.SET_SINGLE_PARAMETER,
 }
 
+HaierAlarmTrigger = haier_ns.class_(
+    "HaierAlarmTrigger",
+    automation.Trigger.template(cg.bool_, cg.uint8, cg.const_char_ptr),
+)
 
 def validate_visual(config):
     if CONF_VISUAL in config:
@@ -235,6 +241,12 @@ CONFIG_SCHEMA = cv.All(
                         device_class=DEVICE_CLASS_TEMPERATURE,
                         state_class=STATE_CLASS_MEASUREMENT,
                     ),
+                    cv.Optional(CONF_ON_ALARM): automation.validate_automation(
+                      {
+                          cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(HaierAlarmTrigger),
+                      }
+                    ),
+
                 }
             ),
         },
@@ -459,5 +471,10 @@ async def to_code(config):
                 config[CONF_CONTROL_PACKET_SIZE] - PROTOCOL_CONTROL_PACKET_SIZE
             )
         )
+    for conf in config.get(CONF_ON_ALARM, []):
+        trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)
+        await automation.build_automation(trigger, 
+                [(cg.bool_, "status"), (cg.uint8, "alarm_code"), (cg.const_char_ptr, "alarm_message")],
+                conf)
     # https://github.com/paveldn/HaierProtocol
     cg.add_library("pavlodn/HaierProtocol", "0.9.24")
