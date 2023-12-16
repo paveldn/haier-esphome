@@ -110,8 +110,12 @@ void HonClimate::start_steri_cleaning() {
   }
 }
 
-void HonClimate::add_alarm_callback(std::function<void(bool, uint8_t, const char*)> &&callback) {
-  this->alarm_callback_.add(std::move(callback));
+void HonClimate::add_alarm_start_callback(std::function<void(uint8_t, const char*)> &&callback) {
+  this->alarm_start_callback_.add(std::move(callback));
+}
+
+void HonClimate::add_alarm_end_callback(std::function<void(uint8_t, const char*)> &&callback) {
+  this->alarm_end_callback_.add(std::move(callback));
 }
 
 haier_protocol::HandlerError HonClimate::get_device_version_answer_handler_(haier_protocol::FrameType request_type,
@@ -640,7 +644,13 @@ void HonClimate::process_alarm_message_(const uint8_t *packet, uint8_t size, boo
                               alarm_code,
                               alarm_message
                               );
-              this->alarm_callback_.call(alarm_status, alarm_code, alarm_message);
+              if (alarm_status) {
+                this->alarm_start_callback_.call(alarm_code, alarm_message);
+                this->active_alarms_count_++;
+              } else {
+                this->alarm_end_callback_.call(alarm_code, alarm_message);
+                this->active_alarms_count_--;
+              }
             }
             alarm_bit <<= 1;
             alarm_code++;
@@ -649,9 +659,16 @@ void HonClimate::process_alarm_message_(const uint8_t *packet, uint8_t size, boo
         }
         else
           alarm_code += 8;
-    }
-    else
+    } else {
+      this->active_alarms_count_ = 0;
+      static uint8_t nibble_bits_count[] = {
+        0, 1, 1, 2, 1, 2, 2, 3,
+        1, 2, 2, 3, 2, 3, 3, 4
+      };
+      for (uint8_t i = 0; i < sizeof(this->active_alarms_); i++)
+        this->active_alarms_count_ += nibble_bits_count[packet[2 + i] & 0x0F] + nibble_bits_count[packet[2 + i] >> 4];
       memcpy(this->active_alarms_, packet + 2, sizeof(this->active_alarms_));
+    }
   }
 }
 

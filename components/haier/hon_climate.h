@@ -53,7 +53,9 @@ class HonClimate : public HaierClimateBase {
   void start_steri_cleaning();
   void set_extra_control_packet_bytes_size(size_t size) { this->extra_control_packet_bytes_ = size; };
   void set_control_method(HonControlMethod method) { this->control_method_ = method; };
-  void add_alarm_callback(std::function<void(bool, uint8_t, const char*)> &&callback);
+  void add_alarm_start_callback(std::function<void(uint8_t, const char*)> &&callback);
+  void add_alarm_end_callback(std::function<void(uint8_t, const char*)> &&callback);
+  uint8_t get_active_alarms_count() const { return this->active_alarms_count_; }
 
  protected:
   void set_handlers() override;
@@ -107,14 +109,25 @@ class HonClimate : public HaierClimateBase {
   HonControlMethod control_method_;
   esphome::sensor::Sensor *outdoor_sensor_;
   std::queue<haier_protocol::HaierMessage> control_messages_queue_;
-  CallbackManager<void(bool, uint8_t, const char*)> alarm_callback_{};
+  CallbackManager<void(uint8_t, const char*)> alarm_start_callback_{};
+  CallbackManager<void(uint8_t, const char*)> alarm_end_callback_{};
+  uint8_t active_alarms_count_{0};
 };
 
-class HaierAlarmTrigger : public Trigger<bool, uint8_t, const char *> {
+class HaierAlarmStartTrigger : public Trigger<uint8_t, const char *> {
  public:
-  explicit HaierAlarmTrigger(HonClimate *parent) {
-    parent->add_alarm_callback([this](bool status, uint8_t alarm_code, const char *alarm_message) {
-      this->trigger(status, alarm_code, alarm_message);
+  explicit HaierAlarmStartTrigger(HonClimate *parent) {
+    parent->add_alarm_start_callback([this](uint8_t alarm_code, const char *alarm_message) {
+      this->trigger(alarm_code, alarm_message);
+    });
+  }
+};
+
+class HaierAlarmEndTrigger : public Trigger<uint8_t, const char *> {
+ public:
+  explicit HaierAlarmEndTrigger(HonClimate *parent) {
+    parent->add_alarm_end_callback([this](uint8_t alarm_code, const char *alarm_message) {
+      this->trigger(alarm_code, alarm_message);
     });
   }
 };
