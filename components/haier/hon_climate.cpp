@@ -16,6 +16,7 @@ constexpr size_t SIGNAL_LEVEL_UPDATE_INTERVAL_MS = 10000;
 constexpr int PROTOCOL_OUTDOOR_TEMPERATURE_OFFSET = -64;
 constexpr uint8_t CONTROL_MESSAGE_RETRIES = 5;
 constexpr std::chrono::milliseconds CONTROL_MESSAGE_RETRIES_INTERVAL = std::chrono::milliseconds(500);
+constexpr size_t ALARM_STATUS_REQUEST_INTERVAL_MS = 600000;
 
 hon_protocol::VerticalSwingMode get_vertical_swing_mode(AirflowVerticalDirection direction) {
   switch (direction) {
@@ -202,7 +203,7 @@ haier_protocol::HandlerError HonClimate::status_handler_(haier_protocol::FrameTy
       switch (this->protocol_phase_) {
         case ProtocolPhases::SENDING_FIRST_STATUS_REQUEST:
           ESP_LOGI(TAG, "First HVAC status received");
-          this->set_phase(ProtocolPhases::SENDING_ALARM_STATUS_REQUEST);
+          this->set_phase(ProtocolPhases::SENDING_FIRST_ALARM_STATUS_REQUEST);
           break;
         case ProtocolPhases::SENDING_ACTION_COMMAND:
           // Do nothing, phase will be changed in process_phase
@@ -259,7 +260,8 @@ haier_protocol::HandlerError HonClimate::get_alarm_status_answer_handler_(haier_
       this->set_phase(ProtocolPhases::IDLE);
       return haier_protocol::HandlerError::UNSUPPORTED_MESSAGE;
     }
-    if (this->protocol_phase_ != ProtocolPhases::SENDING_ALARM_STATUS_REQUEST) {
+    if ((this->protocol_phase_ != ProtocolPhases::SENDING_FIRST_ALARM_STATUS_REQUEST) &&
+        (this->protocol_phase_ != ProtocolPhases::SENDING_ALARM_STATUS_REQUEST)) {
       // Don't expect this answer now
       this->set_phase(ProtocolPhases::IDLE);
       return haier_protocol::HandlerError::UNEXPECTED_MESSAGE;
@@ -282,6 +284,7 @@ haier_protocol::HandlerError HonClimate::alarm_status_message_handler_(haier_pro
       result = haier_protocol::HandlerError::WRONG_MESSAGE_STRUCTURE;
     this->process_alarm_message_(buffer, size, true);
     this->haier_protocol_.send_answer(haier_protocol::HaierMessage(haier_protocol::FrameType::CONFIRM));
+    this->last_alarm_request_ = std::chrono::steady_clock::now();
     return result;
 }
 
@@ -385,10 +388,12 @@ void HonClimate::process_phase(std::chrono::steady_clock::time_point now) {
       this->set_phase(ProtocolPhases::IDLE);
       break;
 #endif
-    case ProtocolPhases::SENDING_ALARM_STATUS_REQUEST:
+    case ProtocolPhases::SENDING_FIRST_ALARM_STATUS_REQUEST:
+    case ProtocolPhases::SENDING_ALARM_STATUS_REQUEST:    
       if (this->can_send_message() && this->is_message_interval_exceeded_(now)) {
         static const haier_protocol::HaierMessage ALARM_STATUS_REQUEST(haier_protocol::FrameType::GET_ALARM_STATUS);
         this->send_message_(ALARM_STATUS_REQUEST, this->use_crc_);
+        this->last_alarm_request_ = now;
       }
       break;
     case ProtocolPhases::SENDING_CONTROL:
@@ -439,7 +444,9 @@ void HonClimate::process_phase(std::chrono::steady_clock::time_point now) {
       if (this->forced_request_status_ || this->is_status_request_interval_exceeded_(now)) {
         this->set_phase(ProtocolPhases::SENDING_STATUS_REQUEST);
         this->forced_request_status_ = false;
-      }
+      } else if (std::chrono::duration_cast<std::chrono::milliseconds>(now - this->last_alarm_request_).count() >
+                ALARM_STATUS_REQUEST_INTERVAL_MS)
+        this->set_phase(ProtocolPhases::SENDING_ALARM_STATUS_REQUEST);
 #ifdef USE_WIFI
       else if (this->send_wifi_signal_ &&
                (std::chrono::duration_cast<std::chrono::milliseconds>(now - this->last_signal_request_).count() >
@@ -638,7 +645,7 @@ void HonClimate::process_alarm_message_(const uint8_t *packet, uint8_t size, boo
             if ((packet[2 + i] & alarm_bit) != (this->active_alarms_[i] & alarm_bit)) {
               bool alarm_status = (packet[2 + i] & alarm_bit) != 0;
               int log_level = alarm_status ? ESPHOME_LOG_LEVEL_WARN : ESPHOME_LOG_LEVEL_INFO;
-              const char* alarm_message = alarm_code < esphome::haier::hon_protocol::HON_ALARMS_COUNT ? esphome::haier::hon_protocol::hon_alarm_messages[alarm_code].c_str() : "Unknown";
+              const char* alarm_message = alarm_code < esphome::haier::hon_protocol::HON_ALARM_COUNT ? esphome::haier::hon_protocol::hon_alarm_messages[alarm_code].c_str() : "Unknown";
               esp_log_printf_(log_level, TAG, __LINE__, "Alarm %s (%d): %s",
                               alarm_status ? "activated" : "deactivated",
                               alarm_code,
@@ -646,10 +653,10 @@ void HonClimate::process_alarm_message_(const uint8_t *packet, uint8_t size, boo
                               );
               if (alarm_status) {
                 this->alarm_start_callback_.call(alarm_code, alarm_message);
-                this->active_alarms_count_++;
+                this->active_alarm_count_ += 1.0f;
               } else {
                 this->alarm_end_callback_.call(alarm_code, alarm_message);
-                this->active_alarms_count_--;
+                this->active_alarm_count_ -= 1.0f;
               }
             }
             alarm_bit <<= 1;
@@ -660,13 +667,15 @@ void HonClimate::process_alarm_message_(const uint8_t *packet, uint8_t size, boo
         else
           alarm_code += 8;
     } else {
-      this->active_alarms_count_ = 0;
+      float alarm_count = 0.0f;
       static uint8_t nibble_bits_count[] = {
         0, 1, 1, 2, 1, 2, 2, 3,
         1, 2, 2, 3, 2, 3, 3, 4
       };
-      for (uint8_t i = 0; i < sizeof(this->active_alarms_); i++)
-        this->active_alarms_count_ += nibble_bits_count[packet[2 + i] & 0x0F] + nibble_bits_count[packet[2 + i] >> 4];
+      for (uint8_t i = 0; i < sizeof(this->active_alarms_); i++) {
+        alarm_count += (float)(nibble_bits_count[packet[2 + i] & 0x0F] + nibble_bits_count[packet[2 + i] >> 4]);
+      }
+      this->active_alarm_count_ = alarm_count;
       memcpy(this->active_alarms_, packet + 2, sizeof(this->active_alarms_));
     }
   }

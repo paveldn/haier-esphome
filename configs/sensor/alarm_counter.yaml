@@ -1,0 +1,11 @@
+﻿sensor:
+  - platform: template
+    id: alarms_counter_sensor
+    name: ${device_name} Alarm Count
+    accuracy_decimals: 0
+    entity_category: diagnostic
+    state_class: total
+    icon: mdi:alert-outline
+    lambda: |-
+      return id(${device_id}).get_active_alarm_count();
+    update_interval: 15s

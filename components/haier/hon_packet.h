@@ -217,7 +217,7 @@ const std::string hon_alarm_messages[] = {
   "Firewall failure",
 };
 
-constexpr size_t HON_ALARMS_COUNT = sizeof(hon_alarm_messages)/sizeof(hon_alarm_messages[0]);
+constexpr size_t HON_ALARM_COUNT = sizeof(hon_alarm_messages)/sizeof(hon_alarm_messages[0]);
 
 }  // namespace hon_protocol
 }  // namespace haier

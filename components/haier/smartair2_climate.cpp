@@ -95,7 +95,7 @@ haier_protocol::HandlerError Smartair2Climate::messages_timeout_handler_with_cyc
   ESP_LOGI(TAG, "Answer timeout for command %02X, phase %s", (uint8_t) message_type,
            phase_to_string_(this->protocol_phase_));
   ProtocolPhases new_phase = (ProtocolPhases) ((int) this->protocol_phase_ + 1);
-  if (new_phase >= ProtocolPhases::SENDING_ALARM_STATUS_REQUEST)
+  if (new_phase >= ProtocolPhases::SENDING_FIRST_ALARM_STATUS_REQUEST)
     new_phase = ProtocolPhases::SENDING_INIT_1;
   this->set_phase(new_phase);
   return haier_protocol::HandlerError::HANDLER_OK;
@@ -170,8 +170,11 @@ void Smartair2Climate::process_phase(std::chrono::steady_clock::time_point now) 
     case ProtocolPhases::SENDING_UPDATE_SIGNAL_REQUEST:
       this->set_phase(ProtocolPhases::SENDING_SIGNAL_LEVEL);
       break;
-    case ProtocolPhases::SENDING_ALARM_STATUS_REQUEST:
+    case ProtocolPhases::SENDING_FIRST_ALARM_STATUS_REQUEST:
       this->set_phase(ProtocolPhases::SENDING_INIT_1);
+      break;
+    case ProtocolPhases::SENDING_ALARM_STATUS_REQUEST:
+      this->set_phase(ProtocolPhases::IDLE);
       break;
     case ProtocolPhases::SENDING_CONTROL:
       if (this->can_send_message() && this->is_control_message_interval_exceeded_(now)) {

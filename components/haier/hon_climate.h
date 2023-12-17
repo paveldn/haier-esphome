@@ -55,7 +55,7 @@ class HonClimate : public HaierClimateBase {
   void set_control_method(HonControlMethod method) { this->control_method_ = method; };
   void add_alarm_start_callback(std::function<void(uint8_t, const char*)> &&callback);
   void add_alarm_end_callback(std::function<void(uint8_t, const char*)> &&callback);
-  uint8_t get_active_alarms_count() const { return this->active_alarms_count_; }
+  float get_active_alarm_count() const { return this->active_alarm_count_; }
 
  protected:
   void set_handlers() override;
@@ -111,7 +111,8 @@ class HonClimate : public HaierClimateBase {
   std::queue<haier_protocol::HaierMessage> control_messages_queue_;
   CallbackManager<void(uint8_t, const char*)> alarm_start_callback_{};
   CallbackManager<void(uint8_t, const char*)> alarm_end_callback_{};
-  uint8_t active_alarms_count_{0};
+  float active_alarm_count_{NAN};
+  std::chrono::steady_clock::time_point last_alarm_request_;
 };
 
 class HaierAlarmStartTrigger : public Trigger<uint8_t, const char *> {

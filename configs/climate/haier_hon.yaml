@@ -30,3 +30,39 @@
       - ECO
       - BOOST
       - SLEEP
+    # Next two triggers calling Home Assistant services to notify user about alarms triggered by AC
+    # this functionality is disabled by default. To enable it check "Allow the device to make Home Assistant service calls"
+    # checkbox in Home Assistant's device settings
+    on_alarm_start:
+      then:
+        - homeassistant.service:
+            service: logbook.log
+            data:
+              domain: climate
+              name: ${device_name}
+            data_template:
+              message: "Alarm activated ({{ alarm_code }}): {{alarm_message}}" 
+            variables:
+              alarm_message: !lambda "return message;"
+              alarm_code: !lambda "return code;"
+        - homeassistant.service:
+            service: notify.persistent_notification
+            data:
+              title: "${device_name}: alarm activated"
+            data_template:
+              message: "Code: {{ alarm_code }}, message: \"{{ alarm_message }}\""
+            variables:
+              alarm_message: !lambda "return message;"
+              alarm_code: !lambda "return code;"
+    on_alarm_end:
+      then:
+        - homeassistant.service:
+            service: logbook.log
+            data:
+              domain: climate
+              name: ${device_name}
+            data_template:
+              message: "Alarm deactivated ({{ alarm_code }}): {{alarm_message}}" 
+            variables:
+              alarm_message: !lambda "return message;"
+              alarm_code: !lambda "return code;"
