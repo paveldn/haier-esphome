@@ -46,6 +46,7 @@ AUTO_LOAD = ["sensor"]
 DEPENDENCIES = ["climate", "uart"]
 CONF_ALTERNATIVE_SWING_CONTROL = "alternative_swing_control"
 CONF_ANSWER_TIMEOUT = "answer_timeout"
+CONF_CONTROL_METHOD = "control_method"
 CONF_CONTROL_PACKET_SIZE = "control_packet_size"
 CONF_DISPLAY = "display"
 CONF_HORIZONTAL_AIRFLOW = "horizontal_airflow"
@@ -54,7 +55,6 @@ CONF_ON_ALARM_END = "on_alarm_end"
 CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
 CONF_VERTICAL_AIRFLOW = "vertical_airflow"
 CONF_WIFI_SIGNAL = "wifi_signal"
-CONF_CONTROL_METHOD = "control_method"
 
 PROTOCOL_HON = "HON"
 PROTOCOL_SMARTAIR2 = "SMARTAIR2"
@@ -132,6 +132,7 @@ HaierAlarmEndTrigger = haier_ns.class_(
     "HaierAlarmEndTrigger",
     automation.Trigger.template(cg.uint8, cg.const_char_ptr),
 )
+
 
 def validate_visual(config):
     if CONF_VISUAL in config:
@@ -214,9 +215,7 @@ CONFIG_SCHEMA = cv.All(
                     ): cv.boolean,
                     cv.Optional(
                         CONF_SUPPORTED_PRESETS,
-                        default=list(
-                            SUPPORTED_CLIMATE_PRESETS_SMARTAIR2_OPTIONS.keys()
-                        ),
+                        default=list(["BOOST", "COMFORT"]),  # No AWAY by default
                     ): cv.ensure_list(
                         cv.enum(SUPPORTED_CLIMATE_PRESETS_SMARTAIR2_OPTIONS, upper=True)
                     ),
@@ -236,7 +235,7 @@ CONFIG_SCHEMA = cv.All(
                     ): cv.int_range(min=PROTOCOL_CONTROL_PACKET_SIZE, max=50),
                     cv.Optional(
                         CONF_SUPPORTED_PRESETS,
-                        default=list(SUPPORTED_CLIMATE_PRESETS_HON_OPTIONS.keys()),
+                        default=list(["BOOST", "ECO", "SLEEP"]),  # No AWAY by default
                     ): cv.ensure_list(
                         cv.enum(SUPPORTED_CLIMATE_PRESETS_HON_OPTIONS, upper=True)
                     ),
@@ -248,14 +247,18 @@ CONFIG_SCHEMA = cv.All(
                         state_class=STATE_CLASS_MEASUREMENT,
                     ),
                     cv.Optional(CONF_ON_ALARM_START): automation.validate_automation(
-                      {
-                          cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(HaierAlarmStartTrigger),
-                      }
+                        {
+                            cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(
+                                HaierAlarmStartTrigger
+                            ),
+                        }
                     ),
                     cv.Optional(CONF_ON_ALARM_END): automation.validate_automation(
-                      {
-                          cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(HaierAlarmEndTrigger),
-                      }
+                        {
+                            cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(
+                                HaierAlarmEndTrigger
+                            ),
+                        }
                     ),
                 }
             ),
@@ -483,13 +486,13 @@ async def to_code(config):
         )
     for conf in config.get(CONF_ON_ALARM_START, []):
         trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)
-        await automation.build_automation(trigger, 
-                [(cg.uint8, "code"), (cg.const_char_ptr, "message")],
-                conf)
+        await automation.build_automation(
+            trigger, [(cg.uint8, "code"), (cg.const_char_ptr, "message")], conf
+        )
     for conf in config.get(CONF_ON_ALARM_END, []):
         trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)
-        await automation.build_automation(trigger, 
-                [(cg.uint8, "code"), (cg.const_char_ptr, "message")],
-                conf)
+        await automation.build_automation(
+            trigger, [(cg.uint8, "code"), (cg.const_char_ptr, "message")], conf
+        )
     # https://github.com/paveldn/HaierProtocol
     cg.add_library("pavlodn/HaierProtocol", "0.9.24")
