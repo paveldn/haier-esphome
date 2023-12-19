@@ -4,7 +4,7 @@ This is an implementation of the ESPHome component to control HVAC on the base o
 
 ## Short description
 
-There are two versions of the Haier protocol. The older one is using an application called SmartAir2 and the newer one - an application called hOn. Both protocols are compatible on the transport level but have different commands to control appliances.
+There are two versions of the Haier protocol. The older one is using an application called SmartAir2 and the newer one - is an application called hOn. Both protocols are compatible on the transport level but have different commands to control appliances.
 
 ### SmartAir2
 
@@ -12,7 +12,7 @@ Older Haier models controlled by the SmartAir2 application are using the KZW-W00
 
 <p><a href="./img/KZW-W002.jpg?raw=true"><img src="./img/KZW-W002.jpg?raw=true" height="50%" width="50%"></a></p>
 
-This module can't be reused, and you need to replace it with an ESP (RPI pico w) module. The USB connector on a board doesn't support the USB protocol. It is a UART port that just uses a USB connector. To connect the ESP board to your AC you can cut a USB type A cable and connect wires to the climate connector.
+This module can't be reused, and you need to replace it with an ESP (RPI pico w) module. The USB connector on the board doesn't support the USB protocol. It is a UART port that just uses a USB connector. To connect the ESP board to your AC you can cut a USB type A cable and connect wires to the climate connector.
 
 **Haier UART pinout:**
 | Board | USB | Wire color | ESP module |
@@ -40,7 +40,7 @@ Newer Haier models using a module called ESP32-for-Haier. It is an ESP32 single-
 
 In some cases, you can reuse this module and flash it with ESPHome, but some new modules don't support this. They look the same but have encryption enabled.
 
-**Warning!** The new generation of ESP32-Haier devices has encryption enabled, so they can only be flashed with firmware that is signed with a private key. There is no way to make them work with ESPHome, so if you try to do it, the board will get into a boot loop with error 
+**Warning!** The new generation of ESP32-Haier devices has encryption enabled, so they can only be flashed with firmware that is signed with a private key. There is no way to make them work with ESPHome, so if you try to do it, the board will get into a boot loop with the error 
 `rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)`
 The only way to recover this board is to flash it with the original image. So before starting your experiments make a backup image: [How to backup the original image and flash ESPHome to the ESP32 Haier module](#how-to-backup-the-original-image-and-flash-esphome-to-the-esp32-haier-module)
 
@@ -77,21 +77,35 @@ climate:
       max_temperature: 30 °C
       temperature_step: 1 °C
     supported_modes:            # Optional, can be used to disable some modes if you don't need them
-    - 'OFF'
-    - AUTO
-    - COOL
-    - HEAT
-    - DRY
-    - FAN_ONLY
+      - 'OFF'
+      - AUTO
+      - COOL
+      - HEAT
+      - DRY
+      - FAN_ONLY
     supported_presets:          # Optional, can be used to disable some presets if your AC does not support it
+      - AWAY
       - ECO
       - BOOST
       - SLEEP
-    supported_swing_modes:      # Optional, can be used to disable some swing modes if your AC does not support it
-    - 'OFF'
-    - VERTICAL
-    - HORIZONTAL
-    - BOTH
+    supported_swing_modes:      # Optional, can be used to disable some (or all) swing modes if your AC does not support it
+      - 'OFF'
+      - VERTICAL
+      - HORIZONTAL
+      - BOTH
+    on_alarm_start:
+      then:
+        - logger.log:
+            level: WARN
+            format: "Alarm activated. Code: %d. Message: \"%s\""
+            args: [ code, message]
+    on_alarm_end:
+      then:
+        - logger.log:
+            level: INFO
+            format: "Alarm deactivated. Code: %d. Message: \"%s\""
+            args: [ code, message]
+
 ```
 
 ### SmartAir2 configuration example
@@ -118,27 +132,28 @@ climate:
       max_temperature: 30 °C
       temperature_step: 1 °C
     supported_modes:            # Optional, can be used to disable some modes if you don't need them
-    - 'OFF'
-    - AUTO
-    - COOL
-    - HEAT
-    - DRY
-    - FAN_ONLY
+      - 'OFF'
+      - AUTO
+      - COOL
+      - HEAT
+      - DRY
+      - FAN_ONLY
     supported_presets:          # Optional, can be used to disable some presets if your AC does not support it
+      - AWAY
       - BOOST
       - COMFORT
-    supported_swing_modes:      # Optional, can be used to disable some swing modes if your AC does not support it
-    - 'OFF'
-    - VERTICAL
-    - HORIZONTAL
-    - BOTH
+    supported_swing_modes:      # Optional, can be used to disable some (or all) swing modes if your AC does not support it
+      - 'OFF'
+      - VERTICAL
+      - HORIZONTAL
+      - BOTH
 ```
 
 ### Configuration variables
 
 - **id (Optional, [ID](https://esphome.io/guides/configuration-types.html#config-id)):** Manually specify the ID used for code generation
 - **uart_id (Optional, [ID](https://esphome.io/guides/configuration-types.html#config-id)):** ID of the UART port to communicate with AC
-- **protocol (Required, string):** Defines protocol of communication with AC. Possible values: hon or smartair2
+- **protocol (Required, string):** Defines communication protocol with AC. Possible values: hon or smartair2
 - **name (Required, string):** The name of the climate device
 - **wifi_signal (Optional, boolean):** If true - send wifi signal level to AC (Olny for devices that support this feature)
 - **beeper (Optional, boolean):** (supported only by hOn) Can be used to disable beeping on commands from AC
@@ -151,17 +166,49 @@ climate:
   - **id (Optional, [ID](https://esphome.io/guides/configuration-types.html#config-id)):** ID of the sensor, can be used for code generation
   - All other options from Sensor.
 - **supported_modes (Optional, list):** Can be used to disable some of AC modes. Possible values: OFF (use quotes in opposite case ESPHome will convert it to False), AUTO, COOL, HEAT, DRY, FAN_ONLY
-- **supported_presets (Optional, list):** Optional, can be used to disable some presets. Possible values: BOOST, COMFORT for SmartAir2, or ECO, BOOST, SLEEP for hOn.
+- **supported_presets (Optional, list):** Optional, can be used to disable some presets. Possible values: AWAY, BOOST, COMFORT for SmartAir2, or AWAY, ECO, BOOST, SLEEP for hOn. AWAY preset can be enabled only in HEAT mode, it is disabled by default
 - **supported_swing_modes (Optional, list):** Can be used to disable some swing modes if your AC does not support it. Possible values: OFF (use quotes in opposite case ESPHome will convert it to False), VERTICAL, HORIZONTAL, BOTH
+- **on_alarm_start (Optional, [Automation](https://esphome.io/guides/automations#automation)):** (supported only by hOn) Automation to perform when AC activates a new alarm. See [on_alarm_start](#on_alarm_start-trigger)
+- **on_alarm_end (Optional, [Automation](https://esphome.io/guides/automations#automation)):** (supported only by hOn) Automation to perform when AC deactivates a new alarm. See [on_alarm_end](#on_alarm_end-trigger)
 - All other options from [Climate](https://esphome.io/components/climate/index.html#config-climate).
 
 ## Automations
 
-Haier climate support some actiuons:
+Haier climate supports some actions and triggers:
+
+### on_alarm_start Trigger
+
+This automation will be triggered when a new alarm is activated by AC. The error code of the alarm will be given in the variable "code" (type uint8_t), error message in the variable "message" (type char*). Those variables can be used in [lambdas](https://esphome.io/guides/automations#config-lambda). Supported only by hOn protocol.
+
+```
+climate:
+  - protocol: hOn
+    on_alarm_start:
+      then:
+        - logger.log:
+            level: WARN
+            format: "Alarm activated. Code: %d. Message: \"%s\""
+            args: [ code, message]
+```
+
+### on_alarm_end Trigger
+
+This automation will be triggered when a previously activated alarm is deactivated by AC. The error code of the alarm will be given in the variable "code" (type uint8_t), error message in the variable "message" (type char*). Those variables can be used in [lambdas](https://esphome.io/guides/automations#config-lambda). Supported only by hOn protocol.
+
+```
+climate:
+  - protocol: hOn
+    on_alarm_end:
+      then:
+        - logger.log:
+            level: INFO
+            format: "Alarm deactivated. Code: %d. Message: \"%s\""
+            args: [ code, message]
+```
 
 ### climate.haier.power_on Action
 
-This action turns AC power on
+This action turns the AC power on
 
 ```
 on_...:
