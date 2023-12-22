@@ -6,38 +6,6 @@
     uart_id: ${uart_id}
     wifi_signal: ${send_wifi}   # Optional, default true, enables WiFI signal transmission from ESP to AC
     beeper: true                # Optional, default true, disables beep on commands from ESP
-    outdoor_temperature:        # Optional, outdoor temperature sensor
-      name: ${device_name} outdoor temperature
-    indoor_coil_temperature:
-      name: ${device_name} Indoor Coil Temperature
-    outdoor_coil_temperature:
-      name: ${device_name} Outdoor Coil Temperature
-    outdoor_defrost_temperature:
-      name: ${device_name} Outdoor Defrost Temperature
-    outdoor_in_air_temperature:
-      name: ${device_name} Outdoor In Air Temperature
-    outdoor_out_air_temperature:
-      name: ${device_name} Outdoor Out Air Temperature
-    power:
-      name: ${device_name} Power
-    compressor_frequency:
-      name: ${device_name} Compressor Frequency
-    compressor_current:
-      name: ${device_name} Compressor Current
-    expansion_valve_open_degree:
-      name: ${device_name} Expansion Valve Open Degree
-    outdoor_fan_status:
-      name: ${device_name} Outdoor Fan Status
-    defrost_status:
-      name: ${device_name} Defrost Status
-    compressor_status:
-      name: ${device_name} Compressor Status
-    indoor_fan_status:
-      name: ${device_name} Indoor Fan Status
-    four_way_valve_status:
-      name: ${device_name} Four-way Valve Status
-    indoor_electric_heating_status:
-      name: ${device_name} Indoor Electric Heating Status
     visual:                     # Optional, you can use it to limit min and max temperatures in UI (not working for remote!)
       min_temperature: 16 °C
       max_temperature: 30 °C

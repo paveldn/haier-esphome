@@ -1,0 +1,5 @@
+﻿sensor:
+  - platform: haier
+    haier_id: ${device_id}
+    expansion_valve_open_degree:
+      name: ${device_name} Expansion Valve Open Degree

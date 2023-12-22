@@ -1,0 +1,5 @@
+﻿sensor:
+  - platform: haier
+    haier_id: ${device_id}
+    outdoor_in_air_temperature:
+      name: ${device_name} Outdoor In Air Temperature

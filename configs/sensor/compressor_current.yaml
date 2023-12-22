@@ -1,0 +1,5 @@
+﻿sensor:
+  - platform: haier
+    haier_id: ${device_id}
+    compressor_current:
+      name: ${device_name} Compressor Current

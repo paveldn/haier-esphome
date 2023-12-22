@@ -19,3 +19,21 @@ packages:
   # Horizontal airflow direction setting. Works only if the horizontal swing
   # is off. You can remove this control if you don't need it
   airflow_horizontal_select: !include configs/select/airflow_horizontal.yaml
+  # Diagnostic sensors
+  outdoor_temperature_sensor: !include configs/sensor/outdoor_temperature.yaml
+  indoor_coil_temperature_sensor: !include configs/sensor/indoor_coil_temperature.yaml
+  outdoor_coil_temperature_sensor: !include configs/sensor/outdoor_coil_temperature.yaml
+  outdoor_defrost_temperature_sensor: !include configs/sensor/outdoor_defrost_temperature.yaml
+  outdoor_in_air_temperature_sensor: !include configs/sensor/outdoor_in_air_temperature.yaml
+  outdoor_out_air_temperature_sensor: !include configs/sensor/outdoor_out_air_temperature.yaml
+  power_sensor: !include configs/sensor/power.yaml
+  compressor_frequency_sensor: !include configs/sensor/compressor_frequency.yaml
+  compressor_current_sensor: !include configs/sensor/compressor_current.yaml
+  expansion_valve_open_degree_sensor: !include configs/sensor/expansion_valve_open_degree.yaml
+  # Diagnostic binary sensors
+  outdoor_fan_status_binary_sensor: !include configs/binary_sensor/outdoor_fan_status.yaml
+  defrost_status_binary_sensor: !include configs/binary_sensor/defrost_status.yaml
+  compressor_status_binary_sensor: !include configs/binary_sensor/compressor_status.yaml
+  indoor_fan_status_binary_sensor: !include configs/binary_sensor/indoor_fan_status.yaml
+  four_way_valve_status_binary_sensor: !include configs/binary_sensor/four_way_valve_status.yaml
+  indoor_electric_heating_status_binary_sensor: !include configs/binary_sensor/indoor_electric_heating_status.yaml
