@@ -1,8 +1,12 @@
 #pragma once
 
 #include <chrono>
+#ifdef USE_SENSOR
 #include "esphome/components/sensor/sensor.h"
+#endif
+#ifdef USE_BINARY_SENSOR
 #include "esphome/components/binary_sensor/binary_sensor.h"
+#endif
 #include "esphome/core/automation.h"
 #include "haier_base.h"
 
@@ -35,6 +39,7 @@ enum class CleaningState : uint8_t {
 enum class HonControlMethod { MONITOR_ONLY = 0, SET_GROUP_PARAMETERS, SET_SINGLE_PARAMETER };
 
 class HonClimate : public HaierClimateBase {
+#ifdef USE_SENSOR
   SUB_SENSOR(indoor_coil_temperature)
   SUB_SENSOR(outdoor_coil_temperature)
   SUB_SENSOR(outdoor_defrost_temperature)
@@ -44,12 +49,16 @@ class HonClimate : public HaierClimateBase {
   SUB_SENSOR(compressor_frequency)
   SUB_SENSOR(compressor_current)
   SUB_SENSOR(expansion_valve_open_degree)
+  SUB_SENSOR(outdoor_temperature)
+#endif
+#ifdef USE_BINARY_SENSOR
   SUB_BINARY_SENSOR(outdoor_fan_status)
   SUB_BINARY_SENSOR(defrost_status)
   SUB_BINARY_SENSOR(compressor_status)
   SUB_BINARY_SENSOR(indoor_fan_status)
   SUB_BINARY_SENSOR(four_way_valve_status)
   SUB_BINARY_SENSOR(indoor_electric_heating_status)
+#endif
 public:
   HonClimate();
   HonClimate(const HonClimate &) = delete;
@@ -58,7 +67,6 @@ public:
   void dump_config() override;
   void set_beeper_state(bool state);
   bool get_beeper_state() const;
-  void set_outdoor_temperature_sensor(esphome::sensor::Sensor *sensor);
   AirflowVerticalDirection get_vertical_airflow() const;
   void set_vertical_airflow(AirflowVerticalDirection direction);
   AirflowHorizontalDirection get_horizontal_airflow() const;
@@ -123,7 +131,6 @@ public:
   uint8_t active_alarms_[8];
   int extra_control_packet_bytes_;
   HonControlMethod control_method_;
-  esphome::sensor::Sensor *outdoor_temperature_sensor_{nullptr};
   std::queue<haier_protocol::HaierMessage> control_messages_queue_;
   CallbackManager<void(uint8_t, const char *)> alarm_start_callback_{};
   CallbackManager<void(uint8_t, const char *)> alarm_end_callback_{};

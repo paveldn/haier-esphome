@@ -65,8 +65,6 @@ void HonClimate::set_beeper_state(bool state) { this->beeper_status_ = state; }
 
 bool HonClimate::get_beeper_state() const { return this->beeper_status_; }
 
-void HonClimate::set_outdoor_temperature_sensor(esphome::sensor::Sensor *sensor) { this->outdoor_temperature_sensor_ = sensor; }
-
 AirflowVerticalDirection HonClimate::get_vertical_airflow() const { return this->vertical_direction_; };
 
 void HonClimate::set_vertical_airflow(AirflowVerticalDirection direction) {
@@ -698,6 +696,7 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
   if ((subtype == 0x7D01) && (size >= expected_size + 4 + sizeof(hon_protocol::HaierPacketBigData))) {
     // Got BigData packet
     const hon_protocol::HaierPacketBigData* bd_packet = (const hon_protocol::HaierPacketBigData*)(&packet_buffer[expected_size + 4]);
+    #ifdef USE_SENSOR
     if (this->indoor_coil_temperature_sensor_ != nullptr) {
       this->indoor_coil_temperature_sensor_->publish_state(bd_packet->indoor_coil_temperature / 2 - 20);
     }
@@ -725,6 +724,8 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
     if (this->expansion_valve_open_degree_sensor_ != nullptr) {
       this->expansion_valve_open_degree_sensor_->publish_state(UINT16_BE(bd_packet->expansion_valve_open_degree) / 4095.0);
     }
+    #endif // USE_SENSOR
+    #ifdef USE_BINARY_SENSOR
     #define UPDATE_BINARY_SENSOR(value) {\
       if (this->value##_binary_sensor_ != nullptr) {\
         switch (bd_packet->value) {\
@@ -744,6 +745,7 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
     UPDATE_BINARY_SENSOR(four_way_valve_status);
     UPDATE_BINARY_SENSOR(indoor_electric_heating_status);
     #undef UPDATE_BINARY_SENSOR
+    #endif // USE_BINARY_SENSOR
   }
   struct {
     hon_protocol::HaierPacketControl control;
@@ -756,6 +758,7 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
   if (packet.sensors.error_status != 0) {
     ESP_LOGW(TAG, "HVAC error, code=0x%02X", packet.sensors.error_status);
   }
+  #ifdef USE_SENSOR
   if ((this->outdoor_temperature_sensor_ != nullptr) &&
       (this->got_valid_outdoor_temp_ || (packet.sensors.outdoor_temperature > 0))) {
     this->got_valid_outdoor_temp_ = true;
@@ -763,6 +766,7 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
     if ((!this->outdoor_temperature_sensor_->has_state()) || (this->outdoor_temperature_sensor_->get_raw_state() != otemp))
       this->outdoor_temperature_sensor_->publish_state(otemp);
   }
+  #endif // USE_SENSOR
   bool should_publish = false;
   {
     // Extra modes/presets
@@ -1176,9 +1180,11 @@ bool HonClimate::prepare_pending_action() {
 
 void HonClimate::process_protocol_reset() {
   HaierClimateBase::process_protocol_reset();
+  #ifdef USE_SENSOR
   if (this->outdoor_temperature_sensor_ != nullptr) {
     this->outdoor_temperature_sensor_->publish_state(NAN);
   }
+  #endif // USE_SENSOR
   this->got_valid_outdoor_temp_ = false;
   this->hvac_hardware_info_.reset();
 }

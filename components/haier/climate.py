@@ -2,7 +2,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 import esphome.final_validate as fv
-from esphome.components import uart, sensor, binary_sensor, climate, logger
+from esphome.components import uart, climate, logger
 from esphome import automation
 from esphome.const import (
     CONF_BEEPER,
@@ -12,7 +12,6 @@ from esphome.const import (
     CONF_LOGS,
     CONF_MAX_TEMPERATURE,
     CONF_MIN_TEMPERATURE,
-    CONF_POWER,
     CONF_PROTOCOL,
     CONF_SUPPORTED_MODES,
     CONF_SUPPORTED_PRESETS,
@@ -22,26 +21,6 @@ from esphome.const import (
     CONF_TRIGGER_ID,
     CONF_VISUAL,
     CONF_WIFI,
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_EMPTY,
-    DEVICE_CLASS_FREQUENCY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-    ICON_CURRENT_AC,
-    ICON_FAN,
-    ICON_GAUGE,
-    ICON_HEATING_COIL,
-    ICON_POWER,
-    ICON_PULSE,
-    ICON_THERMOMETER,
-    ICON_WEATHER_WINDY,
-    STATE_CLASS_MEASUREMENT,
-    UNIT_AMPERE,
-    UNIT_CELSIUS,
-    UNIT_HERTZ,
-    UNIT_PERCENT,
-    UNIT_WATT,
 )
 from esphome.components.climate import (
     ClimateMode,
@@ -59,34 +38,17 @@ PROTOCOL_CURRENT_TEMPERATURE_STEP = 0.5
 PROTOCOL_CONTROL_PACKET_SIZE = 10
 
 CODEOWNERS = ["@paveldn"]
-AUTO_LOAD = ["sensor", "binary_sensor"]
 DEPENDENCIES = ["climate", "uart"]
 CONF_ALTERNATIVE_SWING_CONTROL = "alternative_swing_control"
 CONF_ANSWER_TIMEOUT = "answer_timeout"
-CONF_COMPRESSOR_CURRENT = "compressor_current"
-CONF_COMPRESSOR_FREQUENCY = "compressor_frequency"
-CONF_COMPRESSOR_STATUS = "compressor_status"
 CONF_CONTROL_METHOD = "control_method"
 CONF_CONTROL_PACKET_SIZE = "control_packet_size"
-CONF_DEFROST_STATUS = "defrost_status"
 CONF_DISPLAY = "display"
-CONF_EXPANSION_VALVE_OPEN_DEGREE = "expansion_valve_open_degree"
-CONF_FOUR_WAY_VALVE_STATUS = "four_way_valve_status"
 CONF_HORIZONTAL_AIRFLOW = "horizontal_airflow"
-CONF_INDOOR_COIL_TEMPERATURE = "indoor_coil_temperature"
-CONF_INDOOR_ELECTRIC_HEATING_STATUS = "indoor_electric_heating_status"
-CONF_INDOOR_FAN_STATUS = "indoor_fan_status"
-CONF_ON_ALARM_END = "on_alarm_end"
 CONF_ON_ALARM_START = "on_alarm_start"
-CONF_OUTDOOR_COIL_TEMPERATURE = "outdoor_coil_temperature"
-CONF_OUTDOOR_DEFROST_TEMPERATURE = "outdoor_defrost_temperature"
-CONF_OUTDOOR_FAN_STATUS = "outdoor_fan_status"
-CONF_OUTDOOR_IN_AIR_TEMPERATURE = "outdoor_in_air_temperature"
-CONF_OUTDOOR_OUT_AIR_TEMPERATURE = "outdoor_out_air_temperature"
-CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
+CONF_ON_ALARM_END = "on_alarm_end"
 CONF_VERTICAL_AIRFLOW = "vertical_airflow"
 CONF_WIFI_SIGNAL = "wifi_signal"
-ICON_SNOWFLAKE_THERMOMETER = "mdi:snowflake-thermometer"
 
 PROTOCOL_HON = "HON"
 PROTOCOL_SMARTAIR2 = "SMARTAIR2"
@@ -99,6 +61,13 @@ HaierClimateBase = haier_ns.class_(
 HonClimate = haier_ns.class_("HonClimate", HaierClimateBase)
 Smartair2Climate = haier_ns.class_("Smartair2Climate", HaierClimateBase)
 
+CONF_HAIER_ID = "haier_id"
+
+HAIER_COMPONENT_SCHEMA = cv.Schema(
+    {
+        cv.Required(CONF_HAIER_ID): cv.use_id(HonClimate),
+    }
+)
 
 AirflowVerticalDirection = haier_ns.enum("AirflowVerticalDirection", True)
 AIRFLOW_VERTICAL_DIRECTION_OPTIONS = {
@@ -271,13 +240,6 @@ CONFIG_SCHEMA = cv.All(
                     ): cv.ensure_list(
                         cv.enum(SUPPORTED_CLIMATE_PRESETS_HON_OPTIONS, upper=True)
                     ),
-                    cv.Optional(CONF_OUTDOOR_TEMPERATURE): sensor.sensor_schema(
-                        unit_of_measurement=UNIT_CELSIUS,
-                        icon=ICON_THERMOMETER,
-                        accuracy_decimals=0,
-                        device_class=DEVICE_CLASS_TEMPERATURE,
-                        state_class=STATE_CLASS_MEASUREMENT,
-                    ),
                     cv.Optional(CONF_ON_ALARM_START): automation.validate_automation(
                         {
                             cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(
@@ -291,107 +253,6 @@ CONFIG_SCHEMA = cv.All(
                                 HaierAlarmEndTrigger
                             ),
                         }
-                    ),
-                    cv.Optional(CONF_INDOOR_COIL_TEMPERATURE): sensor.sensor_schema(
-                        unit_of_measurement=UNIT_CELSIUS,
-                        icon=ICON_HEATING_COIL,
-                        accuracy_decimals=0,
-                        device_class=DEVICE_CLASS_TEMPERATURE,
-                        state_class=STATE_CLASS_MEASUREMENT,
-                        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-                    ),
-                    cv.Optional(CONF_OUTDOOR_COIL_TEMPERATURE): sensor.sensor_schema(
-                        unit_of_measurement=UNIT_CELSIUS,
-                        icon=ICON_HEATING_COIL,
-                        accuracy_decimals=0,
-                        device_class=DEVICE_CLASS_TEMPERATURE,
-                        state_class=STATE_CLASS_MEASUREMENT,
-                        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-                    ),
-                    cv.Optional(CONF_OUTDOOR_DEFROST_TEMPERATURE): sensor.sensor_schema(
-                        unit_of_measurement=UNIT_CELSIUS,
-                        icon=ICON_SNOWFLAKE_THERMOMETER,
-                        accuracy_decimals=0,
-                        device_class=DEVICE_CLASS_TEMPERATURE,
-                        state_class=STATE_CLASS_MEASUREMENT,
-                        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-                    ),              
-                    cv.Optional(CONF_OUTDOOR_IN_AIR_TEMPERATURE): sensor.sensor_schema(
-                        unit_of_measurement=UNIT_CELSIUS,
-                        icon=ICON_WEATHER_WINDY,
-                        accuracy_decimals=0,
-                        device_class=DEVICE_CLASS_TEMPERATURE,
-                        state_class=STATE_CLASS_MEASUREMENT,
-                        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-                    ),         
-                    cv.Optional(CONF_OUTDOOR_OUT_AIR_TEMPERATURE): sensor.sensor_schema(
-                        unit_of_measurement=UNIT_CELSIUS,
-                        icon=ICON_WEATHER_WINDY,
-                        accuracy_decimals=0,
-                        device_class=DEVICE_CLASS_TEMPERATURE,
-                        state_class=STATE_CLASS_MEASUREMENT,
-                        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-                    ),
-                    cv.Optional(CONF_POWER): sensor.sensor_schema(
-                        unit_of_measurement=UNIT_WATT,
-                        icon=ICON_POWER,
-                        accuracy_decimals=0,
-                        device_class=DEVICE_CLASS_POWER,
-                        state_class=STATE_CLASS_MEASUREMENT,
-                        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-                    ),
-                    cv.Optional(CONF_COMPRESSOR_FREQUENCY): sensor.sensor_schema(
-                        unit_of_measurement=UNIT_HERTZ,
-                        icon=ICON_PULSE,
-                        accuracy_decimals=0,
-                        device_class=DEVICE_CLASS_FREQUENCY,
-                        state_class=STATE_CLASS_MEASUREMENT,
-                        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-                    ),        
-                    cv.Optional(CONF_COMPRESSOR_CURRENT): sensor.sensor_schema(
-                        unit_of_measurement=UNIT_AMPERE,
-                        icon=ICON_CURRENT_AC,
-                        accuracy_decimals=1,
-                        device_class=DEVICE_CLASS_CURRENT,
-                        state_class=STATE_CLASS_MEASUREMENT,
-                        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-                    ),             
-                    cv.Optional(CONF_COMPRESSOR_CURRENT): sensor.sensor_schema(
-                        unit_of_measurement=UNIT_AMPERE,
-                        icon=ICON_CURRENT_AC,
-                        accuracy_decimals=1,
-                        device_class=DEVICE_CLASS_CURRENT,
-                        state_class=STATE_CLASS_MEASUREMENT,
-                        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-                    ),  
-                    cv.Optional(CONF_EXPANSION_VALVE_OPEN_DEGREE): sensor.sensor_schema(
-                        unit_of_measurement=UNIT_PERCENT,
-                        icon=ICON_GAUGE,
-                        accuracy_decimals=2,
-                        device_class=DEVICE_CLASS_EMPTY,
-                        state_class=STATE_CLASS_MEASUREMENT,
-                        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-                    ),
-                    cv.Optional(CONF_OUTDOOR_FAN_STATUS): binary_sensor.binary_sensor_schema(
-                        icon=ICON_FAN,
-                        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-                    ),
-                    cv.Optional(CONF_DEFROST_STATUS): binary_sensor.binary_sensor_schema(
-                        icon=ICON_SNOWFLAKE_THERMOMETER,
-                        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-                    ),
-                    cv.Optional(CONF_COMPRESSOR_STATUS): binary_sensor.binary_sensor_schema(
-                        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-                    ),
-                    cv.Optional(CONF_INDOOR_FAN_STATUS): binary_sensor.binary_sensor_schema(
-                        icon=ICON_FAN,
-                        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-                    ),
-                    cv.Optional(CONF_FOUR_WAY_VALVE_STATUS): binary_sensor.binary_sensor_schema(
-                        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-                    ),
-                    cv.Optional(CONF_INDOOR_ELECTRIC_HEATING_STATUS): binary_sensor.binary_sensor_schema(
-                        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
                     ),
                 }
             ),
@@ -596,57 +457,6 @@ async def to_code(config):
         cg.add(var.set_beeper_state(config[CONF_BEEPER]))
     if CONF_DISPLAY in config:
         cg.add(var.set_display_state(config[CONF_DISPLAY]))
-    if CONF_OUTDOOR_TEMPERATURE in config:
-        sens = await sensor.new_sensor(config[CONF_OUTDOOR_TEMPERATURE])
-        cg.add(var.set_outdoor_temperature_sensor(sens))
-    if CONF_INDOOR_COIL_TEMPERATURE in config:
-        sens = await sensor.new_sensor(config[CONF_INDOOR_COIL_TEMPERATURE])
-        cg.add(var.set_indoor_coil_temperature_sensor(sens))
-    if CONF_OUTDOOR_COIL_TEMPERATURE in config:
-        sens = await sensor.new_sensor(config[CONF_OUTDOOR_COIL_TEMPERATURE])
-        cg.add(var.set_outdoor_coil_temperature_sensor(sens))
-    if CONF_OUTDOOR_DEFROST_TEMPERATURE in config:
-        sens = await sensor.new_sensor(config[CONF_OUTDOOR_DEFROST_TEMPERATURE])
-        cg.add(var.set_outdoor_defrost_temperature_sensor(sens))
-    if CONF_OUTDOOR_IN_AIR_TEMPERATURE in config:
-        sens = await sensor.new_sensor(config[CONF_OUTDOOR_IN_AIR_TEMPERATURE])
-        cg.add(var.set_outdoor_in_air_temperature_sensor(sens))
-    if CONF_OUTDOOR_OUT_AIR_TEMPERATURE in config:
-        sens = await sensor.new_sensor(config[CONF_OUTDOOR_OUT_AIR_TEMPERATURE])
-        cg.add(var.set_outdoor_out_air_temperature_sensor(sens))
-
-    if CONF_POWER in config:
-        sens = await sensor.new_sensor(config[CONF_POWER])
-        cg.add(var.set_power_sensor(sens))
-    if CONF_COMPRESSOR_FREQUENCY in config:
-        sens = await sensor.new_sensor(config[CONF_COMPRESSOR_FREQUENCY])
-        cg.add(var.set_compressor_frequency_sensor(sens))
-    if CONF_COMPRESSOR_CURRENT in config:
-        sens = await sensor.new_sensor(config[CONF_COMPRESSOR_CURRENT])
-        cg.add(var.set_compressor_current_sensor(sens))
-    if CONF_EXPANSION_VALVE_OPEN_DEGREE in config:
-        sens = await sensor.new_sensor(config[CONF_EXPANSION_VALVE_OPEN_DEGREE])
-        cg.add(var.set_expansion_valve_open_degree_sensor(sens))
-
-    if CONF_OUTDOOR_FAN_STATUS in config:
-        sens = await binary_sensor.new_binary_sensor(config[CONF_OUTDOOR_FAN_STATUS])
-        cg.add(var.set_outdoor_fan_status_binary_sensor(sens))
-    if CONF_DEFROST_STATUS in config:
-        sens = await binary_sensor.new_binary_sensor(config[CONF_DEFROST_STATUS])
-        cg.add(var.set_defrost_status_binary_sensor(sens))
-    if CONF_COMPRESSOR_STATUS in config:
-        sens = await binary_sensor.new_binary_sensor(config[CONF_COMPRESSOR_STATUS])
-        cg.add(var.set_compressor_status_binary_sensor(sens))
-    if CONF_INDOOR_FAN_STATUS in config:
-        sens = await binary_sensor.new_binary_sensor(config[CONF_INDOOR_FAN_STATUS])
-        cg.add(var.set_indoor_fan_status_binary_sensor(sens))
-    if CONF_FOUR_WAY_VALVE_STATUS in config:
-        sens = await binary_sensor.new_binary_sensor(config[CONF_FOUR_WAY_VALVE_STATUS])
-        cg.add(var.set_four_way_valve_status_binary_sensor(sens))
-    if CONF_INDOOR_ELECTRIC_HEATING_STATUS in config:
-        sens = await binary_sensor.new_binary_sensor(config[CONF_INDOOR_ELECTRIC_HEATING_STATUS])
-        cg.add(var.set_indoor_electric_heating_status_binary_sensor(sens))
-        
     if CONF_SUPPORTED_MODES in config:
         cg.add(var.set_supported_modes(config[CONF_SUPPORTED_MODES]))
     if CONF_SUPPORTED_SWING_MODES in config:
