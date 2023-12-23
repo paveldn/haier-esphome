@@ -40,24 +40,40 @@ enum class HonControlMethod { MONITOR_ONLY = 0, SET_GROUP_PARAMETERS, SET_SINGLE
 
 class HonClimate : public HaierClimateBase {
 #ifdef USE_SENSOR
-  SUB_SENSOR(indoor_coil_temperature)
-  SUB_SENSOR(outdoor_coil_temperature)
-  SUB_SENSOR(outdoor_defrost_temperature)
-  SUB_SENSOR(outdoor_in_air_temperature)
-  SUB_SENSOR(outdoor_out_air_temperature)
-  SUB_SENSOR(power)
-  SUB_SENSOR(compressor_frequency)
-  SUB_SENSOR(compressor_current)
-  SUB_SENSOR(expansion_valve_open_degree)
-  SUB_SENSOR(outdoor_temperature)
+public:
+  enum class SubSensorType {
+    INDOOR_COIL_TEMPERATURE = 0,
+    OUTDOOR_COIL_TEMPERATURE,
+    OUTDOOR_DEFROST_TEMPERATURE,
+    OUTDOOR_IN_AIR_TEMPERATURE,
+    OUTDOOR_OUT_AIR_TEMPERATURE,
+    POWER,
+    COMPRESSOR_FREQUENCY,
+    COMPRESSOR_CURRENT,
+    EXPANSION_VALVE_OPEN_DEGREE,
+    OUTDOOR_TEMPERATURE,
+    __SUB_SENSOR_TYPE_COUNT,
+  };
+  void set_sub_sensor(SubSensorType type, sensor::Sensor *sens);
+protected:
+  void update_sub_sensor(SubSensorType type, float value);
+  sensor::Sensor *sub_sensors_[(size_t) SubSensorType::__SUB_SENSOR_TYPE_COUNT]{nullptr};
 #endif
 #ifdef USE_BINARY_SENSOR
-  SUB_BINARY_SENSOR(outdoor_fan_status)
-  SUB_BINARY_SENSOR(defrost_status)
-  SUB_BINARY_SENSOR(compressor_status)
-  SUB_BINARY_SENSOR(indoor_fan_status)
-  SUB_BINARY_SENSOR(four_way_valve_status)
-  SUB_BINARY_SENSOR(indoor_electric_heating_status)
+public:
+  enum class SubBinarySensorType {
+    OUTDOOR_FAN_STATUS = 0,
+    DEFROST_STATUS,
+    COMPRESSOR_STATUS,
+    INDOOR_FAN_STATUS,
+    FOUR_WAY_VALVE_STATUS,
+    INDOOR_ELECTRIC_HEATING_STATUS,
+    __SUB_BINARY_SENSOR_TYPE_COUNT,
+  };
+  void set_sub_binary_sensor(SubBinarySensorType type, binary_sensor::BinarySensor *sens);
+protected:
+  void update_sub_binary_sensor(SubBinarySensorType type, uint8_t value);
+  binary_sensor::BinarySensor *sub_binary_sensors_[(size_t) SubBinarySensorType::__SUB_BINARY_SENSOR_TYPE_COUNT]{nullptr};
 #endif
 public:
   HonClimate();

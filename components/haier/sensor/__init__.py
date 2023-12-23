@@ -23,7 +23,13 @@ from esphome.const import (
     UNIT_PERCENT,
     UNIT_WATT,
 )
-from ..climate import HAIER_COMPONENT_SCHEMA, CONF_HAIER_ID
+from ..climate import (
+    CONF_HAIER_ID,
+    HAIER_COMPONENT_SCHEMA,
+    HonClimate,
+)
+
+SensorTypeEnum = HonClimate.enum("SubSensorType", True)
 
 # Haier sensors
 CONF_COMPRESSOR_CURRENT = "compressor_current"
@@ -132,4 +138,5 @@ async def to_code(config):
         if type in config:
             conf = config[type]
             sens = await sensor.new_sensor(conf)
-            cg.add(getattr(paren, f"set_{type}_sensor")(sens))
+            sensor_type = getattr(SensorTypeEnum, type.upper())
+            cg.add(paren.set_sub_sensor(sensor_type, sens))

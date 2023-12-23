@@ -6,7 +6,13 @@ from esphome.const import (
     ICON_FAN,
     ICON_RADIATOR,
 )
-from ..climate import HAIER_COMPONENT_SCHEMA, CONF_HAIER_ID
+from ..climate import (
+  CONF_HAIER_ID,
+  HAIER_COMPONENT_SCHEMA,
+  HonClimate,
+)
+
+BinarySensorTypeEnum = HonClimate.enum("SubBinarySensorType", True)
 
 # Haier sensors
 CONF_OUTDOOR_FAN_STATUS = "outdoor_fan_status"
@@ -59,4 +65,5 @@ async def to_code(config):
         if type in config:
             conf = config[type]
             sens = await binary_sensor.new_binary_sensor(conf)
-            cg.add(getattr(paren, f"set_{type}_binary_sensor")(sens))
+            binary_sensor_type = getattr(BinarySensorTypeEnum, type.upper())
+            cg.add(paren.set_sub_binary_sensor(binary_sensor_type, sens))

@@ -687,6 +687,37 @@ void HonClimate::process_alarm_message_(const uint8_t *packet, uint8_t size, boo
   }
 }
 
+#ifdef USE_SENSOR
+void HonClimate::set_sub_sensor(SubSensorType type, sensor::Sensor *sens) {
+  if (type < SubSensorType::__SUB_SENSOR_TYPE_COUNT)
+    this->sub_sensors_[(size_t)type] = sens;
+}
+
+void HonClimate::update_sub_sensor(SubSensorType type, float value) {
+  if (type < SubSensorType::__SUB_SENSOR_TYPE_COUNT) {
+    size_t _index = (size_t)type;
+    if ((this->sub_sensors_[_index] != nullptr) && ((!this->sub_sensors_[_index]->has_state()) || (this->sub_sensors_[_index]->raw_state != value)))
+      this->sub_sensors_[_index]->publish_state(value);
+  }
+}
+#endif // USE_SENSOR
+
+#ifdef USE_BINARY_SENSOR
+void HonClimate::set_sub_binary_sensor(SubBinarySensorType type, binary_sensor::BinarySensor *sens) {
+  if (type < SubBinarySensorType::__SUB_BINARY_SENSOR_TYPE_COUNT)
+    this->sub_binary_sensors_[(size_t)type] = sens;
+}
+
+void HonClimate::update_sub_binary_sensor(SubBinarySensorType type, uint8_t value) {
+  if (value < 2) { 
+    bool converted_value = value == 1;
+    size_t _index = (size_t)type;
+    if ((this->sub_binary_sensors_[_index] != nullptr) && ((!this->sub_binary_sensors_[_index]->has_state()) || (this->sub_binary_sensors_[_index]->state != converted_value)))
+      this->sub_binary_sensors_[_index]->publish_state(converted_value);
+  }
+}
+#endif // USE_BINARY_SENSOR
+
 haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *packet_buffer, uint8_t size) {
 
   size_t expected_size = 2 + sizeof(hon_protocol::HaierPacketControl) + sizeof(hon_protocol::HaierPacketSensors) + this->extra_control_packet_bytes_; 
@@ -696,56 +727,25 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
   if ((subtype == 0x7D01) && (size >= expected_size + 4 + sizeof(hon_protocol::HaierPacketBigData))) {
     // Got BigData packet
     const hon_protocol::HaierPacketBigData* bd_packet = (const hon_protocol::HaierPacketBigData*)(&packet_buffer[expected_size + 4]);
-    #ifdef USE_SENSOR
-    if (this->indoor_coil_temperature_sensor_ != nullptr) {
-      this->indoor_coil_temperature_sensor_->publish_state(bd_packet->indoor_coil_temperature / 2 - 20);
-    }
-    if (this->outdoor_coil_temperature_sensor_ != nullptr) {
-      this->outdoor_coil_temperature_sensor_->publish_state(bd_packet->outdoor_coil_temperature - 64);
-    }
-    if (this->outdoor_defrost_temperature_sensor_ != nullptr) {
-      this->outdoor_defrost_temperature_sensor_->publish_state(bd_packet->outdoor_coil_temperature - 64);
-    }
-    if (this->outdoor_in_air_temperature_sensor_ != nullptr) {
-      this->outdoor_in_air_temperature_sensor_->publish_state(bd_packet->outdoor_in_air_temperature - 64);
-    }
-    if (this->outdoor_out_air_temperature_sensor_ != nullptr) {
-      this->outdoor_out_air_temperature_sensor_->publish_state(bd_packet->outdoor_out_air_temperature - 64);
-    }
-    if (this->power_sensor_ != nullptr) {
-      this->power_sensor_->publish_state(UINT16_BE(bd_packet->power));
-    }
-    if (this->compressor_frequency_sensor_ != nullptr) {
-      this->compressor_frequency_sensor_->publish_state(bd_packet->compressor_frequency);
-    }
-    if (this->compressor_current_sensor_ != nullptr) {
-      this->compressor_current_sensor_->publish_state(UINT16_BE(bd_packet->compressor_current) / 10.0);
-    }
-    if (this->expansion_valve_open_degree_sensor_ != nullptr) {
-      this->expansion_valve_open_degree_sensor_->publish_state(UINT16_BE(bd_packet->expansion_valve_open_degree) / 4095.0);
-    }
-    #endif // USE_SENSOR
-    #ifdef USE_BINARY_SENSOR
-    #define UPDATE_BINARY_SENSOR(value) {\
-      if (this->value##_binary_sensor_ != nullptr) {\
-        switch (bd_packet->value) {\
-          case 0:\
-          case 1:\
-            this->value##_binary_sensor_->publish_state(bd_packet->value == 1);\
-            break;\
-          default:\
-            break;\
-        }\
-      }\
-    } while (0)
-    UPDATE_BINARY_SENSOR(outdoor_fan_status);
-    UPDATE_BINARY_SENSOR(compressor_status);
-    UPDATE_BINARY_SENSOR(defrost_status);
-    UPDATE_BINARY_SENSOR(indoor_fan_status);
-    UPDATE_BINARY_SENSOR(four_way_valve_status);
-    UPDATE_BINARY_SENSOR(indoor_electric_heating_status);
-    #undef UPDATE_BINARY_SENSOR
-    #endif // USE_BINARY_SENSOR
+#ifdef USE_SENSOR
+    this->update_sub_sensor(SubSensorType::INDOOR_COIL_TEMPERATURE, bd_packet->indoor_coil_temperature / 2 - 20);
+    this->update_sub_sensor(SubSensorType::OUTDOOR_COIL_TEMPERATURE, bd_packet->outdoor_coil_temperature - 64);
+    this->update_sub_sensor(SubSensorType::OUTDOOR_DEFROST_TEMPERATURE, bd_packet->outdoor_coil_temperature - 64);
+    this->update_sub_sensor(SubSensorType::OUTDOOR_IN_AIR_TEMPERATURE, bd_packet->outdoor_in_air_temperature - 64);
+    this->update_sub_sensor(SubSensorType::OUTDOOR_OUT_AIR_TEMPERATURE, bd_packet->outdoor_out_air_temperature - 64);
+    this->update_sub_sensor(SubSensorType::POWER, UINT16_BE(bd_packet->power));
+    this->update_sub_sensor(SubSensorType::COMPRESSOR_FREQUENCY, bd_packet->compressor_frequency);
+    this->update_sub_sensor(SubSensorType::COMPRESSOR_CURRENT, UINT16_BE(bd_packet->compressor_current) / 10.0);
+    this->update_sub_sensor(SubSensorType::EXPANSION_VALVE_OPEN_DEGREE, UINT16_BE(bd_packet->expansion_valve_open_degree) / 4095.0);
+#endif // USE_SENSOR
+#ifdef USE_BINARY_SENSOR
+    this->update_sub_binary_sensor(SubBinarySensorType::OUTDOOR_FAN_STATUS, bd_packet->outdoor_fan_status);
+    this->update_sub_binary_sensor(SubBinarySensorType::DEFROST_STATUS, bd_packet->defrost_status);
+    this->update_sub_binary_sensor(SubBinarySensorType::COMPRESSOR_STATUS, bd_packet->compressor_status);
+    this->update_sub_binary_sensor(SubBinarySensorType::INDOOR_FAN_STATUS, bd_packet->indoor_fan_status);
+    this->update_sub_binary_sensor(SubBinarySensorType::FOUR_WAY_VALVE_STATUS, bd_packet->four_way_valve_status);
+    this->update_sub_binary_sensor(SubBinarySensorType::INDOOR_ELECTRIC_HEATING_STATUS, bd_packet->indoor_electric_heating_status);
+#endif // USE_BINARY_SENSOR
   }
   struct {
     hon_protocol::HaierPacketControl control;
@@ -758,15 +758,13 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
   if (packet.sensors.error_status != 0) {
     ESP_LOGW(TAG, "HVAC error, code=0x%02X", packet.sensors.error_status);
   }
-  #ifdef USE_SENSOR
-  if ((this->outdoor_temperature_sensor_ != nullptr) &&
+#ifdef USE_SENSOR
+  if ((this->sub_sensors_[(size_t)SubSensorType::OUTDOOR_TEMPERATURE] != nullptr) &&
       (this->got_valid_outdoor_temp_ || (packet.sensors.outdoor_temperature > 0))) {
     this->got_valid_outdoor_temp_ = true;
-    float otemp = (float) (packet.sensors.outdoor_temperature + PROTOCOL_OUTDOOR_TEMPERATURE_OFFSET);
-    if ((!this->outdoor_temperature_sensor_->has_state()) || (this->outdoor_temperature_sensor_->get_raw_state() != otemp))
-      this->outdoor_temperature_sensor_->publish_state(otemp);
+    this->update_sub_sensor(SubSensorType::OUTDOOR_TEMPERATURE, (float) (packet.sensors.outdoor_temperature + PROTOCOL_OUTDOOR_TEMPERATURE_OFFSET));
   }
-  #endif // USE_SENSOR
+#endif // USE_SENSOR
   bool should_publish = false;
   {
     // Extra modes/presets
@@ -1181,8 +1179,9 @@ bool HonClimate::prepare_pending_action() {
 void HonClimate::process_protocol_reset() {
   HaierClimateBase::process_protocol_reset();
   #ifdef USE_SENSOR
-  if (this->outdoor_temperature_sensor_ != nullptr) {
-    this->outdoor_temperature_sensor_->publish_state(NAN);
+  for (size_t index = 0; index < (size_t) SubSensorType::__SUB_SENSOR_TYPE_COUNT; index++) {
+    if ((this->sub_sensors_[index] != nullptr) && this->sub_sensors_[index]->has_state())
+      this->sub_sensors_[index]->publish_state(NAN);
   }
   #endif // USE_SENSOR
   this->got_valid_outdoor_temp_ = false;
