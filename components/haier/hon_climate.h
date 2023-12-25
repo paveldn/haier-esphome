@@ -42,7 +42,10 @@ class HonClimate : public HaierClimateBase {
 #ifdef USE_SENSOR
 public:
   enum class SubSensorType {
-    INDOOR_COIL_TEMPERATURE = 0,
+    // Used data based sensors
+    OUTDOOR_TEMPERATURE = 0,
+    // Big data based sensors
+    INDOOR_COIL_TEMPERATURE,
     OUTDOOR_COIL_TEMPERATURE,
     OUTDOOR_DEFROST_TEMPERATURE,
     OUTDOOR_IN_AIR_TEMPERATURE,
@@ -51,8 +54,8 @@ public:
     COMPRESSOR_FREQUENCY,
     COMPRESSOR_CURRENT,
     EXPANSION_VALVE_OPEN_DEGREE,
-    OUTDOOR_TEMPERATURE,
     __SUB_SENSOR_TYPE_COUNT,
+    __BIG_DATA_FRAME_SUB_SENSORS = INDOOR_COIL_TEMPERATURE,
   };
   void set_sub_sensor(SubSensorType type, sensor::Sensor *sens);
 protected:
@@ -152,6 +155,7 @@ public:
   CallbackManager<void(uint8_t, const char *)> alarm_end_callback_{};
   float active_alarm_count_{NAN};
   std::chrono::steady_clock::time_point last_alarm_request_;
+  int big_data_sensors_{0};
 };
 
 class HaierAlarmStartTrigger : public Trigger<uint8_t, const char *> {

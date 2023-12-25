@@ -689,8 +689,15 @@ void HonClimate::process_alarm_message_(const uint8_t *packet, uint8_t size, boo
 
 #ifdef USE_SENSOR
 void HonClimate::set_sub_sensor(SubSensorType type, sensor::Sensor *sens) {
-  if (type < SubSensorType::__SUB_SENSOR_TYPE_COUNT)
+  if (type < SubSensorType::__SUB_SENSOR_TYPE_COUNT) {
+    if (type >= SubSensorType::__BIG_DATA_FRAME_SUB_SENSORS) {
+      if ((this->sub_sensors_[(size_t)type] != nullptr) && (sens == nullptr))
+        this->big_data_sensors_--;
+      else if ((this->sub_sensors_[(size_t)type] == nullptr) && (sens != nullptr))
+        this->big_data_sensors_++;
+    }
     this->sub_sensors_[(size_t)type] = sens;
+  }
 }
 
 void HonClimate::update_sub_sensor(SubSensorType type, float value) {
@@ -704,8 +711,13 @@ void HonClimate::update_sub_sensor(SubSensorType type, float value) {
 
 #ifdef USE_BINARY_SENSOR
 void HonClimate::set_sub_binary_sensor(SubBinarySensorType type, binary_sensor::BinarySensor *sens) {
-  if (type < SubBinarySensorType::__SUB_BINARY_SENSOR_TYPE_COUNT)
+  if (type < SubBinarySensorType::__SUB_BINARY_SENSOR_TYPE_COUNT) {
+    if ((this->sub_binary_sensors_[(size_t)type] != nullptr) && (sens == nullptr))
+      this->big_data_sensors_--;
+    else if ((this->sub_binary_sensors_[(size_t)type] == nullptr) && (sens != nullptr))
+      this->big_data_sensors_++;
     this->sub_binary_sensors_[(size_t)type] = sens;
+  }
 }
 
 void HonClimate::update_sub_binary_sensor(SubBinarySensorType type, uint8_t value) {
@@ -1189,9 +1201,12 @@ void HonClimate::process_protocol_reset() {
 }
 
 bool HonClimate::should_get_big_data_() {
-  static uint8_t _counter = 0;
-  _counter = (_counter + 1) % 3;
-  return _counter == 1;
+  if (this->big_data_sensors_ > 0) {
+    static uint8_t _counter = 0;
+    _counter = (_counter + 1) % 3;
+    return _counter == 1;
+  }
+  return false;
 }
 
 }  // namespace haier
