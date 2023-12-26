@@ -28,6 +28,8 @@ jobs:
           - tests/rpipicow-smartair2-wifi.yaml
           - tests/esp8266-simple-smartair2.yaml
           - tests/esp8266-simple-hon.yaml
+          - tests/libretiny-hon.yaml
+          - tests/libretiny-smartair2.yaml
     steps:
     - name: Checkout code
       uses: actions/checkout@v3.5.2
