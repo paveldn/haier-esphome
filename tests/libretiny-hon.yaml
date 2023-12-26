@@ -1,0 +1,26 @@
+substitutions:
+  device_name: "Haier AC"
+  device_id: "haier_climate"
+  uart_id: "ac_port"
+  send_wifi: "true"
+
+esphome:
+  name: libretiny-hon
+
+bk72xx:
+  board: generic-bk7231n-qfn32-tuya
+
+uart:
+  baud_rate: 9600
+  tx_pin: 10
+  rx_pin: 11
+  id: ${uart_id}
+
+logger:
+  level: DEBUG
+  baud_rate: 0
+
+packages:
+  local_haier: !include .local-haier.yaml
+  haier_base: !include ../.haier-hon-base.yaml 
+  wifi: !include .wifi-base.yaml
