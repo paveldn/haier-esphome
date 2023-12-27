@@ -44,6 +44,7 @@ public:
   enum class SubSensorType {
     // Used data based sensors
     OUTDOOR_TEMPERATURE = 0,
+    HUMIDITY,
     // Big data based sensors
     INDOOR_COIL_TEMPERATURE,
     OUTDOOR_COIL_TEMPERATURE,

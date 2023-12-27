@@ -776,6 +776,9 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
     this->got_valid_outdoor_temp_ = true;
     this->update_sub_sensor(SubSensorType::OUTDOOR_TEMPERATURE, (float) (packet.sensors.outdoor_temperature + PROTOCOL_OUTDOOR_TEMPERATURE_OFFSET));
   }
+  if ((this->sub_sensors_[(size_t)SubSensorType::HUMIDITY] != nullptr) && (packet.sensors.room_humidity <= 100)) {
+    this->update_sub_sensor(SubSensorType::HUMIDITY, (float) packet.sensors.room_humidity);
+  }
 #endif // USE_SENSOR
   bool should_publish = false;
   {

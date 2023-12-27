@@ -19,8 +19,12 @@ packages:
   # Horizontal airflow direction setting. Works only if the horizontal swing
   # is off. You can remove this control if you don't need it
   airflow_horizontal_select: !include configs/select/airflow_horizontal.yaml
-  # Diagnostic sensors
+  # Additional sensors
   outdoor_temperature_sensor: !include configs/sensor/outdoor_temperature.yaml
+  # Make sure that your AC supports humidity before uncommenting it
+  # (in the opposite case value will always be 0)
+  #indoor_humidity_sensor: !include configs/sensor/humidity.yaml
+  # Diagnostic sensors
   indoor_coil_temperature_sensor: !include configs/sensor/indoor_coil_temperature.yaml
   outdoor_coil_temperature_sensor: !include configs/sensor/outdoor_coil_temperature.yaml
   outdoor_defrost_temperature_sensor: !include configs/sensor/outdoor_defrost_temperature.yaml

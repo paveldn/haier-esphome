@@ -1,0 +1,5 @@
+﻿sensor:
+  - platform: haier
+    haier_id: ${device_id}
+    humidity:
+      name: ${device_name} Indoor Humidity

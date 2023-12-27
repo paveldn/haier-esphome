@@ -3,8 +3,10 @@ import esphome.config_validation as cv
 from esphome.components import sensor
 from esphome.const import (
     CONF_POWER,
+    CONF_HUMIDITY,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_FREQUENCY,
+    DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     ENTITY_CATEGORY_DIAGNOSTIC,
@@ -14,6 +16,7 @@ from esphome.const import (
     ICON_HEATING_COIL,
     ICON_PULSE,
     ICON_THERMOMETER,
+    ICON_WATER_PERCENT,
     ICON_WEATHER_WINDY,
     STATE_CLASS_MEASUREMENT,
     UNIT_AMPERE,
@@ -68,6 +71,13 @@ SENSOR_TYPES = {
         accuracy_decimals=2,
         state_class=STATE_CLASS_MEASUREMENT,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    CONF_HUMIDITY: sensor.sensor_schema(
+        unit_of_measurement=UNIT_PERCENT,
+        icon=ICON_WATER_PERCENT,
+        accuracy_decimals=0,
+        device_class=DEVICE_CLASS_HUMIDITY,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     CONF_INDOOR_COIL_TEMPERATURE: sensor.sensor_schema(
         unit_of_measurement=UNIT_CELSIUS,
