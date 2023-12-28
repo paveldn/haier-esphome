@@ -52,7 +52,6 @@ CONF_WIFI_SIGNAL = "wifi_signal"
 
 PROTOCOL_HON = "HON"
 PROTOCOL_SMARTAIR2 = "SMARTAIR2"
-PROTOCOLS_SUPPORTED = [PROTOCOL_HON, PROTOCOL_SMARTAIR2]
 
 haier_ns = cg.esphome_ns.namespace("haier")
 HaierClimateBase = haier_ns.class_(
