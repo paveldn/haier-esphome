@@ -62,12 +62,6 @@ Smartair2Climate = haier_ns.class_("Smartair2Climate", HaierClimateBase)
 
 CONF_HAIER_ID = "haier_id"
 
-HAIER_COMPONENT_SCHEMA = cv.Schema(
-    {
-        cv.Required(CONF_HAIER_ID): cv.use_id(HonClimate),
-    }
-)
-
 AirflowVerticalDirection = haier_ns.enum("AirflowVerticalDirection", True)
 AIRFLOW_VERTICAL_DIRECTION_OPTIONS = {
     "HEALTH_UP": AirflowVerticalDirection.HEALTH_UP,

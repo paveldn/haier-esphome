@@ -28,7 +28,6 @@ from esphome.const import (
 )
 from ..climate import (
     CONF_HAIER_ID,
-    HAIER_COMPONENT_SCHEMA,
     HonClimate,
 )
 
@@ -136,10 +135,15 @@ SENSOR_TYPES = {
     ),
 }
 
-CONFIG_SCHEMA = HAIER_COMPONENT_SCHEMA.extend(
-    {cv.Optional(type): schema for type, schema in SENSOR_TYPES.items()}
+CONFIG_SCHEMA = cv.Schema(
+    {
+        cv.Required(CONF_HAIER_ID): cv.use_id(HonClimate),
+    }
+).extend(
+    {
+        cv.Optional(type): schema for type, schema in SENSOR_TYPES.items()
+    }
 )
-
 
 async def to_code(config):
     paren = await cg.get_variable(config[CONF_HAIER_ID])
