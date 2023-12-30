@@ -140,35 +140,35 @@ struct HaierPacketSensors {
 
 struct HaierPacketBigData {
   // 29
-  uint8_t power[2]; // AC power consumption (0W - 65535W, 1W step)
+  uint8_t power[2];  // AC power consumption (0W - 65535W, 1W step)
   // 31
   uint8_t indoor_coil_temperature;  // 0.5°C step, -20°C offset (0=-20°C)
   // 32
   uint8_t outdoor_out_air_temperature;  // 1°C step, -64°C offset (0=-64°C)
   // 33
-  uint8_t outdoor_coil_temperature; // 1°C step, -64°C offset (0=-64°C)
+  uint8_t outdoor_coil_temperature;  // 1°C step, -64°C offset (0=-64°C)
   // 34
   uint8_t outdoor_in_air_temperature;  // 1°C step, -64°C offset (0=-64°C)
   // 35
   uint8_t outdoor_defrost_temperature;  // 1°C step, -64°C offset (0=-64°C)
   // 36
-  uint8_t compressor_frequency; // 1Hz step, 0Hz - 127Hz
+  uint8_t compressor_frequency;  // 1Hz step, 0Hz - 127Hz
   // 37
   uint8_t compressor_current[2];  // 0.1A step, 0.0A - 51.1A (0x0000 - 0x01FF)
   // 39
-  uint8_t outdoor_fan_status : 2; // 0 - off, 1 - on,  2 - information not available
-  uint8_t defrost_status : 2; // 0 - off, 1 - on,  2 - information not available
+  uint8_t outdoor_fan_status : 2;  // 0 - off, 1 - on,  2 - information not available
+  uint8_t defrost_status : 2;      // 0 - off, 1 - on,  2 - information not available
   uint8_t : 0;
   // 40
-  uint8_t compressor_status : 2;  // 0 - off, 1 - on,  2 - information not available
-  uint8_t indoor_fan_status : 2;  // 0 - off, 1 - on,  2 - information not available
-  uint8_t four_way_valve_status : 2;  // 0 - off, 1 - on,  2 - information not available
-  uint8_t indoor_electric_heating_status : 2; // 0 - off, 1 - on,  2 - information not available
+  uint8_t compressor_status : 2;               // 0 - off, 1 - on,  2 - information not available
+  uint8_t indoor_fan_status : 2;               // 0 - off, 1 - on,  2 - information not available
+  uint8_t four_way_valve_status : 2;           // 0 - off, 1 - on,  2 - information not available
+  uint8_t indoor_electric_heating_status : 2;  // 0 - off, 1 - on,  2 - information not available
   // 41
-  uint8_t expansion_valve_open_degree[2]; // 0 - 4095
+  uint8_t expansion_valve_open_degree[2];  // 0 - 4095
 };
 
-#define UINT16_BE(x) (((uint16_t)((x)[0]) << 8) + (x)[1]) 
+#define UINT16_BE(x) (((uint16_t) ((x)[0]) << 8) + (x)[1])
 
 struct DeviceVersionAnswer {
   char protocol_version[8];

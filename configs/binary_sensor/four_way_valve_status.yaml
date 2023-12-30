@@ -1,15 +1,5 @@
 ﻿binary_sensor:
   - platform: haier
     haier_id: ${device_id}
-    outdoor_fan_status:
-      name: ${device_name} Outdoor Fan Status
-    defrost_status:
-      name: ${device_name} Defrost Status
-    compressor_status:
-      name: ${device_name} Compressor Status
-    indoor_fan_status:
-      name: ${device_name} Indoor Fan Status
     four_way_valve_status:
       name: ${device_name} Four-way Valve Status
-    indoor_electric_heating_status:
-      name: ${device_name} Indoor Electric Heating Status

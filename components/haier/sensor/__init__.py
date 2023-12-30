@@ -21,7 +21,6 @@ from esphome.const import (
     STATE_CLASS_MEASUREMENT,
     UNIT_AMPERE,
     UNIT_CELSIUS,
-    UNIT_CELSIUS,
     UNIT_HERTZ,
     UNIT_PERCENT,
     UNIT_WATT,
@@ -139,11 +138,8 @@ CONFIG_SCHEMA = cv.Schema(
     {
         cv.Required(CONF_HAIER_ID): cv.use_id(HonClimate),
     }
-).extend(
-    {
-        cv.Optional(type): schema for type, schema in SENSOR_TYPES.items()
-    }
-)
+).extend({cv.Optional(type): schema for type, schema in SENSOR_TYPES.items()})
+
 
 async def to_code(config):
     paren = await cg.get_variable(config[CONF_HAIER_ID])

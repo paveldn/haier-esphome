@@ -40,7 +40,7 @@ enum class HonControlMethod { MONITOR_ONLY = 0, SET_GROUP_PARAMETERS, SET_SINGLE
 
 class HonClimate : public HaierClimateBase {
 #ifdef USE_SENSOR
-public:
+ public:
   enum class SubSensorType {
     // Used data based sensors
     OUTDOOR_TEMPERATURE = 0,
@@ -55,16 +55,17 @@ public:
     COMPRESSOR_FREQUENCY,
     COMPRESSOR_CURRENT,
     EXPANSION_VALVE_OPEN_DEGREE,
-    __SUB_SENSOR_TYPE_COUNT,
-    __BIG_DATA_FRAME_SUB_SENSORS = INDOOR_COIL_TEMPERATURE,
+    SUB_SENSOR_TYPE_COUNT,
+    BIG_DATA_FRAME_SUB_SENSORS = INDOOR_COIL_TEMPERATURE,
   };
   void set_sub_sensor(SubSensorType type, sensor::Sensor *sens);
-protected:
-  void update_sub_sensor(SubSensorType type, float value);
-  sensor::Sensor *sub_sensors_[(size_t) SubSensorType::__SUB_SENSOR_TYPE_COUNT]{nullptr};
+
+ protected:
+  void update_sub_sensor_(SubSensorType type, float value);
+  sensor::Sensor *sub_sensors_[(size_t) SubSensorType::SUB_SENSOR_TYPE_COUNT]{nullptr};
 #endif
 #ifdef USE_BINARY_SENSOR
-public:
+ public:
   enum class SubBinarySensorType {
     OUTDOOR_FAN_STATUS = 0,
     DEFROST_STATUS,
@@ -72,14 +73,15 @@ public:
     INDOOR_FAN_STATUS,
     FOUR_WAY_VALVE_STATUS,
     INDOOR_ELECTRIC_HEATING_STATUS,
-    __SUB_BINARY_SENSOR_TYPE_COUNT,
+    SUB_BINARY_SENSOR_TYPE_COUNT,
   };
   void set_sub_binary_sensor(SubBinarySensorType type, binary_sensor::BinarySensor *sens);
-protected:
-  void update_sub_binary_sensor(SubBinarySensorType type, uint8_t value);
-  binary_sensor::BinarySensor *sub_binary_sensors_[(size_t) SubBinarySensorType::__SUB_BINARY_SENSOR_TYPE_COUNT]{nullptr};
+
+ protected:
+  void update_sub_binary_sensor_(SubBinarySensorType type, uint8_t value);
+  binary_sensor::BinarySensor *sub_binary_sensors_[(size_t) SubBinarySensorType::SUB_BINARY_SENSOR_TYPE_COUNT]{nullptr};
 #endif
-public:
+ public:
   HonClimate();
   HonClimate(const HonClimate &) = delete;
   HonClimate &operator=(const HonClimate &) = delete;

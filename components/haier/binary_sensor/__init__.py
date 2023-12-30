@@ -7,8 +7,8 @@ from esphome.const import (
     ICON_RADIATOR,
 )
 from ..climate import (
-  CONF_HAIER_ID,
-  HonClimate,
+    CONF_HAIER_ID,
+    HonClimate,
 )
 
 BinarySensorTypeEnum = HonClimate.enum("SubBinarySensorType", True)
@@ -57,11 +57,8 @@ CONFIG_SCHEMA = cv.Schema(
     {
         cv.Required(CONF_HAIER_ID): cv.use_id(HonClimate),
     }
-).extend(
-    {
-        cv.Optional(type): schema for type, schema in SENSOR_TYPES.items()
-    }
-)
+).extend({cv.Optional(type): schema for type, schema in SENSOR_TYPES.items()})
+
 
 async def to_code(config):
     paren = await cg.get_variable(config[CONF_HAIER_ID])
