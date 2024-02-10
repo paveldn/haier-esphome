@@ -1093,21 +1093,22 @@ void HonClimate::fill_control_messages_queue_() {
           break;
       }
     }
-    if (quiet_mode_buf[1] != 0xFF) {
+    auto presets = this->traits_.get_supported_presets();
+    if ((quiet_mode_buf[1] != 0xFF) && ((presets.find(climate::ClimatePreset::CLIMATE_PRESET_ECO) != presets.end()))) {
       this->control_messages_queue_.push(
           haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
-                                       (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
-                                           (uint8_t) hon_protocol::DataParameters::QUIET_MODE,
-                                       quiet_mode_buf, 2));
+                                        (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
+                                            (uint8_t) hon_protocol::DataParameters::QUIET_MODE,
+                                        quiet_mode_buf, 2));
     }
-    if (fast_mode_buf[1] != 0xFF) {
+    if ((fast_mode_buf[1] != 0xFF) && ((presets.find(climate::ClimatePreset::CLIMATE_PRESET_BOOST) != presets.end())))  {
       this->control_messages_queue_.push(
           haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
                                        (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
                                            (uint8_t) hon_protocol::DataParameters::FAST_MODE,
                                        fast_mode_buf, 2));
     }
-    if (away_mode_buf[1] != 0xFF) {
+    if ((away_mode_buf[1] != 0xFF) && ((presets.find(climate::ClimatePreset::CLIMATE_PRESET_AWAY) != presets.end()))) {
       this->control_messages_queue_.push(
           haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
                                        (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
