@@ -1117,7 +1117,7 @@ void HonClimate::fill_control_messages_queue_() {
     }
   }
   // Target temperature
-  if (climate_control.target_temperature.has_value()) {
+  if (climate_control.target_temperature.has_value() && (this->mode != ClimateMode::CLIMATE_MODE_FAN_ONLY)) {
     uint8_t buffer[2] = {0x00, 0x00};
     buffer[1] = ((uint8_t) climate_control.target_temperature.value()) - 16;
     this->control_messages_queue_.push(
