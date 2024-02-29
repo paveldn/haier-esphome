@@ -47,6 +47,7 @@ CONF_DISPLAY = "display"
 CONF_HORIZONTAL_AIRFLOW = "horizontal_airflow"
 CONF_ON_ALARM_START = "on_alarm_start"
 CONF_ON_ALARM_END = "on_alarm_end"
+CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
 CONF_VERTICAL_AIRFLOW = "vertical_airflow"
 CONF_WIFI_SIGNAL = "wifi_signal"
 
@@ -232,6 +233,9 @@ CONFIG_SCHEMA = cv.All(
                         default=list(["BOOST", "ECO", "SLEEP"]),  # No AWAY by default
                     ): cv.ensure_list(
                         cv.enum(SUPPORTED_CLIMATE_PRESETS_HON_OPTIONS, upper=True)
+                    ),
+                    cv.Optional(CONF_OUTDOOR_TEMPERATURE): cv.invalid(
+                        f"The {CONF_OUTDOOR_TEMPERATURE} option is deprecated, use a sensor for a haier platform instead"
                     ),
                     cv.Optional(CONF_ON_ALARM_START): automation.validate_automation(
                         {

@@ -2,6 +2,7 @@
 #include <string>
 #include "esphome/components/climate/climate.h"
 #include "esphome/components/uart/uart.h"
+#include "esphome/core/helpers.h"
 #include "hon_climate.h"
 #include "hon_packet.h"
 
@@ -752,11 +753,13 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
     this->update_sub_sensor_(SubSensorType::OUTDOOR_DEFROST_TEMPERATURE, bd_packet->outdoor_coil_temperature - 64);
     this->update_sub_sensor_(SubSensorType::OUTDOOR_IN_AIR_TEMPERATURE, bd_packet->outdoor_in_air_temperature - 64);
     this->update_sub_sensor_(SubSensorType::OUTDOOR_OUT_AIR_TEMPERATURE, bd_packet->outdoor_out_air_temperature - 64);
-    this->update_sub_sensor_(SubSensorType::POWER, UINT16_BE(bd_packet->power));
+    this->update_sub_sensor_(SubSensorType::POWER, encode_uint16(bd_packet->power[0], bd_packet->power[1]));
     this->update_sub_sensor_(SubSensorType::COMPRESSOR_FREQUENCY, bd_packet->compressor_frequency);
-    this->update_sub_sensor_(SubSensorType::COMPRESSOR_CURRENT, UINT16_BE(bd_packet->compressor_current) / 10.0);
-    this->update_sub_sensor_(SubSensorType::EXPANSION_VALVE_OPEN_DEGREE,
-                             UINT16_BE(bd_packet->expansion_valve_open_degree) / 4095.0);
+    this->update_sub_sensor_(SubSensorType::COMPRESSOR_CURRENT,
+                             encode_uint16(bd_packet->compressor_current[0], bd_packet->compressor_current[1]) / 10.0);
+    this->update_sub_sensor_(
+        SubSensorType::EXPANSION_VALVE_OPEN_DEGREE,
+        encode_uint16(bd_packet->expansion_valve_open_degree[0], bd_packet->expansion_valve_open_degree[1]) / 4095.0);
 #endif  // USE_SENSOR
 #ifdef USE_BINARY_SENSOR
     this->update_sub_binary_sensor_(SubBinarySensorType::OUTDOOR_FAN_STATUS, bd_packet->outdoor_fan_status);
@@ -1097,11 +1100,11 @@ void HonClimate::fill_control_messages_queue_() {
     if ((quiet_mode_buf[1] != 0xFF) && ((presets.find(climate::ClimatePreset::CLIMATE_PRESET_ECO) != presets.end()))) {
       this->control_messages_queue_.push(
           haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
-                                        (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
-                                            (uint8_t) hon_protocol::DataParameters::QUIET_MODE,
-                                        quiet_mode_buf, 2));
+                                       (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
+                                           (uint8_t) hon_protocol::DataParameters::QUIET_MODE,
+                                       quiet_mode_buf, 2));
     }
-    if ((fast_mode_buf[1] != 0xFF) && ((presets.find(climate::ClimatePreset::CLIMATE_PRESET_BOOST) != presets.end())))  {
+    if ((fast_mode_buf[1] != 0xFF) && ((presets.find(climate::ClimatePreset::CLIMATE_PRESET_BOOST) != presets.end()))) {
       this->control_messages_queue_.push(
           haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
                                        (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
