@@ -112,7 +112,7 @@ hOn configuration example
        wifi_signal: true           # Optional, default true, enables WiFI signal transmission from ESP to AC
        beeper: true                # Optional, default true, disables beep on commands from ESP
        display: true               # Optional, default true, can be used to turn off LED display
-       answer_timeout:: 200ms      # Optional, request answer timeout, can be used to increase the timeout
+       answer_timeout:  200ms      # Optional, request answer timeout, can be used to increase the timeout
                                    # for some ACs that have longer answer delays
        visual:                     # Optional, you can use it to limit min and max temperatures in UI (not working for remote!)
          min_temperature: 16 °C
