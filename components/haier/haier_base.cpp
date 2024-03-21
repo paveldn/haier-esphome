@@ -243,6 +243,9 @@ void HaierClimateBase::dump_config() {
 
 void HaierClimateBase::loop() {
   std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+  if (this->high_freq_.is_high_frequency() && !this->haier_protocol_.is_waiting_for_answer()) {
+    this->high_freq_.stop();
+  }
   if ((std::chrono::duration_cast<std::chrono::milliseconds>(now - this->last_valid_status_timestamp_).count() >
        COMMUNICATION_TIMEOUT_MS) ||
       (this->reset_protocol_request_ && (!this->haier_protocol_.is_waiting_for_answer()))) {
@@ -361,6 +364,7 @@ void HaierClimateBase::send_message_(const haier_protocol::HaierMessage &command
                                      std::chrono::milliseconds interval) {
   this->haier_protocol_.send_message(command, use_crc, num_repeats, interval);
   this->last_request_timestamp_ = std::chrono::steady_clock::now();
+  this->high_freq_.start();
 }
 
 }  // namespace haier
