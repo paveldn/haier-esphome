@@ -139,6 +139,7 @@ class HaierClimateBase : public esphome::Component,
   esphome::climate::ClimateTraits traits_;
   HvacSettings current_hvac_settings_;
   HvacSettings next_hvac_settings_;
+  bool high_freq_on_;
   esphome::HighFrequencyLoopRequester high_freq_;
   std::unique_ptr<uint8_t[]> last_status_message_;
   std::chrono::steady_clock::time_point last_request_timestamp_;       // For interval between messages
