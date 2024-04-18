@@ -4,9 +4,6 @@ select:
     name: ${device_name} airflow vertical
     entity_category: config
     icon: mdi:arrow-expand-vertical
-    optimistic: true
-    restore_value: true
-    initial_option: Center
     options:
       - Health Up
       - Max Up
@@ -14,8 +11,37 @@ select:
       - Center
       - Down
       - Health Down
-    on_value:
-      then:
-        - climate.haier.set_vertical_airflow:
-           id: ${device_id}
-           vertical_airflow: !lambda "return esphome::haier::AirflowVerticalDirection(i);"
+    lambda: >-
+      switch (id(${device_id}).get_vertical_airflow())
+      {
+          case esphome::haier::hon_protocol::VerticalSwingMode::HEALTH_UP:
+              return std::string("Health Up");
+          case esphome::haier::hon_protocol::VerticalSwingMode::MAX_UP:
+              return std::string("Max Up");
+          case esphome::haier::hon_protocol::VerticalSwingMode::UP:
+              return std::string("Up");
+          default:
+          case esphome::haier::hon_protocol::VerticalSwingMode::CENTER:
+              return std::string("Center");
+          case esphome::haier::hon_protocol::VerticalSwingMode::DOWN:
+              return std::string("Down");
+          case esphome::haier::hon_protocol::VerticalSwingMode::HEALTH_DOWN:
+              return std::string("Health Down");
+      }
+    set_action:
+      - climate.haier.set_vertical_airflow:
+          id: ${device_id}
+          vertical_airflow: !lambda >-
+            if (x == "Health Up")
+                return esphome::haier::hon_protocol::VerticalSwingMode::HEALTH_UP;
+            else if (x == "Max Up")
+                return esphome::haier::hon_protocol::VerticalSwingMode::MAX_UP;
+            else if (x == "Up")
+                return esphome::haier::hon_protocol::VerticalSwingMode::UP;
+            else if (x == "Down")
+                return esphome::haier::hon_protocol::VerticalSwingMode::DOWN;
+            else if (x == "Health Down")
+                return esphome::haier::hon_protocol::VerticalSwingMode::HEALTH_DOWN;
+            else
+                return esphome::haier::hon_protocol::VerticalSwingMode::CENTER;
+

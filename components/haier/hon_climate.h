@@ -9,26 +9,10 @@
 #endif
 #include "esphome/core/automation.h"
 #include "haier_base.h"
+#include "hon_packet.h"
 
 namespace esphome {
 namespace haier {
-
-enum class AirflowVerticalDirection : uint8_t {
-  HEALTH_UP = 0,
-  MAX_UP = 1,
-  UP = 2,
-  CENTER = 3,
-  DOWN = 4,
-  HEALTH_DOWN = 5,
-};
-
-enum class AirflowHorizontalDirection : uint8_t {
-  MAX_LEFT = 0,
-  LEFT = 1,
-  CENTER = 2,
-  RIGHT = 3,
-  MAX_RIGHT = 4,
-};
 
 enum class CleaningState : uint8_t {
   NO_CLEANING = 0,
@@ -89,10 +73,10 @@ class HonClimate : public HaierClimateBase {
   void dump_config() override;
   void set_beeper_state(bool state);
   bool get_beeper_state() const;
-  AirflowVerticalDirection get_vertical_airflow() const;
-  void set_vertical_airflow(AirflowVerticalDirection direction);
-  AirflowHorizontalDirection get_horizontal_airflow() const;
-  void set_horizontal_airflow(AirflowHorizontalDirection direction);
+  hon_protocol::VerticalSwingMode get_vertical_airflow() const;
+  void set_vertical_airflow(hon_protocol::VerticalSwingMode direction);
+  hon_protocol::HorizontalSwingMode get_horizontal_airflow() const;
+  void set_horizontal_airflow(hon_protocol::HorizontalSwingMode direction);
   std::string get_cleaning_status_text() const;
   CleaningState get_cleaning_status() const;
   void start_self_cleaning();
@@ -147,8 +131,8 @@ class HonClimate : public HaierClimateBase {
   bool beeper_status_;
   CleaningState cleaning_status_;
   bool got_valid_outdoor_temp_;
-  AirflowVerticalDirection vertical_direction_;
-  AirflowHorizontalDirection horizontal_direction_;
+  hon_protocol::VerticalSwingMode vertical_direction_;
+  hon_protocol::HorizontalSwingMode horizontal_direction_;
   esphome::optional<HardwareInfo> hvac_hardware_info_;
   uint8_t active_alarms_[8];
   int extra_control_packet_bytes_;

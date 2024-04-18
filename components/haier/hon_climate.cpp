@@ -19,38 +19,6 @@ constexpr uint8_t CONTROL_MESSAGE_RETRIES = 5;
 constexpr std::chrono::milliseconds CONTROL_MESSAGE_RETRIES_INTERVAL = std::chrono::milliseconds(500);
 constexpr size_t ALARM_STATUS_REQUEST_INTERVAL_MS = 600000;
 
-hon_protocol::VerticalSwingMode get_vertical_swing_mode(AirflowVerticalDirection direction) {
-  switch (direction) {
-    case AirflowVerticalDirection::HEALTH_UP:
-      return hon_protocol::VerticalSwingMode::HEALTH_UP;
-    case AirflowVerticalDirection::MAX_UP:
-      return hon_protocol::VerticalSwingMode::MAX_UP;
-    case AirflowVerticalDirection::UP:
-      return hon_protocol::VerticalSwingMode::UP;
-    case AirflowVerticalDirection::DOWN:
-      return hon_protocol::VerticalSwingMode::DOWN;
-    case AirflowVerticalDirection::HEALTH_DOWN:
-      return hon_protocol::VerticalSwingMode::HEALTH_DOWN;
-    default:
-      return hon_protocol::VerticalSwingMode::CENTER;
-  }
-}
-
-hon_protocol::HorizontalSwingMode get_horizontal_swing_mode(AirflowHorizontalDirection direction) {
-  switch (direction) {
-    case AirflowHorizontalDirection::MAX_LEFT:
-      return hon_protocol::HorizontalSwingMode::MAX_LEFT;
-    case AirflowHorizontalDirection::LEFT:
-      return hon_protocol::HorizontalSwingMode::LEFT;
-    case AirflowHorizontalDirection::RIGHT:
-      return hon_protocol::HorizontalSwingMode::RIGHT;
-    case AirflowHorizontalDirection::MAX_RIGHT:
-      return hon_protocol::HorizontalSwingMode::MAX_RIGHT;
-    default:
-      return hon_protocol::HorizontalSwingMode::CENTER;
-  }
-}
-
 HonClimate::HonClimate()
     : cleaning_status_(CleaningState::NO_CLEANING), got_valid_outdoor_temp_(false), active_alarms_{0x00, 0x00, 0x00,
                                                                                                    0x00, 0x00, 0x00,
@@ -66,16 +34,16 @@ void HonClimate::set_beeper_state(bool state) { this->beeper_status_ = state; }
 
 bool HonClimate::get_beeper_state() const { return this->beeper_status_; }
 
-AirflowVerticalDirection HonClimate::get_vertical_airflow() const { return this->vertical_direction_; };
+hon_protocol::VerticalSwingMode HonClimate::get_vertical_airflow() const { return this->vertical_direction_; };
 
-void HonClimate::set_vertical_airflow(AirflowVerticalDirection direction) {
+void HonClimate::set_vertical_airflow(hon_protocol::VerticalSwingMode direction) {
   this->vertical_direction_ = direction;
   this->force_send_control_ = true;
 }
 
-AirflowHorizontalDirection HonClimate::get_horizontal_airflow() const { return this->horizontal_direction_; }
+hon_protocol::HorizontalSwingMode HonClimate::get_horizontal_airflow() const { return this->horizontal_direction_; }
 
-void HonClimate::set_horizontal_airflow(AirflowHorizontalDirection direction) {
+void HonClimate::set_horizontal_airflow(hon_protocol::HorizontalSwingMode direction) {
   this->horizontal_direction_ = direction;
   this->force_send_control_ = true;
 }
@@ -560,16 +528,16 @@ haier_protocol::HaierMessage HonClimate::get_control_message() {
     if (climate_control.swing_mode.has_value()) {
       switch (climate_control.swing_mode.value()) {
         case CLIMATE_SWING_OFF:
-          out_data->horizontal_swing_mode = (uint8_t) get_horizontal_swing_mode(this->horizontal_direction_);
-          out_data->vertical_swing_mode = (uint8_t) get_vertical_swing_mode(this->vertical_direction_);
+          out_data->horizontal_swing_mode = (uint8_t) this->horizontal_direction_;
+          out_data->vertical_swing_mode = (uint8_t) this->vertical_direction_;
           break;
         case CLIMATE_SWING_VERTICAL:
-          out_data->horizontal_swing_mode = (uint8_t) get_horizontal_swing_mode(this->horizontal_direction_);
+          out_data->horizontal_swing_mode = (uint8_t) this->horizontal_direction_;
           out_data->vertical_swing_mode = (uint8_t) hon_protocol::VerticalSwingMode::AUTO;
           break;
         case CLIMATE_SWING_HORIZONTAL:
           out_data->horizontal_swing_mode = (uint8_t) hon_protocol::HorizontalSwingMode::AUTO;
-          out_data->vertical_swing_mode = (uint8_t) get_vertical_swing_mode(this->vertical_direction_);
+          out_data->vertical_swing_mode = (uint8_t) this->vertical_direction_;
           break;
         case CLIMATE_SWING_BOTH:
           out_data->horizontal_swing_mode = (uint8_t) hon_protocol::HorizontalSwingMode::AUTO;
@@ -633,9 +601,9 @@ haier_protocol::HaierMessage HonClimate::get_control_message() {
     }
   } else {
     if (out_data->vertical_swing_mode != (uint8_t) hon_protocol::VerticalSwingMode::AUTO)
-      out_data->vertical_swing_mode = (uint8_t) get_vertical_swing_mode(this->vertical_direction_);
+      out_data->vertical_swing_mode = (uint8_t) this->vertical_direction_;
     if (out_data->horizontal_swing_mode != (uint8_t) hon_protocol::HorizontalSwingMode::AUTO)
-      out_data->horizontal_swing_mode = (uint8_t) get_horizontal_swing_mode(this->horizontal_direction_);
+      out_data->horizontal_swing_mode = (uint8_t) this->horizontal_direction_;
   }
   out_data->beeper_status = ((!this->beeper_status_) || (!has_hvac_settings)) ? 1 : 0;
   control_out_buffer[4] = 0;  // This byte should be cleared before setting values
