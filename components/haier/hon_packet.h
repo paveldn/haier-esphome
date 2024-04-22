@@ -9,11 +9,15 @@ namespace hon_protocol {
 enum class VerticalSwingMode : uint8_t {
   HEALTH_UP = 0x01,
   MAX_UP = 0x02,
+  MAX_UP_2 = 0x00,
   HEALTH_DOWN = 0x03,
   UP = 0x04,
   CENTER = 0x06,
-  DOWN = 0x08,
-  AUTO = 0x0C
+  DOWN = 0x0A,
+  MAX_DOWN = 0x08,
+  AUTO = 0x0C,
+  // Auto for special modes
+  AUTO_SPECIAL = 0x0E,
 };
 
 enum class HorizontalSwingMode : uint8_t {
@@ -22,7 +26,7 @@ enum class HorizontalSwingMode : uint8_t {
   LEFT = 0x04,
   RIGHT = 0x05,
   MAX_RIGHT = 0x06,
-  AUTO = 0x07
+  AUTO = 0x07,
 };
 
 enum class ConditioningMode : uint8_t {
