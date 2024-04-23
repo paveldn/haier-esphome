@@ -11,7 +11,7 @@ select:
       - Right
       - Max Right
     lambda: >-
-      switch (id(${device_id}).get_horizontal_airflow())
+      switch (id(${device_id}).get_horizontal_airflow().value_or(esphome::haier::hon_protocol::HorizontalSwingMode::CENTER))
       {
           case esphome::haier::hon_protocol::HorizontalSwingMode::MAX_LEFT:
               return std::string("Max Left");

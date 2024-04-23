@@ -12,7 +12,7 @@ select:
       - Down
       - Health Down
     lambda: >-
-      switch (id(${device_id}).get_vertical_airflow())
+      switch (id(${device_id}).get_vertical_airflow().value_or(esphome::haier::hon_protocol::VerticalSwingMode::CENTER))
       {
           case esphome::haier::hon_protocol::VerticalSwingMode::HEALTH_UP:
               return std::string("Health Up");
