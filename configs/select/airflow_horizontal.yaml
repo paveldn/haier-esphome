@@ -4,12 +4,16 @@ select:
     name: ${device_name} airflow horizontal
     entity_category: config
     icon: mdi:arrow-expand-horizontal
+    update_interval: 5s
     options:
       - Max Left
       - Left
       - Center
       - Right
       - Max Right
+      - Auto
+      - Test 01
+      - Test 02
     lambda: >-
       switch (id(${device_id}).get_horizontal_airflow().value_or(esphome::haier::hon_protocol::HorizontalSwingMode::CENTER))
       {
@@ -24,6 +28,12 @@ select:
               return std::string("Right");
           case esphome::haier::hon_protocol::HorizontalSwingMode::MAX_RIGHT:
               return std::string("Max Right");
+          case esphome::haier::hon_protocol::HorizontalSwingMode::AUTO:
+              return std::string("Auto");
+          case esphome::haier::hon_protocol::HorizontalSwingMode::TEST_01:
+              return std::string("Test 01");
+          case esphome::haier::hon_protocol::HorizontalSwingMode::TEST_02:
+              return std::string("Test 02");
       }
     set_action:
       - climate.haier.set_horizontal_airflow:
@@ -37,5 +47,11 @@ select:
                 return esphome::haier::hon_protocol::HorizontalSwingMode::RIGHT;
             else if (x == "Max Right")
                 return esphome::haier::hon_protocol::HorizontalSwingMode::MAX_RIGHT;
+            else if (x == "Auto")
+                return esphome::haier::hon_protocol::HorizontalSwingMode::AUTO;
+            else if (x == "Test 01")
+                return esphome::haier::hon_protocol::HorizontalSwingMode::TEST_01;
+            else if (x == "Test 02")
+                return esphome::haier::hon_protocol::HorizontalSwingMode::TEST_02;
             else
                 return esphome::haier::hon_protocol::HorizontalSwingMode::CENTER;

@@ -22,6 +22,8 @@ enum class VerticalSwingMode : uint8_t {
 
 enum class HorizontalSwingMode : uint8_t {
   CENTER = 0x00,
+  TEST_01 = 0x01,
+  TEST_02 = 0x02,
   MAX_LEFT = 0x03,
   LEFT = 0x04,
   RIGHT = 0x05,
