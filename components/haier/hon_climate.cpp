@@ -469,6 +469,8 @@ void HonClimate::initialization() {
     this->settings_ = recovered;
   else
     this->settings_ = { hon_protocol::VerticalSwingMode::CENTER,  hon_protocol::HorizontalSwingMode::CENTER };
+  this->current_vertical_swing_ = this->settings_.last_vertiacal_swing;
+  this->current_horizontal_swing_ = this->settings_.last_horizontal_swing;
 }
 
 haier_protocol::HaierMessage HonClimate::get_control_message() {
