@@ -20,7 +20,6 @@ select:
           case esphome::haier::hon_protocol::VerticalSwingMode::HEALTH_UP:
               return std::string("Health Up");
           case esphome::haier::hon_protocol::VerticalSwingMode::MAX_UP:
-          case esphome::haier::hon_protocol::VerticalSwingMode::MAX_UP_2:
               return std::string("Max Up");
           case esphome::haier::hon_protocol::VerticalSwingMode::UP:
               return std::string("Up");
