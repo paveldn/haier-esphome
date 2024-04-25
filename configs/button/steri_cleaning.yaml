@@ -1,7 +1,6 @@
 button:
 # Introduced in (some) models starting from 2021
-  - platform: template
-    name: ${device_name} start 56°C steri-cleaning
-    icon: mdi:spray-bottle
-    on_press:
-      - climate.haier.start_steri_cleaning: ${device_id}
+  - platform: haier
+    haier_id: ${device_id}
+    steri_cleaning:
+      name: ${device_name} start 56°C steri-cleaning

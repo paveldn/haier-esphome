@@ -1,0 +1,7 @@
+text_sensor:
+  - platform: haier
+    haier_id: ${device_id}
+    protocol_version:
+      name: ${device_name} protocol version
+
+

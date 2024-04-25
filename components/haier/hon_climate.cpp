@@ -120,6 +120,10 @@ haier_protocol::HandlerError HonClimate::get_device_version_answer_handler_(haie
     this->hvac_hardware_info_.value().hardware_version_ = std::string(tmp);
     strncpy(tmp, answr->device_name, 8);
     this->hvac_hardware_info_.value().device_name_ = std::string(tmp);
+#ifdef USE_TEXT_SENSOR
+      this->update_sub_text_sensor_(SubTextSensorType::APPLIANCE_NAME, this->hvac_hardware_info_.value().device_name_);
+      this->update_sub_text_sensor_(SubTextSensorType::PROTOCOL_VERSION, this->hvac_hardware_info_.value().protocol_version_);      
+#endif // USE_TEXT_SENSOR
     this->hvac_hardware_info_.value().functions_[0] = (answr->functions[1] & 0x01) != 0;  // interactive mode support
     this->hvac_hardware_info_.value().functions_[1] =
         (answr->functions[1] & 0x02) != 0;  // controller-device mode support
@@ -725,6 +729,33 @@ void HonClimate::update_sub_binary_sensor_(SubBinarySensorType type, uint8_t val
 }
 #endif  // USE_BINARY_SENSOR
 
+#ifdef USE_TEXT_SENSOR
+void HonClimate::set_sub_text_sensor(SubTextSensorType type, text_sensor::TextSensor *sens) {
+  this->sub_text_sensors_[(size_t) type] = sens;
+  switch (type) {
+    case SubTextSensorType::APPLIANCE_NAME:
+      if (this->hvac_hardware_info_.has_value())
+        sens->publish_state(this->hvac_hardware_info_.value().device_name_);
+      break;
+    case SubTextSensorType::PROTOCOL_VERSION:
+      if (this->hvac_hardware_info_.has_value())
+        sens->publish_state(this->hvac_hardware_info_.value().protocol_version_);
+      break;
+    case SubTextSensorType::CLEANING_STATUS:
+      sens->publish_state(this->get_cleaning_status_text());
+      break;
+    default:
+      break;
+  }
+}
+
+void HonClimate::update_sub_text_sensor_(SubTextSensorType type, std::string value) {
+  size_t index = (size_t) type;
+  if (this->sub_text_sensors_[index] != nullptr)
+    this->sub_text_sensors_[index]->publish_state(value);
+}
+#endif  // USE_TEXT_SENSOR
+
 haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *packet_buffer, uint8_t size) {
   size_t expected_size = 2 + sizeof(hon_protocol::HaierPacketControl) + sizeof(hon_protocol::HaierPacketSensors) +
                          this->extra_control_packet_bytes_;
@@ -884,6 +915,9 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
             PendingAction({ActionRequest::TURN_POWER_OFF, esphome::optional<haier_protocol::HaierMessage>()});
       }
       this->cleaning_status_ = new_cleaning;
+#ifdef USE_TEXT_SENSOR
+      this->update_sub_text_sensor_(SubTextSensorType::CLEANING_STATUS, this->get_cleaning_status_text());
+#endif // USE_TEXT_SENSOR
     }
   }
   {

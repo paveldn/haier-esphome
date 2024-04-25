@@ -1,0 +1,7 @@
+text_sensor:
+  - platform: haier
+    haier_id: ${device_id}
+    appliance_name:
+      name: ${device_name} appliance name
+
+

@@ -1,6 +1,5 @@
 button:
-  - platform: template
-    name: ${device_name} start self cleaning
-    icon: mdi:spray-bottle
-    on_press:
-      - climate.haier.start_self_cleaning: ${device_id}
+  - platform: haier
+    haier_id: ${device_id}
+    self_cleaning:
+      name: ${device_name} start self cleaning

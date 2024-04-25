@@ -8,7 +8,7 @@ packages:
   turn_off_service: !include configs/api/service.turn_off.yaml
   self_cleaning_button: !include configs/button/self_cleaning.yaml
   steri_cleaning_button: !include configs/button/steri_cleaning.yaml
-  cleaning_status_sensor: !include configs/text_sensor/cleaning_status.yaml
+  cleaning_status_text_sensor: !include configs/text_sensor/cleaning_status.yaml
   display_switch: !include configs/switch/display.yaml
   beeper_switch: !include configs/switch/beeper.yaml
   health_mode_switch: !include configs/switch/health_mode.yaml
@@ -41,3 +41,6 @@ packages:
   indoor_fan_status_binary_sensor: !include configs/binary_sensor/indoor_fan_status.yaml
   four_way_valve_status_binary_sensor: !include configs/binary_sensor/four_way_valve_status.yaml
   indoor_electric_heating_status_binary_sensor: !include configs/binary_sensor/indoor_electric_heating_status.yaml
+  # Diagnostic text sensors
+  appliance_name_text_sensor: !include configs/text_sensor/appliance_name.yaml
+  protocol_version_text_sensor: !include configs/text_sensor/protocol_version.yaml

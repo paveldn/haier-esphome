@@ -7,6 +7,9 @@
 #ifdef USE_BINARY_SENSOR
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #endif
+#ifdef USE_TEXT_SENSOR
+#include "esphome/components/text_sensor/text_sensor.h"
+#endif
 #include "esphome/core/automation.h"
 #include "haier_base.h"
 #include "hon_packet.h"
@@ -69,6 +72,20 @@ class HonClimate : public HaierClimateBase {
  protected:
   void update_sub_binary_sensor_(SubBinarySensorType type, uint8_t value);
   binary_sensor::BinarySensor *sub_binary_sensors_[(size_t) SubBinarySensorType::SUB_BINARY_SENSOR_TYPE_COUNT]{nullptr};
+#endif
+#ifdef USE_TEXT_SENSOR
+ public:
+  enum class SubTextSensorType {
+    CLEANING_STATUS = 0,
+    PROTOCOL_VERSION,
+    APPLIANCE_NAME,
+    SUB_TEXT_SENSOR_TYPE_COUNT,
+  };
+  void set_sub_text_sensor(SubTextSensorType type, text_sensor::TextSensor *sens);
+
+ protected:
+  void update_sub_text_sensor_(SubTextSensorType type, std::string value);
+  text_sensor::TextSensor *sub_text_sensors_[(size_t) SubTextSensorType::SUB_TEXT_SENSOR_TYPE_COUNT]{nullptr};
 #endif
  public:
   HonClimate();
