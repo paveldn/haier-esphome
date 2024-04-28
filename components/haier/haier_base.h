@@ -6,6 +6,10 @@
 #include "esphome/components/uart/uart.h"
 // HaierProtocol
 #include <protocol/haier_protocol.h>
+#ifdef USE_SWITCH
+#include "esphome/components/switch/switch.h"
+#endif
+
 
 namespace esphome {
 namespace haier {
@@ -23,11 +27,15 @@ class HaierClimateBase : public esphome::Component,
                          public esphome::climate::Climate,
                          public esphome::uart::UARTDevice,
                          public haier_protocol::ProtocolStream {
+#ifdef USE_SWITCH
+  SUB_SWITCH(display)
+  SUB_SWITCH(health_mode)
+#endif
  public:
   HaierClimateBase();
   HaierClimateBase(const HaierClimateBase &) = delete;
   HaierClimateBase &operator=(const HaierClimateBase &) = delete;
-  ~HaierClimateBase();
+  virtual ~HaierClimateBase();
   void setup() override;
   void loop() override;
   void control(const esphome::climate::ClimateCall &call) override;
@@ -80,7 +88,8 @@ class HaierClimateBase : public esphome::Component,
   virtual void process_phase(std::chrono::steady_clock::time_point now) = 0;
   virtual haier_protocol::HaierMessage get_control_message() = 0;
   virtual haier_protocol::HaierMessage get_power_message(bool state) = 0;
-  virtual void initialization() {};
+  virtual bool load_persistent_data_(bool forced);
+  virtual void save_persistent_data_();
   virtual bool prepare_pending_action();
   virtual void process_protocol_reset();
   esphome::climate::ClimateTraits traits() override;
@@ -130,13 +139,15 @@ class HaierClimateBase : public esphome::Component,
   esphome::optional<PendingAction> action_request_;
   uint8_t fan_mode_speed_;
   uint8_t other_modes_fan_speed_;
-  bool display_status_;
-  bool health_mode_;
+  esphome::optional<bool> display_status_{};
+  esphome::optional<bool> health_mode_{};
   bool force_send_control_;
   bool forced_request_status_;
   bool reset_protocol_request_;
   bool send_wifi_signal_;
   bool use_crc_;
+  bool persistent_data_changed_{false};
+  bool persistent_data_loaded_{false};
   esphome::climate::ClimateTraits traits_;
   HvacSettings current_hvac_settings_;
   HvacSettings next_hvac_settings_;
@@ -147,6 +158,7 @@ class HaierClimateBase : public esphome::Component,
   std::chrono::steady_clock::time_point last_valid_status_timestamp_;  // For protocol timeout
   std::chrono::steady_clock::time_point last_status_request_;          // To request AC status
   std::chrono::steady_clock::time_point last_signal_request_;          // To send WiFI signal level
+  esphome::ESPPreferenceObject haier_state_saver_;
 };
 
 }  // namespace haier

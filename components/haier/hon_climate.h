@@ -25,11 +25,6 @@ enum class CleaningState : uint8_t {
 
 enum class HonControlMethod { MONITOR_ONLY = 0, SET_GROUP_PARAMETERS, SET_SINGLE_PARAMETER };
 
-struct HonSettings {
-  hon_protocol::VerticalSwingMode last_vertiacal_swing;
-  hon_protocol::HorizontalSwingMode last_horizontal_swing;
-};
-
 class HonClimate : public HaierClimateBase {
 #ifdef USE_SENSOR
  public:
@@ -87,11 +82,17 @@ class HonClimate : public HaierClimateBase {
   void update_sub_text_sensor_(SubTextSensorType type, std::string value);
   text_sensor::TextSensor *sub_text_sensors_[(size_t) SubTextSensorType::SUB_TEXT_SENSOR_TYPE_COUNT]{nullptr};
 #endif
+#ifdef USE_SWITCH
+ protected:
+  switch_::Switch *beeper_switch_{nullptr};
+ public:
+  void set_beeper_switch(switch_::Switch *s);
+#endif
  public:
   HonClimate();
   HonClimate(const HonClimate &) = delete;
   HonClimate &operator=(const HonClimate &) = delete;
-  ~HonClimate();
+  virtual ~HonClimate();
   void dump_config() override;
   void set_beeper_state(bool state);
   bool get_beeper_state() const;
@@ -114,9 +115,10 @@ class HonClimate : public HaierClimateBase {
   void process_phase(std::chrono::steady_clock::time_point now) override;
   haier_protocol::HaierMessage get_control_message() override;
   haier_protocol::HaierMessage get_power_message(bool state) override;
-  void initialization() override;
   bool prepare_pending_action() override;
   void process_protocol_reset() override;
+  bool load_persistent_data_(bool forced) override;
+  void save_persistent_data_() override;
   bool should_get_big_data_();
 
   // Answers handlers
@@ -151,7 +153,7 @@ class HonClimate : public HaierClimateBase {
     bool functions_[5];
   };
 
-  bool beeper_status_;
+  esphome::optional<bool> beeper_status_{};
   CleaningState cleaning_status_;
   bool got_valid_outdoor_temp_;
   esphome::optional<hon_protocol::VerticalSwingMode> pending_vertical_direction_{};
@@ -168,8 +170,8 @@ class HonClimate : public HaierClimateBase {
   int big_data_sensors_{0};
   esphome::optional<hon_protocol::VerticalSwingMode> current_vertical_swing_{};
   esphome::optional<hon_protocol::HorizontalSwingMode> current_horizontal_swing_{};
-  HonSettings settings_;
-  ESPPreferenceObject rtc_;
+  esphome::optional<hon_protocol::VerticalSwingMode> last_vertical_position_{};
+  esphome::optional<hon_protocol::HorizontalSwingMode> last_horizontal_position_{};
 };
 
 class HaierAlarmStartTrigger : public Trigger<uint8_t, const char *> {

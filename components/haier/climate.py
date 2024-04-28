@@ -225,7 +225,7 @@ CONFIG_SCHEMA = cv.All(
                     ): cv.ensure_list(
                         cv.enum(SUPPORTED_HON_CONTROL_METHODS, upper=True)
                     ),
-                    cv.Optional(CONF_BEEPER, default=True): cv.boolean,
+                    cv.Optional(CONF_BEEPER): cv.boolean,
                     cv.Optional(
                         CONF_CONTROL_PACKET_SIZE, default=PROTOCOL_CONTROL_PACKET_SIZE
                     ): cv.int_range(min=PROTOCOL_CONTROL_PACKET_SIZE, max=50),

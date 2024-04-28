@@ -49,10 +49,14 @@ bool check_timeout(std::chrono::steady_clock::time_point now, std::chrono::stead
   return std::chrono::duration_cast<std::chrono::milliseconds>(now - tpoint).count() > timeout;
 }
 
+struct HaierStateData {
+  bool display_status_;
+  bool health_mode_;
+};
+
 HaierClimateBase::HaierClimateBase()
     : haier_protocol_(*this),
       protocol_phase_(ProtocolPhases::SENDING_INIT_1),
-      display_status_(true),
       health_mode_(false),
       force_send_control_(false),
       forced_request_status_(false),
@@ -71,7 +75,12 @@ HaierClimateBase::HaierClimateBase()
   this->traits_.set_supports_current_temperature(true);
 }
 
-HaierClimateBase::~HaierClimateBase() {}
+HaierClimateBase::~HaierClimateBase() {
+  if (persistent_data_changed_) {
+    persistent_data_changed_ = false;
+    save_persistent_data_();
+  }
+}
 
 void HaierClimateBase::set_phase(ProtocolPhases phase) {
   if (this->protocol_phase_ != phase) {
@@ -128,12 +137,17 @@ haier_protocol::HaierMessage HaierClimateBase::get_wifi_signal_message_() {
 }
 #endif
 
-bool HaierClimateBase::get_display_state() const { return this->display_status_; }
+bool HaierClimateBase::get_display_state() const { return this->display_status_.value_or(true); }
 
 void HaierClimateBase::set_display_state(bool state) {
-  if (this->display_status_ != state) {
+  if (!this->display_status_.has_value() || (this->display_status_.value() != state)) {
     this->display_status_ = state;
     this->force_send_control_ = true;
+#ifdef USE_SWITCH 
+    if (this->display_switch_ != nullptr)
+      this->display_switch_->publish_state(state);
+#endif  
+
   }
 }
 
@@ -235,7 +249,8 @@ void HaierClimateBase::setup() {
   this->haier_protocol_.set_default_timeout_handler(
       std::bind(&esphome::haier::HaierClimateBase::timeout_default_handler_, this, std::placeholders::_1));
   this->set_handlers();
-  this->initialization();
+  if (!this->load_persistent_data_(false))
+    this->save_persistent_data_();
 }
 
 void HaierClimateBase::dump_config() {
@@ -288,6 +303,10 @@ void HaierClimateBase::loop() {
   }
   this->process_phase(now);
   this->haier_protocol_.loop();
+  if (persistent_data_changed_) {
+    persistent_data_changed_ = false;
+    save_persistent_data_();
+  }
 }
 
 void HaierClimateBase::process_protocol_reset() {
@@ -371,6 +390,44 @@ void HaierClimateBase::send_message_(const haier_protocol::HaierMessage &command
     this->high_freq_on_ = true;
     this->high_freq_.start();
   }
+}
+
+bool HaierClimateBase::load_persistent_data_(bool forced) {
+  constexpr uint32_t RESTORE_SETTINGS_VERSION = 0xA1CC23B3;
+  this->haier_state_saver_ = global_preferences->make_preference<HaierStateData>(this->get_object_id_hash() ^
+                                                                               RESTORE_SETTINGS_VERSION);
+  this->persistent_data_loaded_ = true;
+  HaierStateData recovered;
+  if (!this->haier_state_saver_.load(&recovered))
+    recovered = { true, false };
+  bool result = true;
+  if (forced || !this->health_mode_.has_value()) {
+    this->health_mode_ = recovered.health_mode_;
+#ifdef USE_SWITCH
+  if (this->health_mode_switch_ != nullptr)
+    this->health_mode_switch_->publish_state(recovered.health_mode_);
+#endif // USE_SWITCH
+  } else
+    result = false;
+  if (forced || !this->display_status_.has_value()) {
+    this->display_status_ = recovered.display_status_;
+#ifdef USE_SWITCH
+  if (this->display_switch_ != nullptr)
+    this->display_switch_->publish_state(recovered.display_status_);
+#endif // USE_SWITCH
+  } else
+    result = false;
+  return result;
+}
+
+void HaierClimateBase::save_persistent_data_() {
+  if (!this->persistent_data_loaded_)
+    return;
+  HaierStateData current_state = {
+    this->display_status_.value_or(true),
+    this->health_mode_.value_or(false),
+  };
+  this->haier_state_saver_.save(&current_state);
 }
 
 }  // namespace haier
