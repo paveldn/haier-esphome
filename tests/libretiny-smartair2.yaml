@@ -7,9 +7,8 @@ substitutions:
 esphome:
   name: libretiny-smartair2
 
-
-rtl87xx:
-  board: generic-rtl8710bn-2mb-788k
+bk72xx:
+  board: generic-bk7231n-qfn32-tuya
 
 uart:
   baud_rate: 9600
