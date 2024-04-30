@@ -1,0 +1,56 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "hOn: esp32-haier-module.yaml",
+			"type": "shell",
+			"command": "esphome compile esp32-haier-module.yaml",
+			"group": {
+				"kind": "build",
+			}
+		},
+		{
+			"label": "hOn: esp32-c3.yaml",
+			"type": "shell",
+			"command": "esphome compile esp32-c3.yaml",
+			"group": {
+				"kind": "build",
+			}
+		},
+		{
+			"label": "hOn: rpipico.yaml",
+			"type": "shell",
+			"command": "esphome compile rpipico.yaml",
+			"group": {
+				"kind": "build",
+			}
+		},
+		{
+			"label": "hOn: wemos_d1_mini.yaml",
+			"type": "shell",
+			"command": "esphome compile wemos_d1_mini.yaml",
+			"group": {
+				"kind": "build",
+			}
+		},
+		{
+			"label": "smartAir2: smartair2-esp8266.yaml",
+			"type": "shell",
+			"command": "esphome compile esp32-haier-module.yaml",
+			"group": {
+				"kind": "build",
+			}
+		},
+		{
+			"label": "Run all tests",
+			"type": "shell",
+			"command": "& \"${workspaceFolder}/tests/run_tests.bat\"",
+			"options": {
+				"cwd": "${workspaceFolder}/tests/"
+			},
+			"group": {
+				"kind": "test",
+			}
+		},
+	]
+}
