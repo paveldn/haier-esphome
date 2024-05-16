@@ -5,6 +5,7 @@
     name: ${device_name}
     uart_id: ${uart_id}
     wifi_signal: ${send_wifi}   # Optional, default true, enables WiFI signal transmission from ESP to AC
+    beeper: true                # Optional, default true, disables beep on commands from ESP
     visual:                     # Optional, you can use it to limit min and max temperatures in UI (not working for remote!)
       min_temperature: 16 °C
       max_temperature: 30 °C

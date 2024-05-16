@@ -458,10 +458,6 @@ haier_protocol::HandlerError Smartair2Climate::process_status_message_(const uin
           this->force_send_control_ = true;
         } else {
           this->display_status_ = disp_status;
-#ifdef USE_SWITCH
-          if ((this->display_switch_ != nullptr) && (this->display_switch_->state != this->display_status_))
-            this->display_switch_->publish_state(this->display_status_);
-#endif
         }
       }
     }

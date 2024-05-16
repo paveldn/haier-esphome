@@ -1,5 +1,12 @@
 switch:
-  - platform: haier
-    haier_id: ${device_id}
-    health_mode:
-      name: ${device_name} health mode
+  - platform: template
+    id: ${device_id}_health_mode
+    name: ${device_name} health mode
+    icon: mdi:leaf
+    restore_mode: RESTORE_DEFAULT_OFF
+    lambda: |-
+      return id(${device_id}).get_health_mode();
+    turn_on_action:
+      climate.haier.health_on: ${device_id}
+    turn_off_action:
+      climate.haier.health_off: ${device_id}
