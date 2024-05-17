@@ -16,7 +16,7 @@ enum class VerticalSwingMode : uint8_t {
   MAX_DOWN = 0x0A,
   AUTO = 0x0C,
   // Auto for special modes
-  AUTO_SPECIAL = 0x0E,
+  AUTO_SPECIAL = 0x0E
 };
 
 enum class HorizontalSwingMode : uint8_t {
@@ -25,7 +25,7 @@ enum class HorizontalSwingMode : uint8_t {
   LEFT = 0x04,
   RIGHT = 0x05,
   MAX_RIGHT = 0x06,
-  AUTO = 0x07,
+  AUTO = 0x07
 };
 
 enum class ConditioningMode : uint8_t {

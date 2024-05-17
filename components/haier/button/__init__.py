@@ -32,6 +32,7 @@ CONFIG_SCHEMA = cv.Schema(
     }
 )
 
+
 async def to_code(config):
     for button_type in [CONF_SELF_CLEANING, CONF_STERI_CLEANING]:
         if conf := config.get(button_type):

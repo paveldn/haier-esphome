@@ -44,7 +44,7 @@ void HonClimate::set_vertical_airflow(hon_protocol::VerticalSwingMode direction)
 }
 
 esphome::optional<hon_protocol::HorizontalSwingMode> HonClimate::get_horizontal_airflow() const {
-  return this->current_horizontal_swing_; 
+  return this->current_horizontal_swing_;
 }
 
 void HonClimate::set_horizontal_airflow(hon_protocol::HorizontalSwingMode direction) {
@@ -121,9 +121,10 @@ haier_protocol::HandlerError HonClimate::get_device_version_answer_handler_(haie
     strncpy(tmp, answr->device_name, 8);
     this->hvac_hardware_info_.value().device_name_ = std::string(tmp);
 #ifdef USE_TEXT_SENSOR
-      this->update_sub_text_sensor_(SubTextSensorType::APPLIANCE_NAME, this->hvac_hardware_info_.value().device_name_);
-      this->update_sub_text_sensor_(SubTextSensorType::PROTOCOL_VERSION, this->hvac_hardware_info_.value().protocol_version_);      
-#endif // USE_TEXT_SENSOR
+    this->update_sub_text_sensor_(SubTextSensorType::APPLIANCE_NAME, this->hvac_hardware_info_.value().device_name_);
+    this->update_sub_text_sensor_(SubTextSensorType::PROTOCOL_VERSION,
+                                  this->hvac_hardware_info_.value().protocol_version_);
+#endif
     this->hvac_hardware_info_.value().functions_[0] = (answr->functions[1] & 0x01) != 0;  // interactive mode support
     this->hvac_hardware_info_.value().functions_[1] =
         (answr->functions[1] & 0x02) != 0;  // controller-device mode support
@@ -465,14 +466,14 @@ haier_protocol::HaierMessage HonClimate::get_power_message(bool state) {
 }
 
 void HonClimate::initialization() {
-  constexpr uint32_t RESTORE_SETTINGS_VERSION = 0xE834D8DCUL;
-  this->rtc_ = global_preferences->make_preference<HonSettings>(this->get_object_id_hash() ^
-                                                                RESTORE_SETTINGS_VERSION);
+  constexpr uint32_t restore_settings_version = 0xE834D8DCUL;
+  this->rtc_ = global_preferences->make_preference<HonSettings>(this->get_object_id_hash() ^ restore_settings_version);
   HonSettings recovered;
-  if (this->rtc_.load(&recovered))
+  if (this->rtc_.load(&recovered)) {
     this->settings_ = recovered;
-  else
-    this->settings_ = { hon_protocol::VerticalSwingMode::CENTER,  hon_protocol::HorizontalSwingMode::CENTER };
+  } else {
+    this->settings_ = {hon_protocol::VerticalSwingMode::CENTER, hon_protocol::HorizontalSwingMode::CENTER};
+  }
   this->current_vertical_swing_ = this->settings_.last_vertiacal_swing;
   this->current_horizontal_swing_ = this->settings_.last_horizontal_swing;
 }
@@ -620,7 +621,7 @@ haier_protocol::HaierMessage HonClimate::get_control_message() {
           break;
       }
     }
-  } 
+  }
   if (this->pending_vertical_direction_.has_value()) {
     out_data->vertical_swing_mode = (uint8_t) this->pending_vertical_direction_.value();
     this->pending_vertical_direction_.reset();
@@ -749,7 +750,7 @@ void HonClimate::set_sub_text_sensor(SubTextSensorType type, text_sensor::TextSe
   }
 }
 
-void HonClimate::update_sub_text_sensor_(SubTextSensorType type, std::string value) {
+void HonClimate::update_sub_text_sensor_(SubTextSensorType type, const std::string& value) {
   size_t index = (size_t) type;
   if (this->sub_text_sensors_[index] != nullptr)
     this->sub_text_sensors_[index]->publish_state(value);
@@ -917,7 +918,7 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
       this->cleaning_status_ = new_cleaning;
 #ifdef USE_TEXT_SENSOR
       this->update_sub_text_sensor_(SubTextSensorType::CLEANING_STATUS, this->get_cleaning_status_text());
-#endif // USE_TEXT_SENSOR
+#endif  // USE_TEXT_SENSOR
     }
   }
   {

@@ -80,7 +80,7 @@ class HaierClimateBase : public esphome::Component,
   virtual void process_phase(std::chrono::steady_clock::time_point now) = 0;
   virtual haier_protocol::HaierMessage get_control_message() = 0;
   virtual haier_protocol::HaierMessage get_power_message(bool state) = 0;
-  virtual void initialization() {};
+  virtual void initialization(){};
   virtual bool prepare_pending_action();
   virtual void process_protocol_reset();
   esphome::climate::ClimateTraits traits() override;
