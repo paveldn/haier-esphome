@@ -84,7 +84,7 @@ class HonClimate : public HaierClimateBase {
   void set_sub_text_sensor(SubTextSensorType type, text_sensor::TextSensor *sens);
 
  protected:
-  void update_sub_text_sensor_(SubTextSensorType type, const std::string& value);
+  void update_sub_text_sensor_(SubTextSensorType type, const std::string &value);
   text_sensor::TextSensor *sub_text_sensors_[(size_t) SubTextSensorType::SUB_TEXT_SENSOR_TYPE_COUNT]{nullptr};
 #endif
  public:
