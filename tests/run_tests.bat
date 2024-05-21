@@ -11,7 +11,7 @@ if /i "%1"=="show" (
 	goto :eof
 )
 if /i "%1"=="wsl" (
-	wsl --cd "%cd%" /bin/sh -c "esphome compile %configs_list%"
+	wsl --cd "%cd%" /bin/sh -c "~/.local/bin/esphome compile %configs_list%"
 ) else (
 	esphome compile %configs_list%
 )
