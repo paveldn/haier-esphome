@@ -1,11 +1,30 @@
-Haier Climate
-=============
+ESPHome Haier component
+#######################
 
 This is an implementation of the ESPHome component to control HVAC on the base of the SmartAir2 and hOn Haier protocols (AC that is controlled by the hOn or SmartAir2 application).
 
-There are two versions of the Haier protocol: the older version uses an application called SmartAir2 while the newer version uses an application called hOn. Both protocols are compatible on the transport level but utilize different commands to control appliances.
+Short description
+*****************
 
-Older Haier models controlled by the SmartAir2 application are using the KZW-W002 module. This module can’t be reused, and you need to replace it with an ESP or RPI Pico W module. The USB connector on the board doesn’t support the USB protocol. It is a UART port that just uses a USB connector. To connect the ESP board to your AC you can cut a USB type A cable and connect wires to the climate connector.
+There are two versions of the Haier protocol. The older one uses an application called SmartAir2, and the newer one is called hOn. 
+Both protocols are compatible on the transport level but have different commands to control appliances.
+
+Climate component
+*****************
+
+SmartAir2
+=========
+
+Older Haier models controlled by the SmartAir2 application use the KZW-W002 module that looks like this:
+
+.. raw:: HTML
+
+  <p><a href="./images/KZW-W002.jpg?raw=true"><img src="./images/KZW-W002.jpg?raw=true" height="50%" width="50%"></a></p>
+
+This module can’t be reused, and you need to replace it with an ESP (RPI pico w) module.
+The USB connector on the board doesn’t support the USB protocol. 
+It is a UART port that just uses a USB connector.
+To connect the ESP board to your AC you can cut a USB type A cable and connect wires to the climate connector.
 
 .. list-table:: Haier UART pinout
     :header-rows: 1
@@ -33,80 +52,153 @@ Older Haier models controlled by the SmartAir2 application are using the KZW-W00
 
 .. raw:: HTML
 
-  <p><a href="./docs/esphome-docs/climate/images/usb_pinout.png?raw=true"><img src="./docs/esphome-docs/climate/images/usb_pinout.png?raw=true" height="50%" width="50%"></a></p>
+  <p><a href="./images/usb_pinout.png?raw=true"><img src="./images/usb_pinout.png?raw=true" height="50%" width="50%"></a></p>
 
-    KZW-W002 module pinout
+KZW-W002 module pinout
 
-Newer Haier models using a module called ESP32-for-Haier. It is an ESP32 single-core board with an ESP32-S0WD chip. In some cases, you can reuse this module and flash it with ESPHome, but some new modules don’t support this. They look the same but have encryption enabled.
+hOn
+===
 
-**Warning!** The new generation of ESP32-Haier devices has encryption enabled, so they can only be flashed with firmware that is signed with a private key. There is no way to make them work with ESPHome, so if you try to do it, the board will get into a boot loop with the error ``rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)`` The only way to recover this board is to flash it with the original image. So before starting your experiments make a backup image.
+You can use this component together with a native Haier ESP32 device: 
+Newer Haier models using a module called ESP32-for-Haier.
+It is an ESP32 single-core board with an ESP32-S0WD chip.
+The module board looks like this:
+
+**Front:**
 
 .. raw:: HTML
 
-  <p><a href="./docs/esphome-docs/climate/images/haier_pinout.jpg?raw=true"><img src="./docs/esphome-docs/climate/images/haier_pinout.jpg?raw=true" height="50%" width="50%"></a></p>
+  <p><a href="./images/ESP32_front.jpg?raw=true"><img src="./images/ESP32_front.jpg?raw=true" height="50%" width="50%"></a></p>
 
-    ESP32-for-Haier UART0 pinout
+**Back:**
 
-Also, you can use any other ESP32, ESP8266, or an RPI pico W board. In this case, you will need to cut the original wire or make a connector yourself (the board has a JST SM04B-GHS-TB connector)
+.. raw:: HTML
 
-This component requires a `UART Bus <https://esphome.io/components/uart#uart>`_ to be setup.
+  <a href="./images/ESP32_back.jpg?raw=true"><img src="./images/ESP32_back.jpg?raw=true" height="50%" width="50%"></a>
+
+In some cases, you can reuse this module and flash it with ESPHome, but some new modules don’t support this. They look the same but have encryption enabled.
+
+**Warning!** The new generation of ESP32-Haier devices has encryption  enabled, so they can only be flashed with firmware that is signed with a private key. 
+There is no way to make them work with ESPHome, so if you try to do it, the board will get into a boot loop with the error ``rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)``.
+The only way to recover this board is to flash it with the original image. 
+So before starting your experiments make a backup image: `How to backup the original image and flash ESPHome to the ESP32 Haier module <#how-to-backup-the-original-image-and-flash-esphome-to-the-esp32-haier-module>`__
+
+Also, you can use any other ESP32, ESP8266, or an RPI pico W board. 
+In this case, you will need to cut the original wire or make a connector yourself (the board has a JST SM04B-GHS-TB connector)
+
+Configuration
+=============
+
+The configuration will be a little bit different for different protocols.
+For example, the SmartAir2 protocol doesn’t support cleaning, setting air direction (just swing on/off), etc.
+
+hOn configuration example
+-------------------------
 
 .. code-block:: yaml
 
-    # Example configuration entry
-    climate:
-      - platform: haier
-        id: haier_ac
-        protocol: hOn
-        name: Haier AC
-        uart_id: ac_port
-        wifi_signal: true
-        beeper: true
-        display: true
-        visual:
-          min_temperature: 16 °C
-          max_temperature: 30 °C
-          temperature_step: 1 °C
-        supported_modes:
-        - 'OFF'
-        - HEAT_COOL
-        - COOL
-        - HEAT
-        - DRY
-        - FAN_ONLY
-        supported_swing_modes:
-        - 'OFF'
-        - VERTICAL
-        - HORIZONTAL
-        - BOTH
-      supported_presets:
-        - AWAY
-        - ECO
-        - BOOST
-        - SLEEP
-      on_alarm_start:
-        then:
-          - logger.log:
-              level: WARN
-              format: "Alarm activated. Code: %d. Message: \"%s\""
-              args: [ code, message]
-      on_alarm_end:
-        then:
-          - logger.log:
-              level: INFO
-              format: "Alarm deactivated. Code: %d. Message: \"%s\""
-              args: [ code, message]
+   uart:
+     baud_rate: 9600
+     tx_pin: 17
+     rx_pin: 16
+     id: ac_port  
 
+   climate:
+     - platform: haier
+       id: haier_ac
+       protocol: hOn
+       name: Haier AC 
+       uart_id: ac_port
+       wifi_signal: true           # Optional, default true, enables WiFI signal transmission from ESP to AC
+       beeper: true                # Optional, default true, disables beep on commands from ESP
+       display: true               # Optional, default true, can be used to turn off LED display
+       answer_timeout:  200ms      # Optional, request answer timeout, can be used to increase the timeout
+                                   # for some ACs that have longer answer delays
+       visual:                     # Optional, you can use it to limit min and max temperatures in UI (not working for remote!)
+         min_temperature: 16 °C
+         max_temperature: 30 °C
+         temperature_step: 1 °C
+       supported_modes:            # Optional, can be used to disable some modes if you don't need them
+         - 'OFF'
+         - AUTO
+         - COOL
+         - HEAT
+         - DRY
+         - FAN_ONLY
+       supported_presets:          # Optional, can be used to disable some presets if your AC does not support it
+         - AWAY
+         - ECO
+         - BOOST
+         - SLEEP
+       supported_swing_modes:      # Optional, can be used to disable some (or all) swing modes if your AC does not support it
+         - 'OFF'
+         - VERTICAL
+         - HORIZONTAL
+         - BOTH
+       on_alarm_start:
+         then:
+           - logger.log:
+               level: WARN
+               format: "Alarm activated. Code: %d. Message: \"%s\""
+               args: [ code, message]
+       on_alarm_end:
+         then:
+           - logger.log:
+               level: INFO
+               format: "Alarm deactivated. Code: %d. Message: \"%s\""
+               args: [ code, message]
 
-Configuration variables:
-------------------------
+SmartAir2 configuration example
+-------------------------------
 
-- **id** (*Optional*, `ID <https://esphome.io/guides/configuration-types.html#config-id>`_): Manually specify the ID used for code generation.
-- **uart_id** (*Optional*, `ID <https://esphome.io/guides/configuration-types.html#config-id>`_): ID of the UART port to communicate with AC.
+.. code-block:: yaml
+
+   uart:
+     baud_rate: 9600
+     tx_pin: 1
+     rx_pin: 3
+     id: ac_port  
+
+   climate:
+     - platform: haier
+       id: haier_ac
+       protocol: smartAir2
+       name: Haier AC 
+       uart_id: ac_port
+       wifi_signal: true           # Optional, default true, enables WiFI signal transmission from ESP to AC
+       display: true               # Optional, default true, can be used to turn off LED display
+       answer_timeout: 200ms       # Optional, request answer timeout, can be used to increase the timeout
+                                   # for some ACs that have longer answer delays
+       visual:                     # Optional, you can use it to limit min and max temperatures in UI (not working for remote!)
+         min_temperature: 16 °C
+         max_temperature: 30 °C
+         temperature_step: 1 °C
+       supported_modes:            # Optional, can be used to disable some modes if you don't need them
+         - 'OFF'
+         - AUTO
+         - COOL
+         - HEAT
+         - DRY
+         - FAN_ONLY
+       supported_presets:          # Optional, can be used to disable some presets if your AC does not support it
+         - AWAY
+         - BOOST
+         - COMFORT
+       supported_swing_modes:      # Optional, can be used to disable some (or all) swing modes if your AC does not support it
+         - 'OFF'
+         - VERTICAL
+         - HORIZONTAL
+         - BOTH
+
+Configuration variables
+-----------------------
+
+- **id** (*Optional*, `ID <https://esphome.io/guides/configuration-types.html#config-id>`__): Manually specify the ID used for code generation.
+- **uart_id** (*Optional*, `ID <https://esphome.io/guides/configuration-types.html#config-id>`__): ID of the UART port to communicate with AC.
 - **protocol** (*Optional*, string): Defines communication protocol with AC. Possible values: hon or smartair2. The default value is smartair2.
 - **name** (**Required**, string): The name of the climate device.
 - **wifi_signal** (*Optional*, boolean): If true - send wifi signal level to AC.
-- **answer_timeout** (*Optional*, `Time <https://esphome.io/guides/configuration-types.html#config-time>`_): Responce timeout. The default value is 200ms.
+- **answer_timeout** (*Optional*, `Time <https://esphome.io/guides/configuration-types.html#config-time>`__): Responce timeout. The default value is 200ms.
 - **alternative_swing_control** (*Optional*, boolean): (supported by smartAir2 only) If true - use alternative values to control swing mode. Use only if the original control method is not working for your AC.
 - **control_packet_size** (*Optional*, int): (supported only by hOn) Define the size of the control packet. Can help with some newer models of ACs that use bigger packets. The default value: 10.
 - **control_method** (*Optional*, list): (supported only by hOn) Defines control method (should be supported by AC). Supported values: MONITOR_ONLY - no control, just monitor status, SET_GROUP_PARAMETERS - set all AC parameters with one command (default method), SET_SINGLE_PARAMETER - set each parameter individually (this method is supported by some new ceiling ACs like AD71S2SM3FA)
@@ -115,19 +207,19 @@ Configuration variables:
 - **supported_modes** (*Optional*, list): Can be used to disable some of AC modes. Possible values: 'OFF', HEAT_COOL, COOL, HEAT, DRY, FAN_ONLY
 - **supported_swing_modes** (*Optional*, list): Can be used to disable some swing modes if your AC does not support it. Possible values: 'OFF', VERTICAL, HORIZONTAL, BOTH
 - **supported_presets** (*Optional*, list): Can be used to disable some presets. Possible values for smartair2 are: AWAY, BOOST, COMFORT. Possible values for hOn are: AWAY, ECO, BOOST, SLEEP. AWAY preset can be enabled only in HEAT mode, it is disabled by default
-- **on_alarm_start** (*Optional*, `Automation <https://esphome.io/guides/automations#automation>`_): (supported only by hOn) Automation to perform when AC activates a new alarm. See `on_alarm_start Trigger`_
-- **on_alarm_end** (*Optional*, `Automation <https://esphome.io/guides/automations#automation>`_): (supported only by hOn) Automation to perform when AC deactivates a new alarm. See `on_alarm_end Trigger`_
-- All other options from `Climate <https://esphome.io/components/climate/index.html#config-climate>`_.
+- **on_alarm_start** (*Optional*, `Automation <https://esphome.io/guides/automations#automation>`__): (supported only by hOn) Automation to perform when AC activates a new alarm. See `on_alarm_start Trigger`_
+- **on_alarm_end** (*Optional*, `Automation <https://esphome.io/guides/automations#automation>`__): (supported only by hOn) Automation to perform when AC deactivates a new alarm. See `on_alarm_end Trigger`_
+- All other options from `Climate <https://esphome.io/components/climate/index.html#config-climate>`__.
 
 Automations
------------
+===========
 
 .. _haier-on_alarm_start:
 
 ``on_alarm_start`` Trigger
-**************************
+--------------------------
 
-This automation will be triggered when a new alarm is activated by AC. The error code of the alarm will be given in the variable "code" (type uint8_t), error message in the variable "message" (type char*). Those variables can be used in `lambdas <https://esphome.io/guides/automations#config-lambda>`_
+This automation will be triggered when a new alarm is activated by AC. The error code of the alarm will be given in the variable "code" (type uint8_t), error message in the variable "message" (type char*). Those variables can be used in `lambdas <https://esphome.io/guides/automations#templates-lambdas>`_.
 
 .. code-block:: yaml
 
@@ -143,9 +235,9 @@ This automation will be triggered when a new alarm is activated by AC. The error
 .. _haier-on_alarm_end:
 
 ``on_alarm_end`` Trigger
-************************
+------------------------
 
-This automation will be triggered when a previously activated alarm is deactivated by AC. The error code of the alarm will be given in the variable "code" (type uint8_t), error message in the variable "message" (type char*). Those variables can be used in `lambdas <https://esphome.io/guides/automations#config-lambda>`_
+This automation will be triggered when a previously activated alarm is deactivated by AC. The error code of the alarm will be given in the variable "code" (type uint8_t), error message in the variable "message" (type char*). Those variables can be used in `lambdas <https://esphome.io/guides/automations#templates-lambdas>`_.
 
 .. code-block:: yaml
 
@@ -159,7 +251,7 @@ This automation will be triggered when a previously activated alarm is deactivat
                 args: [ code, message]
 
 ``climate.haier.power_on`` Action
-*********************************
+---------------------------------
 
 This action turns AC power on.
 
@@ -170,7 +262,7 @@ This action turns AC power on.
         climate.haier.power_on: device_id
 
 ``climate.haier.power_off`` Action
-**********************************
+----------------------------------
 
 This action turns AC power off
 
@@ -181,7 +273,7 @@ This action turns AC power off
         climate.haier.power_off: device_id
 
 ``climate.haier.power_toggle`` Action
-*************************************
+-------------------------------------
 
 This action toggles AC power
 
@@ -192,7 +284,7 @@ This action toggles AC power
         climate.haier.power_toggle: device_id
 
 ``climate.haier.display_on`` Action
-***********************************
+-----------------------------------
 
 This action turns the AC display on
 
@@ -203,7 +295,7 @@ This action turns the AC display on
         climate.haier.display_on: device_id
 
 ``climate.haier.display_off`` Action
-************************************
+------------------------------------
 
 This action turns the AC display off
 
@@ -214,7 +306,7 @@ This action turns the AC display off
         climate.haier.display_off: device_id
 
 ``climate.haier.health_on`` Action
-**********************************
+----------------------------------
 
 Turn on health mode (`UV light sterilization <https://www.haierhvac.eu/en/node/1809>`__)
 
@@ -225,7 +317,7 @@ Turn on health mode (`UV light sterilization <https://www.haierhvac.eu/en/node/1
         climate.haier.health_on: device_id
 
 ``climate.haier.health_off`` Action
-***********************************
+-----------------------------------
 
 Turn off health mode
 
@@ -236,7 +328,7 @@ Turn off health mode
         climate.haier.health_off: device_id
 
 ``climate.haier.beeper_on`` Action
-**********************************
+----------------------------------
 
 (supported only by hOn) This action enables beep feedback on every command sent to AC
 
@@ -247,7 +339,7 @@ Turn off health mode
         climate.haier.beeper_on: device_id
 
 ``climate.haier.beeper_off`` Action
-***********************************
+-----------------------------------
 
 (supported only by hOn) This action disables beep feedback on every command sent to AC (keep in mind that this will not work for IR remote commands)
 
@@ -258,7 +350,7 @@ Turn off health mode
         climate.haier.beeper_off: device_id
 
 ``climate.haier.set_vertical_airflow`` Action
-*********************************************
+---------------------------------------------
 
 (supported only by hOn) Set direction for vertical airflow if the vertical swing is disabled. Possible values: Health_Up, Max_Up, Up, Center, Down, Health_Down.
 
@@ -271,7 +363,7 @@ Turn off health mode
           vertical_airflow: Up
 
 ``climate.haier.set_horizontal_airflow`` Action
-***********************************************
+-----------------------------------------------
 
 (supported only by hOn) Set direction for horizontal airflow if the horizontal swing is disabled. Possible values: Max_Left, Left, Center, Right, Max_Right.
 
@@ -284,7 +376,7 @@ Turn off health mode
           vertical_airflow: Right
 
 ``climate.haier.start_self_cleaning`` Action
-********************************************
+--------------------------------------------
 
 (supported only by hOn) Start `self-cleaning <https://www.haier.com/in/blogs/beat-the-summer-heat-with-haier-self-cleaning-ac.shtml>`__
 
@@ -295,7 +387,7 @@ Turn off health mode
         - climate.haier.start_self_cleaning: device_id
 
 ``climate.haier.start_steri_cleaning`` Action
-*********************************************
+---------------------------------------------
 
 (supported only by hOn) Start 56°C steri-cleaning
 
@@ -305,19 +397,33 @@ Turn off health mode
       then:
         - climate.haier.start_steri_cleaning: device_id
 
-Haier Climate Sensors
-=====================
+Additional components (hOn protocol only)
+*****************************************
 
-Additional sensors for Haier Climate device. **These sensors are supported only by the hOn protocol**.
+Haier climate with hOn protocol can support additional sensors and/or binary sensors. *Please, make sure that your model supports these features*
 
+Sensors
+=======
 
-.. raw:: HTML
-
-  <p><a href="./docs/esphome-docs/sensor/images/haier-climate.jpg?raw=true"><img src="./docs/esphome-docs/sensor/images/haier-climate.jpg?raw=true" height="50%" width="50%"></a></p>
+Configuration example
+---------------------
 
 .. code-block:: yaml
 
     # Example configuration entry
+    uart:
+      baud_rate: 9600
+      tx_pin: 17
+      rx_pin: 16
+      id: ac_port
+    
+    climate:
+      - platform: haier
+        id: haier_ac
+        protocol: hOn
+        name: Haier AC
+        uart_id: ac_port
+    
     sensor:
       - platform: haier
         haier_id: haier_ac
@@ -347,7 +453,7 @@ Additional sensors for Haier Climate device. **These sensors are supported only 
 Configuration variables:
 ------------------------
 
-- **haier_id** (**Required**, `ID <https://esphome.io/guides/configuration-types.html#config-id>`_): The id of haier climate component
+- **haier_id** (**Required**, `ID <https://esphome.io/guides/configuration-types.html#config-id>`__): The id of haier climate component
 - **outdoor_temperature** (*Optional*): Temperature sensor for outdoor temperature.
   All options from `Sensor <https://esphome.io/components/sensor/index.html#config-sensor>`_.
 - **humidity** (*Optional*): Sensor for indoor humidity. Make sure that your climate model supports this type of sensor.
@@ -371,20 +477,28 @@ Configuration variables:
 - **power** (*Optional*): Sensor for climate power consumption. Make sure that your climate model supports this type of sensor.
   All options from `Sensor <https://esphome.io/components/sensor/index.html#config-sensor>`_.
 
+Binary Sensors
+==============
 
-Haier Climate Binary Sensors
-============================
-
-Additional sensors for Haier Climate device. **These sensors are supported only by the hOn protocol**.
-
-
-.. raw:: HTML
-
-  <p><a href="./docs/esphome-docs/binary_sensor/images/haier-climate.jpg?raw=true"><img src="./docs/esphome-docs/binary_sensor/images/haier-climate.jpg?raw=true" height="50%" width="50%"></a></p>
+Configuration example
+---------------------
 
 .. code-block:: yaml
 
     # Example configuration entry
+    uart:
+      baud_rate: 9600
+      tx_pin: 17
+      rx_pin: 16
+      id: ac_port
+    
+    climate:
+      - platform: haier
+        id: haier_ac
+        protocol: hOn
+        name: Haier AC
+        uart_id: ac_port
+    
     binary_sensor:
       - platform: haier
         haier_id: haier_ac
@@ -404,7 +518,7 @@ Additional sensors for Haier Climate device. **These sensors are supported only 
 Configuration variables:
 ------------------------
 
-- **haier_id** (**Required**, `ID <https://esphome.io/guides/configuration-types.html#config-id>`_): The id of haier climate component
+- **haier_id** (**Required**, `ID <https://esphome.io/guides/configuration-types.html#config-id>`__): The id of haier climate component
 - **compressor_status** (*Optional*): A binary sensor that indicates Haier climate compressor activity.
   All options from `Binary Sensor <https://esphome.io/components/binary_sensor/index.html#base-binary-sensor-configuration>`_.
 - **defrost_status** (*Optional*): A binary sensor that indicates defrost procedure activity.
@@ -413,62 +527,39 @@ Configuration variables:
   All options from `Binary Sensor <https://esphome.io/components/binary_sensor/index.html#base-binary-sensor-configuration>`_.
 - **indoor_electric_heating_status** (*Optional*): A binary sensor that indicates electrical heating system activity.
   All options from `Binary Sensor <https://esphome.io/components/binary_sensor/index.html#base-binary-sensor-configuration>`_.
-- **indoor_fan_status** (*Optional*): A binary sensor that indicates indoor fan activity.
+- **indoor_fan_status** (*Optional*): A binary sensor that indicates indoor fan activity. 
   All options from `Binary Sensor <https://esphome.io/components/binary_sensor/index.html#base-binary-sensor-configuration>`_.
-- **outdoor_fan_status** (*Optional*): A binary sensor that indicates outdoor fan activity.
+- **outdoor_fan_status** (*Optional*): A binary sensor that indicates outdoor fan activity. 
   All options from `Binary Sensor <https://esphome.io/components/binary_sensor/index.html#base-binary-sensor-configuration>`_.
 
-Haier Climate Text Sensors
-==========================
+How to backup the original image and flash ESPHome to the ESP32 Haier module
+****************************************************************************
 
-Additional sensors for Haier Climate device. **These sensors are supported only by the hOn protocol**.
+**It is strongly recommended to make a backup of the original flash
+content before flashing ESPHome!**
 
-.. code-block:: yaml
+To make a backup and to flash the new firmware you will need to use a
+USB to TTL converter and solder wires to access UART0 on board (or use
+something like this: `Pogo Pin Probe Clip 2x5p 2.54
+mm <https://www.tinytronics.nl/shop/en/tools-and-mounting/measuring/accessories/test-probe-with-clamp-pogo-pin-2x5p>`__)
 
-    # Example configuration entry
-    text_sensor:
-      - platform: haier
-        haier_id: haier_ac
-        appliance_name:
-          name: Haier appliance name
-        cleaning_status:
-          name: Haier cleaning status
-        protocol_version:
-          name: Haier protocol version
+**UART0 pinout:**
 
-Configuration variables:
-------------------------
+.. raw:: HTML
 
-- **haier_id** (**Required**, `ID <https://esphome.io/guides/configuration-types.html#config-id>`_): The id of haier climate component
-- **appliance_name** (*Optional*): A text sensor that indicates Haier appliance name.
-  All options from `Text Sensor <https://esphome.io/components/text_sensor/index.html#base-text-sensor-configuration>`_.
-- **cleaning_status** (*Optional*): A text sensor that indicates cleaning status. Possible values "No cleaning", "Self clean", "56°C Steri-Clean".
-  All options from `Text Sensor <https://esphome.io/components/text_sensor/index.html#base-text-sensor-configuration>`_.
-- **protocol_version** (*Optional*): A text sensor that indicates Haier protocol version.
-  All options from `Text Sensor <https://esphome.io/components/text_sensor/index.html#base-text-sensor-configuration>`_.
+  <p><a href="./images/ESP32_Haier_UAR0_pinout.jpg?raw=true"><img src="./images/ESP32_Haier_UAR0_pinout.jpg?raw=true" height="50%" width="50%"></a></p>
 
-Haier Climate Buttons
-=====================
+To put the device in the flash mode you will need to shortcut GPIO0 to
+the ground before powering the device.
 
-Additional buttons for Haier AC cleaning. **These buttons are supported only by the hOn protocol**.
+Once the device is in flash mode you can make a full backup of the
+original firmware in case you would like to return the module to its
+factory state. To make a backup you can use
+`esptool <https://github.com/espressif/esptool>`__. Command to make a
+full flash backup:
 
-.. code-block:: yaml
+**python esptool.py -b 115200 –port read_flash 0x00000 0x400000
+flash_4M.bin**
 
-    # Example configuration entry
-    button:
-      - platform: haier
-        haier_id: haier_ac
-        self_cleaning:
-          name: Haier start self cleaning
-        steri_cleaning:
-          name: Haier start 56°C steri-cleaning
-
-Configuration variables:
-------------------------
-
-- **haier_id** (**Required**, `ID <https://esphome.io/guides/configuration-types.html#config-id>`_): The id of Haier climate component
-- **self_cleaning** (*Optional*): A button that starts Haier climate self cleaning.
-  All options from `Text Sensor <https://esphome.io/components/button/index.html#base-button-configuration>`_.
-- **steri_cleaning** (*Optional*): A button that starts Haier climate 56°C Steri-Clean.
-  All options from `Text Sensor <https://esphome.io/components/button/index.html#base-button-configuration>`_.
-
+After this, you can flash firmware using ESPHome tools (dashboard,
+website, esphome command, etc)
