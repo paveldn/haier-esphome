@@ -19,7 +19,7 @@ Older Haier models controlled by the SmartAir2 application use the KZW-W002 modu
 
 .. raw:: HTML
 
-  <p><a href="./img/KZW-W002.jpg?raw=true"><img src="./img/KZW-W002.jpg?raw=true" height="50%" width="50%"></a></p>
+  <p><a href="./doc/images/KZW-W002.jpg?raw=true"><img src="./doc/images/KZW-W002.jpg?raw=true" height="50%" width="50%"></a></p>
 
 This module can’t be reused, and you need to replace it with an ESP (RPI pico w) module.
 The USB connector on the board doesn’t support the USB protocol. 
@@ -52,7 +52,7 @@ To connect the ESP board to your AC you can cut a USB type A cable and connect w
 
 .. raw:: HTML
 
-  <p><a href="./img/usb_pinout.png?raw=true"><img src="./img/usb_pinout.png?raw=true" height="50%" width="50%"></a></p>
+  <p><a href="./doc/images/usb_pinout.png?raw=true"><img src="./doc/images/usb_pinout.png?raw=true" height="50%" width="50%"></a></p>
 
 KZW-W002 module pinout
 
@@ -68,13 +68,13 @@ The module board looks like this:
 
 .. raw:: HTML
 
-  <p><a href="./img/ESP32_front.jpg?raw=true"><img src="./img/ESP32_front.jpg?raw=true" height="50%" width="50%"></a></p>
+  <p><a href="./doc/images/ESP32_front.jpg?raw=true"><img src="./doc/images/ESP32_front.jpg?raw=true" height="50%" width="50%"></a></p>
 
 **Back:**
 
 .. raw:: HTML
 
-  <a href="./img/ESP32_back.jpg?raw=true"><img src="./img/ESP32_back.jpg?raw=true" height="50%" width="50%"></a>
+  <a href="./doc/images/ESP32_back.jpg?raw=true"><img src="./doc/images/ESP32_back.jpg?raw=true" height="50%" width="50%"></a>
 
 In some cases, you can reuse this module and flash it with ESPHome, but some new modules don’t support this. They look the same but have encryption enabled.
 
@@ -547,7 +547,7 @@ mm <https://www.tinytronics.nl/shop/en/tools-and-mounting/measuring/accessories/
 
 .. raw:: HTML
 
-  <p><a href="./img/ESP32_Haier_UAR0_pinout.jpg?raw=true"><img src="./img/ESP32_Haier_UAR0_pinout.jpg?raw=true" height="50%" width="50%"></a></p>
+  <p><a href="./doc/images/ESP32_Haier_UAR0_pinout.jpg?raw=true"><img src="./doc/images/ESP32_Haier_UAR0_pinout.jpg?raw=true" height="50%" width="50%"></a></p>
 
 To put the device in the flash mode you will need to shortcut GPIO0 to
 the ground before powering the device.
