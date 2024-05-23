@@ -31,9 +31,9 @@ Older Haier models controlled by the SmartAir2 application are using the KZW-W00
       - white
       - TX
 
-.. figure:: ./doc/esphome-docs/climate/images/usb_pinout.png
-    :align: center
-    :width: 70.0%
+.. raw:: HTML
+
+  <p><a href="./docs/esphome-docs/climate/images/usb_pinout.png?raw=true"><img src="./docs/esphome-docs/climate/images/usb_pinout.png?raw=true" height="50%" width="50%"></a></p>
 
     KZW-W002 module pinout
 
@@ -41,9 +41,9 @@ Newer Haier models using a module called ESP32-for-Haier. It is an ESP32 single-
 
 **Warning!** The new generation of ESP32-Haier devices has encryption enabled, so they can only be flashed with firmware that is signed with a private key. There is no way to make them work with ESPHome, so if you try to do it, the board will get into a boot loop with the error ``rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)`` The only way to recover this board is to flash it with the original image. So before starting your experiments make a backup image.
 
-.. figure:: ./doc/esphome-docs/climate/images/haier_pinout.jpg
-    :align: center
-    :width: 70.0%
+.. raw:: HTML
+
+  <p><a href="./docs/esphome-docs/climate/images/haier_pinout.jpg?raw=true"><img src="./docs/esphome-docs/climate/images/haier_pinout.jpg?raw=true" height="50%" width="50%"></a></p>
 
     ESP32-for-Haier UART0 pinout
 
@@ -311,9 +311,9 @@ Haier Climate Sensors
 Additional sensors for Haier Climate device. **These sensors are supported only by the hOn protocol**.
 
 
-.. figure:: ./doc/esphome-docs/sensor/images/haier-climate.jpg
-    :align: center
-    :width: 50.0%
+.. raw:: HTML
+
+  <p><a href="./docs/esphome-docs/sensor/images/haier-climate.jpg?raw=true"><img src="./docs/esphome-docs/sensor/images/haier-climate.jpg?raw=true" height="50%" width="50%"></a></p>
 
 .. code-block:: yaml
 
@@ -378,9 +378,9 @@ Haier Climate Binary Sensors
 Additional sensors for Haier Climate device. **These sensors are supported only by the hOn protocol**.
 
 
-.. figure:: ./doc/esphome-docs/binary_sensor/images/haier-climate.jpg
-    :align: center
-    :width: 50.0%
+.. raw:: HTML
+
+  <p><a href="./docs/esphome-docs/binary_sensor/images/haier-climate.jpg?raw=true"><img src="./docs/esphome-docs/binary_sensor/images/haier-climate.jpg?raw=true" height="50%" width="50%"></a></p>
 
 .. code-block:: yaml
 

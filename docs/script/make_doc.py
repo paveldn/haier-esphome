@@ -12,7 +12,9 @@ doc_file_path = [
 def process_images(line, pth):
     m = re.match(r"^( *\.\. +figure:: +)(.+)$", line)
     if m:
-        return m.group(1) + "./doc/" + pth + "/" + m.group(2) + "\n"
+        new_url = "./docs/" + pth + "/" + m.group(2)
+        return ".. raw:: HTML\n\n  <p><a href=\"" + new_url + "?raw=true\"><img src=\"" + new_url + "?raw=true\" height=\"50%\" width=\"50%\"></a></p>\n"
+        #return m.group(1) + new_url + "\n"
     return line
 
 def process_esphome_refs(line, l_num):
@@ -38,6 +40,11 @@ def process_esphome_refs(line, l_num):
         print(f"Warning: ref found, line #{l_num}!")
     return res
 
+lines_to_remove = [
+    "    :align: center\n",
+    "    :width: 50.0%\n",
+    "    :width: 70.0%\n"
+]
 output_file = open("../../main.rst", "w")
 for in_f in doc_file_path:
     input_file = open(f"../{in_f}", "r")
@@ -54,6 +61,8 @@ for in_f in doc_file_path:
         if is_seo:
             if not line.startswith("    :"):
                 is_seo = False
+            continue
+        if line in lines_to_remove:
             continue
         l = process_images(line, p)
         l = process_esphome_refs(l, l_counter)
