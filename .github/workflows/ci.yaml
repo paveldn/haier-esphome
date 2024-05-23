@@ -3,6 +3,7 @@ name: build CI test
 
 on:
   push:
+    branches-ignore: [ "doc_test" ]
   pull_request:
     branches: [ "master", "dev" , "experimental" ]
 

@@ -8,7 +8,7 @@ Haier Climate Sensors
 Additional sensors for Haier Climate device. **These sensors are supported only by the hOn protocol**.
 
 
-.. figure:: images/sensor.jpg
+.. figure:: images/haier-climate.jpg
     :align: center
     :width: 50.0%
 
