@@ -1,0 +1,91 @@
+Example of climate configuration for smartair2 protocol
+=======================================================
+
+Configuration of your climate will depend on capabilities specific model.
+
+Minimal configuration will look like this:
+
+.. code-block:: yaml
+
+    uart:
+      baud_rate: 9600
+      tx_pin: 17
+      rx_pin: 16
+
+    climate:
+      - platform: haier
+          name: Haier SmartAir2 Climate
+
+
+Maximum configuration witch will use all possible options will look like this:
+
+.. code-block:: yaml
+
+    uart:
+      baud_rate: 9600
+      tx_pin: 17
+      rx_pin: 16
+      id: haier_uart
+
+    api:
+      services:
+        - service: turn_on
+          then:
+          - climate.haier.power_on: haier_ac
+        - service: turn_off
+          then:
+          - climate.haier.power_off: haier_ac
+
+    climate:
+      - platform: haier
+      id: haier_ac
+      protocol: smartAir2
+      name: Haier SmartAir2 Climate
+      uart_id: haier_uart
+      alternative_swing_control: false
+      wifi_signal: true
+      visual:
+        min_temperature: 16 °C
+        max_temperature: 30 °C
+        temperature_step: 1 °C
+      supported_modes:
+        - 'OFF'
+        - HEAT_COOL
+        - COOL
+        - HEAT
+        - DRY
+        - FAN_ONLY
+      supported_swing_modes:
+        - 'OFF'
+        - VERTICAL
+        - HORIZONTAL
+        - BOTH
+      supported_presets:
+        - BOOST
+        - COMFORT
+        - AWAY
+
+    switch:
+      - platform: template
+        id: haier_ac_health_mode
+        name: Haier SmartAir2 Climate health mode
+        icon: mdi:leaf
+        restore_mode: RESTORE_DEFAULT_OFF
+        lambda: |-
+          return id(haier_ac).get_health_mode();
+        turn_on_action:
+          climate.haier.health_on: haier_ac
+        turn_off_action:
+          climate.haier.health_off: haier_ac
+      - platform: template
+        id: haier_ac_display_switch
+        name: Haier SmartAir2 Climate display
+        icon: mdi:led-on
+        entity_category: config
+        restore_mode: RESTORE_DEFAULT_ON
+        lambda: |-
+          return id(haier_ac).get_display_state();
+        turn_on_action:
+          climate.haier.display_on: haier_ac
+        turn_off_action:
+          climate.haier.display_off: haier_ac

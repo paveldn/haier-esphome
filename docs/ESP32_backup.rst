@@ -13,7 +13,7 @@ mm <https://www.tinytronics.nl/shop/en/tools-and-mounting/measuring/accessories/
 
 .. raw:: HTML
 
-  <p><a href="./docs/images/ESP32_Haier_UAR0_pinout.jpg?raw=true"><img src="./docs/images/ESP32_Haier_UAR0_pinout.jpg?raw=true" height="50%" width="50%"></a></p>
+  <p><a href="./docs/esphome-docs/climate/images/haier_pinout.jpg?raw=true"><img src="./docs/esphome-docs/climate/images/haier_pinout.jpg?raw=true" height="50%" width="50%"></a></p>
 
 To put the device in the flash mode you will need to shortcut GPIO0 to
 the ground before powering the device.

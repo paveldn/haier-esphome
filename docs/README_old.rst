@@ -52,7 +52,7 @@ To connect the ESP board to your AC you can cut a USB type A cable and connect w
 
 .. raw:: HTML
 
-  <p><a href="./images/usb_pinout.png?raw=true"><img src="./images/usb_pinout.png?raw=true" height="50%" width="50%"></a></p>
+  <p><a href="./docs/esphome-docs/climate/images/usb_pinout.png?raw=true"><img src="./docs/esphome-docs/climate/images/usb_pinout.png?raw=true" height="50%" width="50%"></a></p>
 
 KZW-W002 module pinout
 
@@ -547,7 +547,7 @@ mm <https://www.tinytronics.nl/shop/en/tools-and-mounting/measuring/accessories/
 
 .. raw:: HTML
 
-  <p><a href="./images/ESP32_Haier_UAR0_pinout.jpg?raw=true"><img src="./images/ESP32_Haier_UAR0_pinout.jpg?raw=true" height="50%" width="50%"></a></p>
+  <p><a href="./docs/esphome-docs/climate/images/haier_pinout.jpg?raw=true"><img src="./docs/esphome-docs/climate/images/haier_pinout.jpg?raw=true" height="50%" width="50%"></a></p>
 
 To put the device in the flash mode you will need to shortcut GPIO0 to
 the ground before powering the device.

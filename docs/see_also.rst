@@ -2,6 +2,8 @@ Additional information
 ======================
 
 - `HaierProtocol <https://github.com/paveldn/HaierProtocol>`_
+- `Haier smart modules <./docs/haier_modules.rst>`_
+- `Example of climate configuration for smartair2 protocol <./docs/smartair2_example.rst>`_
 - `ESPHome Haier Climate <https://esphome.io/components/climate/haier.html>`_
 - `ESPHome Haier Climate Sensors <https://esphome.io/components/sensor/haier.html>`_
 - `ESPHome Haier Climate Binary Sensors <https://esphome.io/components/binary_sensor/haier.html>`_
