@@ -39,9 +39,7 @@ Older Haier models controlled by the SmartAir2 application are using the KZW-W00
 
 .. raw:: HTML
 
-  <p><a href="./docs/esphome-docs/climate/images/usb_pinout.png?raw=true"><img src="./docs/esphome-docs/climate/images/usb_pinout.png?raw=true" height="50%" width="50%"></a></p>
-
-    KZW-W002 module pinout
+  <p><a href="./docs/esphome-docs/climate/images/usb_pinout.png?raw=true"><img src="./docs/esphome-docs/climate/images/usb_pinout.png?raw=true" height="70%" width="70%"></a><br><i>&emsp;KZW-W002 module pinout</i></p>
 
 Newer Haier models using a module called ESP32-for-Haier. It is an ESP32 single-core board with an ESP32-S0WD chip. In some cases, you can reuse this module and flash it with ESPHome, but some new modules don’t support this. They look the same but have encryption enabled.
 
@@ -49,9 +47,7 @@ Newer Haier models using a module called ESP32-for-Haier. It is an ESP32 single-
 
 .. raw:: HTML
 
-  <p><a href="./docs/esphome-docs/climate/images/haier_pinout.jpg?raw=true"><img src="./docs/esphome-docs/climate/images/haier_pinout.jpg?raw=true" height="50%" width="50%"></a></p>
-
-    ESP32-for-Haier UART0 pinout
+  <p><a href="./docs/esphome-docs/climate/images/haier_pinout.jpg?raw=true"><img src="./docs/esphome-docs/climate/images/haier_pinout.jpg?raw=true" height="70%" width="70%"></a><br><i>&emsp;ESP32-for-Haier UART0 pinout</i></p>
 
 Also, you can use any other ESP32, ESP8266, or an RPI pico W board. In this case, you will need to cut the original wire or make a connector yourself (the board has a JST SM04B-GHS-TB connector)
 
@@ -305,12 +301,6 @@ Turn off health mode
 
 (supported only by hOn) Start 56°C steri-cleaning
 
-.. code-block:: yaml
-
-    on_...:
-      then:
-        - climate.haier.start_steri_cleaning: device_id
-
 .. Generated from esphome-docs/sensor/haier.rst
 
 Haier Climate Sensors
@@ -503,7 +493,7 @@ mm <https://www.tinytronics.nl/shop/en/tools-and-mounting/measuring/accessories/
 
 .. raw:: HTML
 
-  <p><a href="./docs/esphome-docs/climate/images/haier_pinout.jpg?raw=true"><img src="./docs/esphome-docs/climate/images/haier_pinout.jpg?raw=true" height="50%" width="50%"></a></p>
+  <p><a href="./docs/esphome-docs/climate/images/haier_pinout.jpg?raw=true"><img src="./docs/esphome-docs/climate/images/haier_pinout.jpg?raw=true" height="70%" width="70%"></a></p>
 
 To put the device in the flash mode you will need to shortcut GPIO0 to
 the ground before powering the device.
