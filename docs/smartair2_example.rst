@@ -14,7 +14,7 @@ Minimal configuration will look like this:
 
     climate:
       - platform: haier
-          name: Haier SmartAir2 Climate
+        name: Haier SmartAir2 Climate
 
 
 Maximum configuration witch will use all possible options will look like this:
@@ -38,32 +38,32 @@ Maximum configuration witch will use all possible options will look like this:
 
     climate:
       - platform: haier
-      id: haier_ac
-      protocol: smartAir2
-      name: Haier SmartAir2 Climate
-      uart_id: haier_uart
-      alternative_swing_control: false
-      wifi_signal: true
-      visual:
-        min_temperature: 16 °C
-        max_temperature: 30 °C
-        temperature_step: 1 °C
-      supported_modes:
-        - 'OFF'
-        - HEAT_COOL
-        - COOL
-        - HEAT
-        - DRY
-        - FAN_ONLY
-      supported_swing_modes:
-        - 'OFF'
-        - VERTICAL
-        - HORIZONTAL
-        - BOTH
-      supported_presets:
-        - BOOST
-        - COMFORT
-        - AWAY
+        id: haier_ac
+        protocol: smartAir2
+        name: Haier SmartAir2 Climate
+        uart_id: haier_uart
+        alternative_swing_control: false
+        wifi_signal: true
+        visual:
+          min_temperature: 16 °C
+          max_temperature: 30 °C
+          temperature_step: 1 °C
+        supported_modes:
+          - 'OFF'
+          - HEAT_COOL
+          - COOL
+          - HEAT
+          - DRY
+          - FAN_ONLY
+        supported_swing_modes:
+          - 'OFF'
+          - VERTICAL
+          - HORIZONTAL
+          - BOTH
+        supported_presets:
+          - BOOST
+          - COMFORT
+          - AWAY
 
     switch:
       - platform: template

@@ -2,6 +2,8 @@
    Please, don't change. In case you need to make corrections or changes change
    source documentation in ./doc folder or script.
 
+.. Generated from esphome-docs/climate/haier.rst
+
 Haier Climate
 =============
 
@@ -309,6 +311,8 @@ Turn off health mode
       then:
         - climate.haier.start_steri_cleaning: device_id
 
+.. Generated from esphome-docs/sensor/haier.rst
+
 Haier Climate Sensors
 =====================
 
@@ -376,6 +380,8 @@ Configuration variables:
   All options from `Sensor <https://esphome.io/components/sensor/index.html#config-sensor>`_.
 
 
+.. Generated from esphome-docs/binary_sensor/haier.rst
+
 Haier Climate Binary Sensors
 ============================
 
@@ -422,6 +428,8 @@ Configuration variables:
 - **outdoor_fan_status** (*Optional*): A binary sensor that indicates outdoor fan activity.
   All options from `Binary Sensor <https://esphome.io/components/binary_sensor/index.html#base-binary-sensor-configuration>`_.
 
+.. Generated from esphome-docs/text_sensor/haier.rst
+
 Haier Climate Text Sensors
 ==========================
 
@@ -451,6 +459,8 @@ Configuration variables:
 - **protocol_version** (*Optional*): A text sensor that indicates Haier protocol version.
   All options from `Text Sensor <https://esphome.io/components/text_sensor/index.html#base-text-sensor-configuration>`_.
 
+.. Generated from esphome-docs/button/haier.rst
+
 Haier Climate Buttons
 =====================
 
@@ -475,6 +485,8 @@ Configuration variables:
   All options from `Text Sensor <https://esphome.io/components/button/index.html#base-button-configuration>`_.
 - **steri_cleaning** (*Optional*): A button that starts Haier climate 56°C Steri-Clean.
   All options from `Text Sensor <https://esphome.io/components/button/index.html#base-button-configuration>`_.
+
+.. Generated from esp32_backup.rst
 
 How to backup the original image and flash ESPHome to the ESP32 Haier module
 ============================================================================
@@ -508,12 +520,15 @@ flash_4M.bin**
 After this, you can flash firmware using ESPHome tools (dashboard,
 website, esphome command, etc)
 
+.. Generated from additional_information.rst
+
 Additional information
 ======================
 
 - `HaierProtocol <https://github.com/paveldn/HaierProtocol>`_
 - `Haier smart modules <./docs/haier_modules.rst>`_
 - `Example of climate configuration for smartair2 protocol <./docs/smartair2_example.rst>`_
+- `Example of climate configuration for hOn protocol <./docs/hon_example.rst>`_
 - `ESPHome Haier Climate <https://esphome.io/components/climate/haier.html>`_
 - `ESPHome Haier Climate Sensors <https://esphome.io/components/sensor/haier.html>`_
 - `ESPHome Haier Climate Binary Sensors <https://esphome.io/components/binary_sensor/haier.html>`_

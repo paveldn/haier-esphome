@@ -7,8 +7,8 @@ doc_file_path = [
     'esphome-docs/binary_sensor/haier.rst',
     'esphome-docs/text_sensor/haier.rst',
     'esphome-docs/button/haier.rst',
-    'ESP32_backup.rst',
-    'see_also.rst',
+    'esp32_backup.rst',
+    'additional_information.rst',
 ]
 
 def process_images(line, pth):
@@ -39,7 +39,7 @@ def process_esphome_refs(line, l_num):
     for o, r in esphome_refs:
         res = res.replace(o, r)
     if res.find(":ref:") != -1:
-        print(f"Warning: ref found, line #{l_num}!")
+        print(f"\tWarning: ref found, line #{l_num}")
     return res
 
 document_header = [
@@ -56,12 +56,15 @@ lines_to_remove = [
 output_file = open("../../README.rst", "w")
 output_file.writelines(document_header)
 for in_f in doc_file_path:
+    print(f"Processing: {in_f}")
+    output_file.write(f".. Generated from {in_f}\n\n")
     input_file = open(f"../{in_f}", "r")
     p = os.path.dirname(in_f)
     lines = input_file.readlines()
     is_seo = False
-    l_counter = 1
+    l_counter = 0
     for line in lines:
+        l_counter += 1
         if line == "See Also\n":
             break
         if line == ".. seo::\n":
@@ -76,4 +79,4 @@ for in_f in doc_file_path:
         l = process_images(line, p)
         l = process_esphome_refs(l, l_counter)
         output_file.write(l)
-        l_counter += 1
+    print(f"\tProcessed {l_counter} line(s)")
