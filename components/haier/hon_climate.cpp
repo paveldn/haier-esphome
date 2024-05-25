@@ -1165,6 +1165,35 @@ void HonClimate::fill_control_messages_queue_() {
                                          (uint8_t) hon_protocol::DataParameters::SET_POINT,
                                      buffer, 2));
   }
+  // Vertical swing mode 
+  if (climate_control.swing_mode.has_value()) {
+    uint8_t vertical_swing_buf[] =    {0x00, (uint8_t) hon_protocol::VerticalSwingMode::AUTO};
+    uint8_t horizontal_swing_buf[] =  {0x00, (uint8_t) hon_protocol::HorizontalSwingMode::AUTO};
+    switch (climate_control.swing_mode.value()) {
+      case CLIMATE_SWING_OFF:
+        horizontal_swing_buf[1] = (uint8_t) this->settings_.last_horizontal_swing;
+        vertical_swing_buf[1] =   (uint8_t) this->settings_.last_vertiacal_swing;
+        break;
+      case CLIMATE_SWING_VERTICAL:
+        horizontal_swing_buf[1] = (uint8_t) this->settings_.last_horizontal_swing;
+        break;
+      case CLIMATE_SWING_HORIZONTAL:
+        vertical_swing_buf[1] = (uint8_t) this->settings_.last_vertiacal_swing;
+        break;
+      case CLIMATE_SWING_BOTH:
+        break;
+    }
+    this->control_messages_queue_.push(
+        haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
+                                      (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
+                                          (uint8_t) hon_protocol::DataParameters::HORIZONTAL_SWING_MODE,
+                                      horizontal_swing_buf, 2));
+    this->control_messages_queue_.push(
+        haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
+                                      (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
+                                          (uint8_t) hon_protocol::DataParameters::VERTICAL_SWING_MODE,
+                                      vertical_swing_buf, 2));
+  }
   // Fan mode
   if (climate_control.fan_mode.has_value()) {
     switch (climate_control.fan_mode.value()) {
