@@ -48,6 +48,7 @@ CONF_CONTROL_PACKET_SIZE = "control_packet_size"
 CONF_HORIZONTAL_AIRFLOW = "horizontal_airflow"
 CONF_ON_ALARM_START = "on_alarm_start"
 CONF_ON_ALARM_END = "on_alarm_end"
+CONF_ON_STATUS_MESSAGE = "on_status_message"
 CONF_VERTICAL_AIRFLOW = "vertical_airflow"
 CONF_WIFI_SIGNAL = "wifi_signal"
 
@@ -129,6 +130,10 @@ HaierAlarmEndTrigger = haier_ns.class_(
     automation.Trigger.template(cg.uint8, cg.const_char_ptr),
 )
 
+StatusMessageTrigger = haier_ns.class_(
+    "StatusMessageTrigger",
+    automation.Trigger.template(cg.const_char_ptr, cg.size_t),
+)
 
 def validate_visual(config):
     if CONF_VISUAL in config:
@@ -194,6 +199,13 @@ BASE_CONFIG_SCHEMA = (
             cv.Optional(
                 CONF_ANSWER_TIMEOUT,
             ): cv.positive_time_period_milliseconds,
+            cv.Optional(CONF_ON_STATUS_MESSAGE): automation.validate_automation(
+                {
+                    cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(
+                        StatusMessageTrigger
+                    ),
+                }
+            ),
         }
     )
     .extend(uart.UART_DEVICE_SCHEMA)
