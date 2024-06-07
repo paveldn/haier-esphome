@@ -495,5 +495,10 @@ async def to_code(config):
         await automation.build_automation(
             trigger, [(cg.uint8, "code"), (cg.const_char_ptr, "message")], conf
         )
+    for conf in config.get(CONF_ON_STATUS_MESSAGE, []):
+        trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)
+        await automation.build_automation(
+            trigger, [(cg.const_char_ptr, "data"), (cg.size_t, "data_size")], conf
+        )        
     # https://github.com/paveldn/HaierProtocol
     cg.add_library("pavlodn/HaierProtocol", "0.9.28")
