@@ -759,8 +759,8 @@ void HonClimate::update_sub_text_sensor_(SubTextSensorType type, const std::stri
 #endif  // USE_TEXT_SENSOR
 
 haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *packet_buffer, uint8_t size) {
-  size_t expected_size = 2 + sizeof(hon_protocol::HaierPacketControl) + sizeof(hon_protocol::HaierPacketSensors) +
-                         this->extra_control_packet_bytes_;
+  size_t expected_size = 2 + this->status_message_header_size_ + sizeof(hon_protocol::HaierPacketControl) + 
+                         sizeof(hon_protocol::HaierPacketSensors) +  this->extra_control_packet_bytes_;
   if (size < expected_size)
     return haier_protocol::HandlerError::WRONG_MESSAGE_STRUCTURE;
   uint16_t subtype = (((uint16_t) packet_buffer[0]) << 8) + packet_buffer[1];
@@ -796,10 +796,10 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
     hon_protocol::HaierPacketControl control;
     hon_protocol::HaierPacketSensors sensors;
   } packet;
-  memcpy(&packet.control, packet_buffer + 2, sizeof(hon_protocol::HaierPacketControl));
+  memcpy(&packet.control, packet_buffer + 2 + this->status_message_header_size_, sizeof(hon_protocol::HaierPacketControl));
   memcpy(&packet.sensors,
-         packet_buffer + 2 + sizeof(hon_protocol::HaierPacketControl) + this->extra_control_packet_bytes_,
-         sizeof(hon_protocol::HaierPacketSensors));
+         packet_buffer + 2 + this->status_message_header_size_ + sizeof(hon_protocol::HaierPacketControl) + 
+         this->extra_control_packet_bytes_, sizeof(hon_protocol::HaierPacketSensors));
   if (packet.sensors.error_status != 0) {
     ESP_LOGW(TAG, "HVAC error, code=0x%02X", packet.sensors.error_status);
   }

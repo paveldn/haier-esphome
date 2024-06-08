@@ -104,6 +104,7 @@ class HonClimate : public HaierClimateBase {
   void start_self_cleaning();
   void start_steri_cleaning();
   void set_extra_control_packet_bytes_size(size_t size) { this->extra_control_packet_bytes_ = size; };
+  void set_status_message_header_size(size_t size) { this->status_message_header_size_ = size; };
   void set_control_method(HonControlMethod method) { this->control_method_ = method; };
   void add_alarm_start_callback(std::function<void(uint8_t, const char *)> &&callback);
   void add_alarm_end_callback(std::function<void(uint8_t, const char *)> &&callback);
@@ -159,6 +160,7 @@ class HonClimate : public HaierClimateBase {
   esphome::optional<HardwareInfo> hvac_hardware_info_{};
   uint8_t active_alarms_[8];
   int extra_control_packet_bytes_;
+  int status_message_header_size_{0};
   HonControlMethod control_method_;
   std::queue<haier_protocol::HaierMessage> control_messages_queue_;
   CallbackManager<void(uint8_t, const char *)> alarm_start_callback_{};
