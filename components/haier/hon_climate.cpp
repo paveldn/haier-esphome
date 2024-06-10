@@ -23,7 +23,6 @@ HonClimate::HonClimate()
     : cleaning_status_(CleaningState::NO_CLEANING), got_valid_outdoor_temp_(false), active_alarms_{0x00, 0x00, 0x00,
                                                                                                    0x00, 0x00, 0x00,
                                                                                                    0x00, 0x00} {
-  last_status_message_ = std::unique_ptr<uint8_t[]>(new uint8_t[sizeof(hon_protocol::HaierPacketControl)]);
   this->fan_mode_speed_ = (uint8_t) hon_protocol::FanMode::FAN_MID;
   this->other_modes_fan_speed_ = (uint8_t) hon_protocol::FanMode::FAN_AUTO;
 }
@@ -169,12 +168,16 @@ haier_protocol::HandlerError HonClimate::status_handler_(haier_protocol::FrameTy
       this->action_request_.reset();
       this->force_send_control_ = false;
     } else {
-      if (data_size >= sizeof(hon_protocol::HaierPacketControl) + 2) {
-        memcpy(this->last_status_message_.get(), data + 2, sizeof(hon_protocol::HaierPacketControl));
+      if (!this->last_status_message_) {
+        this->real_control_packet_size_ = sizeof(hon_protocol::HaierPacketControl) + this->extra_control_packet_bytes_;
+        this->last_status_message_.reset(new uint8_t[this->real_control_packet_size_]);
+      };
+      if (data_size >= this->real_control_packet_size_ + 2) {
+        memcpy(this->last_status_message_.get(), data + 2 + this->status_message_header_size_, this->real_control_packet_size_);
         this->status_message_callback_.call((const char*) data, data_size);
       } else {
         ESP_LOGW(TAG, "Status packet too small: %d (should be >= %d)", data_size,
-                 sizeof(hon_protocol::HaierPacketControl));
+                 this->real_control_packet_size_);
       }
       switch (this->protocol_phase_) {
         case ProtocolPhases::SENDING_FIRST_STATUS_REQUEST:
@@ -480,8 +483,8 @@ void HonClimate::initialization() {
 }
 
 haier_protocol::HaierMessage HonClimate::get_control_message() {
-  uint8_t control_out_buffer[sizeof(hon_protocol::HaierPacketControl)];
-  memcpy(control_out_buffer, this->last_status_message_.get(), sizeof(hon_protocol::HaierPacketControl));
+  static uint8_t control_out_buffer[haier_protocol::MAX_FRAME_SIZE];
+  memcpy(control_out_buffer, this->last_status_message_.get(), this->real_control_packet_size_);
   hon_protocol::HaierPacketControl *out_data = (hon_protocol::HaierPacketControl *) control_out_buffer;
   control_out_buffer[4] = 0;  // This byte should be cleared before setting values
   bool has_hvac_settings = false;
@@ -637,7 +640,7 @@ haier_protocol::HaierMessage HonClimate::get_control_message() {
   out_data->health_mode = this->health_mode_ ? 1 : 0;
   return haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
                                       (uint16_t) hon_protocol::SubcommandsControl::SET_GROUP_PARAMETERS,
-                                      control_out_buffer, sizeof(hon_protocol::HaierPacketControl));
+                                      control_out_buffer, this->real_control_packet_size_);
 }
 
 void HonClimate::process_alarm_message_(const uint8_t *packet, uint8_t size, bool check_new) {
@@ -759,10 +762,11 @@ void HonClimate::update_sub_text_sensor_(SubTextSensorType type, const std::stri
 #endif  // USE_TEXT_SENSOR
 
 haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *packet_buffer, uint8_t size) {
-  size_t expected_size = 2 + this->status_message_header_size_ + sizeof(hon_protocol::HaierPacketControl) + 
-                         sizeof(hon_protocol::HaierPacketSensors) +  this->extra_control_packet_bytes_;
-  if (size < expected_size)
+  size_t expected_size = 2 + this->status_message_header_size_ + this->real_control_packet_size_ + sizeof(hon_protocol::HaierPacketSensors);
+  if (size < expected_size) {
+    ESP_LOGW(TAG, "Unexpected message size %d (expexted >= %d)", size, expected_size);
     return haier_protocol::HandlerError::WRONG_MESSAGE_STRUCTURE;
+  }
   uint16_t subtype = (((uint16_t) packet_buffer[0]) << 8) + packet_buffer[1];
   if ((subtype == 0x7D01) && (size >= expected_size + 4 + sizeof(hon_protocol::HaierPacketBigData))) {
     // Got BigData packet
@@ -797,9 +801,8 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
     hon_protocol::HaierPacketSensors sensors;
   } packet;
   memcpy(&packet.control, packet_buffer + 2 + this->status_message_header_size_, sizeof(hon_protocol::HaierPacketControl));
-  memcpy(&packet.sensors,
-         packet_buffer + 2 + this->status_message_header_size_ + sizeof(hon_protocol::HaierPacketControl) + 
-         this->extra_control_packet_bytes_, sizeof(hon_protocol::HaierPacketSensors));
+  memcpy(&packet.sensors, packet_buffer + 2 + this->status_message_header_size_ + this->real_control_packet_size_,
+         sizeof(hon_protocol::HaierPacketSensors));
   if (packet.sensors.error_status != 0) {
     ESP_LOGW(TAG, "HVAC error, code=0x%02X", packet.sensors.error_status);
   }
@@ -1233,8 +1236,8 @@ void HonClimate::clear_control_messages_queue_() {
 bool HonClimate::prepare_pending_action() {
   switch (this->action_request_.value().action) {
     case ActionRequest::START_SELF_CLEAN: {
-      uint8_t control_out_buffer[sizeof(hon_protocol::HaierPacketControl)];
-      memcpy(control_out_buffer, this->last_status_message_.get(), sizeof(hon_protocol::HaierPacketControl));
+      uint8_t control_out_buffer[haier_protocol::MAX_FRAME_SIZE];
+      memcpy(control_out_buffer, this->last_status_message_.get(), this->real_control_packet_size_);
       hon_protocol::HaierPacketControl *out_data = (hon_protocol::HaierPacketControl *) control_out_buffer;
       out_data->self_cleaning_status = 1;
       out_data->steri_clean = 0;
@@ -1246,12 +1249,12 @@ bool HonClimate::prepare_pending_action() {
       out_data->light_status = 0;
       this->action_request_.value().message = haier_protocol::HaierMessage(
           haier_protocol::FrameType::CONTROL, (uint16_t) hon_protocol::SubcommandsControl::SET_GROUP_PARAMETERS,
-          control_out_buffer, sizeof(hon_protocol::HaierPacketControl));
+          control_out_buffer, this->real_control_packet_size_);
     }
       return true;
     case ActionRequest::START_STERI_CLEAN: {
-      uint8_t control_out_buffer[sizeof(hon_protocol::HaierPacketControl)];
-      memcpy(control_out_buffer, this->last_status_message_.get(), sizeof(hon_protocol::HaierPacketControl));
+      uint8_t control_out_buffer[haier_protocol::MAX_FRAME_SIZE];
+      memcpy(control_out_buffer, this->last_status_message_.get(), this->real_control_packet_size_);
       hon_protocol::HaierPacketControl *out_data = (hon_protocol::HaierPacketControl *) control_out_buffer;
       out_data->self_cleaning_status = 0;
       out_data->steri_clean = 1;
@@ -1263,7 +1266,7 @@ bool HonClimate::prepare_pending_action() {
       out_data->light_status = 0;
       this->action_request_.value().message = haier_protocol::HaierMessage(
           haier_protocol::FrameType::CONTROL, (uint16_t) hon_protocol::SubcommandsControl::SET_GROUP_PARAMETERS,
-          control_out_buffer, sizeof(hon_protocol::HaierPacketControl));
+          control_out_buffer, this->real_control_packet_size_);
     }
       return true;
     default:
@@ -1281,6 +1284,7 @@ void HonClimate::process_protocol_reset() {
 #endif  // USE_SENSOR
   this->got_valid_outdoor_temp_ = false;
   this->hvac_hardware_info_.reset();
+  this->last_status_message_.reset(nullptr);
 }
 
 bool HonClimate::should_get_big_data_() {

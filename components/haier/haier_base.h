@@ -142,7 +142,7 @@ class HaierClimateBase : public esphome::Component,
   esphome::climate::ClimateTraits traits_;
   HvacSettings current_hvac_settings_;
   HvacSettings next_hvac_settings_;
-  std::unique_ptr<uint8_t[]> last_status_message_;
+  std::unique_ptr<uint8_t[]> last_status_message_{ nullptr };
   std::chrono::steady_clock::time_point last_request_timestamp_;       // For interval between messages
   std::chrono::steady_clock::time_point last_valid_status_timestamp_;  // For protocol timeout
   std::chrono::steady_clock::time_point last_status_request_;          // To request AC status
