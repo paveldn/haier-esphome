@@ -18,6 +18,9 @@ constexpr int PROTOCOL_OUTDOOR_TEMPERATURE_OFFSET = -64;
 constexpr uint8_t CONTROL_MESSAGE_RETRIES = 5;
 constexpr std::chrono::milliseconds CONTROL_MESSAGE_RETRIES_INTERVAL = std::chrono::milliseconds(500);
 constexpr size_t ALARM_STATUS_REQUEST_INTERVAL_MS = 600000;
+const uint8_t ONE_BUF[] = {0x00, 0x01};
+const uint8_t ZERO_BUF[] = {0x00, 0x00};
+
 
 HonClimate::HonClimate()
     : cleaning_status_(CleaningState::NO_CLEANING), got_valid_outdoor_temp_(false), active_alarms_{0x00, 0x00, 0x00,
@@ -1000,8 +1003,6 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
 }
 
 void HonClimate::fill_control_messages_queue_() {
-  static uint8_t one_buf[] = {0x00, 0x01};
-  static uint8_t zero_buf[] = {0x00, 0x00};
   if (!this->current_hvac_settings_.valid && !this->force_send_control_)
     return;
   this->clear_control_messages_queue_();
@@ -1013,7 +1014,7 @@ void HonClimate::fill_control_messages_queue_() {
         haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
                                      (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
                                          (uint8_t) hon_protocol::DataParameters::BEEPER_STATUS,
-                                     this->beeper_status_ ? zero_buf : one_buf, 2));
+                                     this->beeper_status_ ? ZERO_BUF : ONE_BUF, 2));
   }
   // Health mode
   {
@@ -1021,7 +1022,7 @@ void HonClimate::fill_control_messages_queue_() {
         haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
                                      (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
                                          (uint8_t) hon_protocol::DataParameters::HEALTH_MODE,
-                                     this->health_mode_ ? one_buf : zero_buf, 2));
+                                     this->health_mode_ ? ONE_BUF : ZERO_BUF, 2));
   }
   // Climate mode
   bool new_power = this->mode != CLIMATE_MODE_OFF;
@@ -1096,7 +1097,7 @@ void HonClimate::fill_control_messages_queue_() {
         haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
                                      (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
                                          (uint8_t) hon_protocol::DataParameters::AC_POWER,
-                                     new_power ? one_buf : zero_buf, 2));
+                                     new_power ? ONE_BUF : ZERO_BUF, 2));
   }
   // CLimate preset
   {
@@ -1235,40 +1236,58 @@ void HonClimate::clear_control_messages_queue_() {
 
 bool HonClimate::prepare_pending_action() {
   switch (this->action_request_.value().action) {
-    case ActionRequest::START_SELF_CLEAN: {
-      uint8_t control_out_buffer[haier_protocol::MAX_FRAME_SIZE];
-      memcpy(control_out_buffer, this->last_status_message_.get(), this->real_control_packet_size_);
-      hon_protocol::HaierPacketControl *out_data = (hon_protocol::HaierPacketControl *) control_out_buffer;
-      out_data->self_cleaning_status = 1;
-      out_data->steri_clean = 0;
-      out_data->set_point = 0x06;
-      out_data->vertical_swing_mode = (uint8_t) hon_protocol::VerticalSwingMode::CENTER;
-      out_data->horizontal_swing_mode = (uint8_t) hon_protocol::HorizontalSwingMode::CENTER;
-      out_data->ac_power = 1;
-      out_data->ac_mode = (uint8_t) hon_protocol::ConditioningMode::DRY;
-      out_data->light_status = 0;
-      this->action_request_.value().message = haier_protocol::HaierMessage(
-          haier_protocol::FrameType::CONTROL, (uint16_t) hon_protocol::SubcommandsControl::SET_GROUP_PARAMETERS,
-          control_out_buffer, this->real_control_packet_size_);
-    }
-      return true;
-    case ActionRequest::START_STERI_CLEAN: {
-      uint8_t control_out_buffer[haier_protocol::MAX_FRAME_SIZE];
-      memcpy(control_out_buffer, this->last_status_message_.get(), this->real_control_packet_size_);
-      hon_protocol::HaierPacketControl *out_data = (hon_protocol::HaierPacketControl *) control_out_buffer;
-      out_data->self_cleaning_status = 0;
-      out_data->steri_clean = 1;
-      out_data->set_point = 0x06;
-      out_data->vertical_swing_mode = (uint8_t) hon_protocol::VerticalSwingMode::CENTER;
-      out_data->horizontal_swing_mode = (uint8_t) hon_protocol::HorizontalSwingMode::CENTER;
-      out_data->ac_power = 1;
-      out_data->ac_mode = (uint8_t) hon_protocol::ConditioningMode::DRY;
-      out_data->light_status = 0;
-      this->action_request_.value().message = haier_protocol::HaierMessage(
-          haier_protocol::FrameType::CONTROL, (uint16_t) hon_protocol::SubcommandsControl::SET_GROUP_PARAMETERS,
-          control_out_buffer, this->real_control_packet_size_);
-    }
-      return true;
+    case ActionRequest::START_SELF_CLEAN:
+      if (this->control_method_ == HonControlMethod::SET_GROUP_PARAMETERS) {
+        uint8_t control_out_buffer[haier_protocol::MAX_FRAME_SIZE];
+        memcpy(control_out_buffer, this->last_status_message_.get(), this->real_control_packet_size_);
+        hon_protocol::HaierPacketControl *out_data = (hon_protocol::HaierPacketControl *) control_out_buffer;
+        out_data->self_cleaning_status = 1;
+        out_data->steri_clean = 0;
+        out_data->set_point = 0x06;
+        out_data->vertical_swing_mode = (uint8_t) hon_protocol::VerticalSwingMode::CENTER;
+        out_data->horizontal_swing_mode = (uint8_t) hon_protocol::HorizontalSwingMode::CENTER;
+        out_data->ac_power = 1;
+        out_data->ac_mode = (uint8_t) hon_protocol::ConditioningMode::DRY;
+        out_data->light_status = 0;
+        this->action_request_.value().message = haier_protocol::HaierMessage(
+            haier_protocol::FrameType::CONTROL, (uint16_t) hon_protocol::SubcommandsControl::SET_GROUP_PARAMETERS,
+            control_out_buffer, this->real_control_packet_size_);
+        return true;
+      }
+      else if (this->control_method_ == HonControlMethod::SET_SINGLE_PARAMETER) {
+        this->action_request_.value().message = haier_protocol::HaierMessage(
+            haier_protocol::FrameType::CONTROL,
+            (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
+                (uint8_t) hon_protocol::DataParameters::SELF_CLEANING,
+            ONE_BUF, 2);
+            return true;
+      }
+      else {
+        this->action_request_.reset();
+        return false;
+      }
+    case ActionRequest::START_STERI_CLEAN:
+      if (this->control_method_ == HonControlMethod::SET_GROUP_PARAMETERS) {
+        uint8_t control_out_buffer[haier_protocol::MAX_FRAME_SIZE];
+        memcpy(control_out_buffer, this->last_status_message_.get(), this->real_control_packet_size_);
+        hon_protocol::HaierPacketControl *out_data = (hon_protocol::HaierPacketControl *) control_out_buffer;
+        out_data->self_cleaning_status = 0;
+        out_data->steri_clean = 1;
+        out_data->set_point = 0x06;
+        out_data->vertical_swing_mode = (uint8_t) hon_protocol::VerticalSwingMode::CENTER;
+        out_data->horizontal_swing_mode = (uint8_t) hon_protocol::HorizontalSwingMode::CENTER;
+        out_data->ac_power = 1;
+        out_data->ac_mode = (uint8_t) hon_protocol::ConditioningMode::DRY;
+        out_data->light_status = 0;
+        this->action_request_.value().message = haier_protocol::HaierMessage(
+            haier_protocol::FrameType::CONTROL, (uint16_t) hon_protocol::SubcommandsControl::SET_GROUP_PARAMETERS,
+            control_out_buffer, this->real_control_packet_size_);
+        return true;
+      } else {
+        // No Steri clean support (yet?) in SET_SINGLE_PARAMETER
+        this->action_request_.reset();
+        return false;
+      }
     default:
       return HaierClimateBase::prepare_pending_action();
   }
