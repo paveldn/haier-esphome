@@ -38,6 +38,8 @@ PROTOCOL_MAX_TEMPERATURE = 30.0
 PROTOCOL_TARGET_TEMPERATURE_STEP = 1.0
 PROTOCOL_CURRENT_TEMPERATURE_STEP = 0.5
 PROTOCOL_CONTROL_PACKET_SIZE = 10
+PROTOCOL_MIN_SENSORS_PACKET_SIZE = 18
+PROTOCOL_DEFAULT_SENSORS_PACKET_SIZE = 22
 PROTOCOL_STATUS_MESSAGE_HEADER_SIZE = 0
 
 CODEOWNERS = ["@paveldn"]
@@ -46,11 +48,12 @@ CONF_ALTERNATIVE_SWING_CONTROL = "alternative_swing_control"
 CONF_ANSWER_TIMEOUT = "answer_timeout"
 CONF_CONTROL_METHOD = "control_method"
 CONF_CONTROL_PACKET_SIZE = "control_packet_size"
-CONF_STATUS_MESSAGE_HEADER_SIZE = "status_message_header_size"
 CONF_HORIZONTAL_AIRFLOW = "horizontal_airflow"
 CONF_ON_ALARM_START = "on_alarm_start"
 CONF_ON_ALARM_END = "on_alarm_end"
 CONF_ON_STATUS_MESSAGE = "on_status_message"
+CONF_SENSORS_PACKET_SIZE = "sensors_packet_size"
+CONF_STATUS_MESSAGE_HEADER_SIZE = "status_message_header_size"
 CONF_VERTICAL_AIRFLOW = "vertical_airflow"
 CONF_WIFI_SIGNAL = "wifi_signal"
 
@@ -243,6 +246,9 @@ CONFIG_SCHEMA = cv.All(
                     cv.Optional(
                         CONF_CONTROL_PACKET_SIZE, default=PROTOCOL_CONTROL_PACKET_SIZE
                     ): cv.int_range(min=PROTOCOL_CONTROL_PACKET_SIZE, max=50),
+                    cv.Optional(
+                        CONF_SENSORS_PACKET_SIZE, default=PROTOCOL_DEFAULT_SENSORS_PACKET_SIZE
+                    ): cv.int_range(min=PROTOCOL_MIN_SENSORS_PACKET_SIZE, max=50),
                     cv.Optional(
                         CONF_STATUS_MESSAGE_HEADER_SIZE, default=PROTOCOL_STATUS_MESSAGE_HEADER_SIZE
                     ): cv.int_range(min=PROTOCOL_STATUS_MESSAGE_HEADER_SIZE),
@@ -488,6 +494,12 @@ async def to_code(config):
         cg.add(
             var.set_extra_control_packet_bytes_size(
                 config[CONF_CONTROL_PACKET_SIZE] - PROTOCOL_CONTROL_PACKET_SIZE
+            )
+        )
+    if CONF_SENSORS_PACKET_SIZE in config:
+        cg.add(
+            var.set_extra_sensors_packet_bytes_size(
+                config[CONF_SENSORS_PACKET_SIZE] - PROTOCOL_MIN_SENSORS_PACKET_SIZE
             )
         )
     if CONF_STATUS_MESSAGE_HEADER_SIZE in config:

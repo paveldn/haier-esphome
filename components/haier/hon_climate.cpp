@@ -173,6 +173,7 @@ haier_protocol::HandlerError HonClimate::status_handler_(haier_protocol::FrameTy
     } else {
       if (!this->last_status_message_) {
         this->real_control_packet_size_ = sizeof(hon_protocol::HaierPacketControl) + this->extra_control_packet_bytes_;
+        this->real_sensors_packet_size_ = sizeof(hon_protocol::HaierPacketSensors) + this->extra_sensors_packet_bytes_;
         this->last_status_message_.reset(new uint8_t[this->real_control_packet_size_]);
       };
       if (data_size >= this->real_control_packet_size_ + 2) {
@@ -765,16 +766,16 @@ void HonClimate::update_sub_text_sensor_(SubTextSensorType type, const std::stri
 #endif  // USE_TEXT_SENSOR
 
 haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *packet_buffer, uint8_t size) {
-  size_t expected_size = 2 + this->status_message_header_size_ + this->real_control_packet_size_ + sizeof(hon_protocol::HaierPacketSensors);
+  size_t expected_size = 2 + this->status_message_header_size_ + this->real_control_packet_size_ + this->real_sensors_packet_size_;
   if (size < expected_size) {
     ESP_LOGW(TAG, "Unexpected message size %d (expexted >= %d)", size, expected_size);
     return haier_protocol::HandlerError::WRONG_MESSAGE_STRUCTURE;
   }
   uint16_t subtype = (((uint16_t) packet_buffer[0]) << 8) + packet_buffer[1];
-  if ((subtype == 0x7D01) && (size >= expected_size + 4 + sizeof(hon_protocol::HaierPacketBigData))) {
+  if ((subtype == 0x7D01) && (size >= expected_size + sizeof(hon_protocol::HaierPacketBigData))) {
     // Got BigData packet
     const hon_protocol::HaierPacketBigData *bd_packet =
-        (const hon_protocol::HaierPacketBigData *) (&packet_buffer[expected_size + 4]);
+        (const hon_protocol::HaierPacketBigData *) (&packet_buffer[expected_size]);
 #ifdef USE_SENSOR
     this->update_sub_sensor_(SubSensorType::INDOOR_COIL_TEMPERATURE, bd_packet->indoor_coil_temperature / 2.0 - 20);
     this->update_sub_sensor_(SubSensorType::OUTDOOR_COIL_TEMPERATURE, bd_packet->outdoor_coil_temperature - 64);
