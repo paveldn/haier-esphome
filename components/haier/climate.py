@@ -522,4 +522,4 @@ async def to_code(config):
             trigger, [(cg.const_char_ptr, "data"), (cg.size_t, "data_size")], conf
         )        
     # https://github.com/paveldn/HaierProtocol
-    cg.add_library("pavlodn/HaierProtocol", "0.9.28")
+    cg.add_library("pavlodn/HaierProtocol", "0.9.31")
