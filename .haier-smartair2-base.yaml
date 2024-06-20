@@ -1,6 +1,7 @@
 api:
 
 ota:
+  - platform: esphome
 
 packages:
   smartair2_climate: !include configs/climate/haier_smartair2.yaml

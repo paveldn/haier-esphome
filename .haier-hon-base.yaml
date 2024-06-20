@@ -1,6 +1,7 @@
 api:
 
 ota:
+  - platform: esphome
 
 packages:
   hon_climate: !include configs/climate/haier_hon.yaml
