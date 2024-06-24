@@ -1,0 +1,18 @@
+name: documentation check
+
+on:
+  push:
+  pull_request:
+    branches: [ "master", "dev" , "experimental" ]
+
+jobs:
+  tests:
+    name: documentation check
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4.1.3
+    - name: Run script and save results
+      run: python docs/script/make_doc.py README.tmp
+    - name: Compare temp file with readme.rst
+      run: diff -u --strip-trailing-cr README.rst README.tmp

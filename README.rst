@@ -509,7 +509,6 @@ flash_4M.bin**
 
 After this, you can flash firmware using ESPHome tools (dashboard,
 website, esphome command, etc)
-
 .. Generated from additional_information.rst
 
 Additional information

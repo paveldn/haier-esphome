@@ -1,14 +1,15 @@
 import re
 import os
+import sys
 
 doc_file_path = [ 
-    'esphome-docs/climate/haier.rst',
-    'esphome-docs/sensor/haier.rst',
-    'esphome-docs/binary_sensor/haier.rst',
-    'esphome-docs/text_sensor/haier.rst',
-    'esphome-docs/button/haier.rst',
-    'esp32_backup.rst',
-    'additional_information.rst',
+    "/".join(["esphome-docs", "climate", "haier.rst"]),
+    "/".join(["esphome-docs", "sensor", "haier.rst"]),
+    "/".join(["esphome-docs", "binary_sensor", "haier.rst"]),
+    "/".join(["esphome-docs", "text_sensor", "haier.rst"]),
+    "/".join(["esphome-docs", "button", "haier.rst"]),
+    "esp32_backup.rst",
+    "additional_information.rst",
 ]
 
 def process_esphome_refs(line, l_num):
@@ -72,12 +73,16 @@ document_header = [
     "   source documentation in ./doc folder or script.\n\n"
 ]
 
-output_file = open("../../README.rst", "w")
+script_path = os.path.dirname(__file__)
+output_file_name = "../../README.rst"
+if len(sys.argv) > 1:
+    output_file_name = sys.argv[1]
+output_file = open(output_file_name, "w")
 output_file.writelines(document_header)
 for in_f in doc_file_path:
     print(f"Processing: {in_f}")
     output_file.write(f".. Generated from {in_f}\n\n")
-    input_file = open(f"../{in_f}", "r")
+    input_file = open(os.path.join(script_path, "..", in_f), "r")
     p = os.path.dirname(in_f)
     lines = input_file.readlines()
     is_seo = False

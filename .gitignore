@@ -6,3 +6,4 @@ __pycache__/
 /buildlog.txt
 *.bak
 *.local.yaml
+*.tmp
