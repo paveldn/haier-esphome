@@ -514,6 +514,7 @@ website, esphome command, etc)
 Additional information
 ======================
 
+- `FAQ <./docs/faq.rst>`_
 - `HaierProtocol <https://github.com/paveldn/HaierProtocol>`_
 - `Haier smart modules <./docs/haier_modules.rst>`_
 - `Haier protocol overview <./docs/protocol_overview.rst>`_
