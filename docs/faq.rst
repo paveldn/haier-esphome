@@ -28,7 +28,7 @@ Frequently Asked Questions
 
 **A:** This warning means that the AC denied the control command. It can happen in two cases: either the AC is using a different type of control or the structure of the status packet is different. You can try using the `control_method: SET_SINGLE_PARAMETER`. If that doesn't help, you can try to figure out the size of different parts of the status packet using this method: `Haier protocol overview <./docs/protocol_overview.rst>`. If nothing helps, you can create an issue on GitHub.
 
-**Q:** My ESP is communicating with the AC, but I can't control it. Or I can control it, but my sensors show wrong information.
+**Q:** My ESP is communicating with the AC, but I can't control it. Or I can control it, but my sensors show the wrong information.
 -------------------------------------------------------------------------------------------------------------------------------
 
 **A:** Most likely, you have one of two problems: either the wrong control method or the wrong status packet structure. You can try using the `control_method: SET_SINGLE_PARAMETER`. If that doesn't help, you can try to figure out the size of different parts of the status packet using this method: `Haier protocol overview <./docs/protocol_overview.rst>`.
@@ -37,6 +37,7 @@ Frequently Asked Questions
 ----------------------------------------------------------------------------------------
 
 **A:** First, you need to figure out if the feature is supported by the serial protocol. There is some functionality that is supported only by the IR remote. The easiest way to check is by using the IR remote:
+
 - Start capturing logs from your ESP modules.
 - Wait 10 - 15 seconds.
 - Enable the feature using the remote.
@@ -45,4 +46,5 @@ Frequently Asked Questions
 - Wait 10 - 15 seconds.
 - Stop capturing logs.
 - Check the logs for changes in the status packet.
+
 If all messages that look like this "Frame found: type 02, data: 6D 01 ..." are the same, the feature you want to add is not supported by the serial protocol. If you see some changes in the status packet, you can create a feature request on GitHub with the logs you collected.
