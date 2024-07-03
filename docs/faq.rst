@@ -48,3 +48,9 @@ Frequently Asked Questions
 - Check the logs for changes in the status packet.
 
 If all messages that look like this "Frame found: type 02, data: 6D 01 ..." are the same, the feature you want to add is not supported by the serial protocol. If you see some changes in the status packet, you can create a feature request on GitHub with the logs you collected.
+
+**Q:** How ESP module should be connected to the AC?
+----------------------------------------------------
+
+**A:** On AC side there is a conector ususally marked as CN34 or CN35 it is a 4 pin connector with pins marked as RXD, TXD, GND, +5V. 
+It is 4 pin 5264 molex connector. On ESP side used USB Type-A connector (it is not real USB just UART with USB connector) or JST SM04B-GHS-TB connector.
