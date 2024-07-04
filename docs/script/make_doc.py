@@ -20,6 +20,7 @@ def process_esphome_refs(line, l_num):
         (":ref:`Automation <automation>`", "`Automation <https://esphome.io/guides/automations#automation>`_"),
         (":ref:`haier-on_alarm_start`", "`on_alarm_start Trigger`_"),
         (":ref:`haier-on_alarm_end`", "`on_alarm_end Trigger`_"),
+        (":ref:`haier-on_status_message`", "`on_status_message Trigger`_"),
         (":ref:`Climate <config-climate>`", "`Climate <https://esphome.io/components/climate/index.html#config-climate>`_"),
         (":ref:`lambdas <config-lambda>`", "`lambdas <https://esphome.io/guides/automations#config-lambda>`_"),
         (":ref:`Sensor <config-sensor>`", "`Sensor <https://esphome.io/components/sensor/index.html#config-sensor>`_"),

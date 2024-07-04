@@ -98,6 +98,12 @@ This component requires a `UART Bus <https://esphome.io/components/uart#uart>`_ 
               level: INFO
               format: "Alarm deactivated. Code: %d. Message: \"%s\""
               args: [ code, message]
+      on_status_message:
+        then:
+          - logger.log:
+              level: INFO
+              format: "New status message received, size=%d, subcmd=%02X%02X"
+              args: [ 'data_size', 'data[0]', 'data[1]' ]
 
 
 Configuration variables:
@@ -121,6 +127,7 @@ Configuration variables:
 - **supported_presets** (*Optional*, list): Can be used to disable some presets. Possible values for smartair2 are: AWAY, BOOST, COMFORT. Possible values for hOn are: AWAY, ECO, BOOST, SLEEP. AWAY preset can be enabled only in HEAT mode, it is disabled by default
 - **on_alarm_start** (*Optional*, `Automation <https://esphome.io/guides/automations#automation>`_): (supported only by hOn) Automation to perform when AC activates a new alarm. See `on_alarm_start Trigger`_
 - **on_alarm_end** (*Optional*, `Automation <https://esphome.io/guides/automations#automation>`_): (supported only by hOn) Automation to perform when AC deactivates a new alarm. See `on_alarm_end Trigger`_
+- **on_status_message** (*Optional*, `Automation <https://esphome.io/guides/automations#automation>`_): Automation to perform when status message received from AC. See `on_status_message Trigger`_
 - All other options from `Climate <https://esphome.io/components/climate/index.html#config-climate>`_.
 
 Automations
@@ -131,7 +138,7 @@ Automations
 ``on_alarm_start`` Trigger
 **************************
 
-This automation will be triggered when a new alarm is activated by AC. The error code of the alarm will be given in the variable "code" (type uint8_t), error message in the variable "message" (type char*). Those variables can be used in `lambdas <https://esphome.io/guides/automations#config-lambda>`_
+This automation will be triggered when a new alarm is activated by AC. The error code of the alarm will be given in the variable ``code`` (``uint8_t``), error message in the variable ``message`` (``const char *``). Those variables can be used in `lambdas <https://esphome.io/guides/automations#config-lambda>`_
 
 .. code-block:: yaml
 
@@ -142,14 +149,14 @@ This automation will be triggered when a new alarm is activated by AC. The error
             - logger.log:
                 level: WARN
                 format: "Alarm activated. Code: %d. Message: \"%s\""
-                args: [ code, message]
+                args: [ 'code', 'message' ]
 
 .. _haier-on_alarm_end:
 
 ``on_alarm_end`` Trigger
 ************************
 
-This automation will be triggered when a previously activated alarm is deactivated by AC. The error code of the alarm will be given in the variable "code" (type uint8_t), error message in the variable "message" (type char*). Those variables can be used in `lambdas <https://esphome.io/guides/automations#config-lambda>`_
+This automation will be triggered when a previously activated alarm is deactivated by AC. The error code of the alarm will be given in the variable ``code`` (``uint8_t``), error message in the variable ``message`` (``const char *``). Those variables can be used in `lambdas <https://esphome.io/guides/automations#config-lambda>`_
 
 .. code-block:: yaml
 
@@ -160,7 +167,26 @@ This automation will be triggered when a previously activated alarm is deactivat
             - logger.log:
                 level: INFO
                 format: "Alarm deactivated. Code: %d. Message: \"%s\""
-                args: [ code, message]
+                args: [ 'code', 'message' ]
+
+.. _haier-on_status_message:
+
+``on_status_message`` Trigger
+*****************************
+
+This automation will be triggered when component receives new status packet from AC. Raw message binary (without header and checksum) will be provided in the variable ``data`` (``const char *``), message length in the variable ``data_size`` (``uint8_t``). Those variables can be used in `lambdas <https://esphome.io/guides/automations#config-lambda>`_
+This trigger can be used to support some features that unique for the model and not supported by others.
+
+.. code-block:: yaml
+
+    climate:
+      - protocol: hOn
+        on_status_message:
+          then:
+            - logger.log:
+                level: INFO
+                format: "New status message received, size=%d, subcmd=%02X%02X"
+                args: [ 'data_size', 'data[0]', 'data[1]' ]
 
 ``climate.haier.power_on`` Action
 *********************************
