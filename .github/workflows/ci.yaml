@@ -40,5 +40,7 @@ jobs:
       run: pip3 install -U esphome
     - name: Version esphome
       run: esphome version
+    - name: Install libsodium
+      run: sudo apt-get install -y libsodium-dev
     - name: Build ESPHome config
       run: esphome compile ${{ matrix.file }}
