@@ -1,8 +1,3 @@
-api:
-
-ota:
-  - platform: esphome
-
 packages:
   smartair2_climate: !include configs/climate/haier_smartair2.yaml
   turn_on_service: !include configs/api/service.turn_on.yaml
