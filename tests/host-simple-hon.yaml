@@ -1,13 +1,11 @@
 esphome:
-  name: esp8266-hon-wifi
+  name: host-simple-hon
 
-esp8266:
-  board: esp01_1m
+host:
 
 uart:
   baud_rate: 9600
-  tx_pin: 1
-  rx_pin: 3
+  port: /dev/ttyUSB0
 
 logger:
   level: DEBUG
@@ -16,4 +14,3 @@ logger:
 packages:
   local_haier: !include .local-haier.yaml
   haier_base: !include .simple-hon.yaml 
-  wifi: !include .wifi-base.yaml
