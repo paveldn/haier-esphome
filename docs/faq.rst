@@ -33,9 +33,9 @@ Compatibility and Support
 
 However, ESP modules equipped with the ESP32-S3 chip have native USB support and can potentially communicate using UART protocol if the USB Type-A connector is directly connected to the ESP pins without an intermediary chip. This setup allows for creating an ESPHome configuration that utilizes the same pins for UART communication.
 
-Currently, the `M5Stack AtomS3U <https://shop.m5stack.com/products/atoms3u>`_ is one confirmed board that supports this configuration, though there may be others.
+Currently, the `M5Stack AtomS3U <https://shop.m5stack.com/products/atoms3u>`_ and `Lilygo T-Dongle S3 <https://www.lilygo.cc/products/t-dongle-s3?variant=42455191519413>`_ confirmed board that supports this configuration, though there may be others.
 
-**Sample ESPHome Configuration for M5Stack AtomS3U:**
+**Sample ESPHome Configuration that works for both M5Stack AtomS3U and Lilygo T-Dongle S3:**
 
 .. code-block:: yaml
 

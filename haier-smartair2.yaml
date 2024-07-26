@@ -1,0 +1,100 @@
+﻿esphome:
+  name: haier
+  platform: ESP8266
+  board: d1_mini
+
+# Set statul led for Wemos D1 mini
+status_led:
+  pin: GPIO2
+
+wifi:
+  ssid: "ASUS88"
+  password: "3503470936"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Haier_wifi"
+    password: "Haier_wifi"
+
+captive_portal:
+
+# Enable web server (can be disabled)
+web_server:
+  port: 80
+
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: "Europe/ Moscow"
+
+# Enable logging
+logger:
+  level: DEBUG
+  baud_rate: 0 #Important. You can't use serial port
+
+# Enable Home Assistant API
+api:
+  password: "3503470936"
+
+ota:
+  - platform: esphome
+    password: "3503470936"
+
+uart:
+  - baud_rate: 9600
+    tx_pin: 1
+    rx_pin: 3
+
+
+climate:
+  - platform: haier
+    id: haier_ac
+    name: "Haier"
+    alternative_swing_control: false
+    wifi_signal: true
+    supported_modes:
+      - 'OFF'
+      - HEAT_COOL
+      - COOL
+      - HEAT
+      - DRY
+      - FAN_ONLY
+    supported_swing_modes:
+      - 'OFF'
+      - VERTICAL
+      - HORIZONTAL
+      - BOTH
+    supported_presets:
+      - BOOST
+      - COMFORT
+
+switch:
+  - platform: template
+    id: haier_ac_health_mode
+    name: Haier SmartAir2 Climate health mode
+    icon: mdi:leaf
+    restore_mode: RESTORE_DEFAULT_OFF
+    lambda: |-
+      return id(haier_ac).get_health_mode();
+    turn_on_action:
+      climate.haier.health_on: haier_ac
+    turn_off_action:
+      climate.haier.health_off: haier_ac
+  - platform: template
+    id: haier_ac_display_switch
+    name: Haier SmartAir2 Climate display
+    icon: mdi:led-on
+    entity_category: config
+    restore_mode: RESTORE_DEFAULT_ON
+    lambda: |-
+      return id(haier_ac).get_display_state();
+    turn_on_action:
+      climate.haier.display_on: haier_ac
+    turn_off_action:
+      climate.haier.display_off: haier_ac
+
+mqtt:
+  broker: 192.168.31.58
+  port: 44444
+  username: mqtt
+  password: mqtt
