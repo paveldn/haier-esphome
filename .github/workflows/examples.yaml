@@ -1,5 +1,5 @@
 # Build component for different platforms
-name: build CI test
+name: build examples
 
 on:
   push:
@@ -22,13 +22,13 @@ jobs:
 
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4.1.3
-    - name: Install esphome
-      run: pip3 install -U esphome
-    - name: Version esphome
-      run: esphome version
-    - name: Prepering test file
-      run: cat .base.yaml ${{ matrix.file }} > __test__.yaml
-    - name: Build ESPHome config
-      run: esphome compile __test__.yaml
+      - name: Checkout code
+        uses: actions/checkout@v4.1.3
+      - name: Install esphome
+        run: pip3 install -U esphome
+      - name: Version esphome
+        run: esphome version
+      - name: Prepering test file
+        run: cat docs/examples/.base.yaml ${{ matrix.file }} > __test__.yaml
+      - name: Build ESPHome config
+        run: esphome compile __test__.yaml

@@ -6,8 +6,8 @@ on:
     branches: [ "master", "dev" , "experimental" ]
 
 jobs:
-  tests:
-    name: documentation check
+  readme_check:
+    name: Readme check
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
@@ -16,3 +16,23 @@ jobs:
       run: python docs/script/make_doc.py README.tmp
     - name: Compare temp file with readme.rst
       run: diff -u --strip-trailing-cr README.rst README.tmp
+  hon_examples_check:
+    name: Check hon_example
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4.1.3
+    - name: Run script and save results
+      run: python docs/script/process_examples.py docs/examples/hon_example.rst docs/hon_example.tmp
+    - name: Compare temp file with hon_example.rst
+      run: diff -u --strip-trailing-cr docs/hon_example.rst docs/hon_example.tmp
+  smartair2_examples_check:
+    name: Check smartair2_example
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4.1.3
+    - name: Run script and save results
+      run: python docs/script/process_examples.py docs/examples/smartair2_example.rst docs/smartair2_example.tmp
+    - name: Compare temp file with smartair2_example.rst
+      run: diff -u --strip-trailing-cr docs/smartair2_example.rst docs/smartair2_example.tmp

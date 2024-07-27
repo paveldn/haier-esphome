@@ -13,3 +13,4 @@ logger:
 wifi:
   ssid: test_ssid
   password: test_pass
+
