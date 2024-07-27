@@ -1,73 +1,93 @@
-Sniffing Serial Communication with Two TTL to USB Adapters
-==========================================================
+Sniffing Protocol for Haier Appliance Communication
+====================================================
 
-Introduction
-------------
-Serial communication is a cornerstone in many electronic systems, allowing various devices to communicate over relatively simple connections. In some cases, you may need to intercept or "sniff" this communication to debug or understand the data exchange between two devices. This guide will show you how to use two TTL to USB adapters to sniff serial communication.
+If your Haier appliance is not supported or lacks certain features, you may attempt to log the communication between the native dongle and the appliance to "sniff" the protocol.
 
 Requirements
 ------------
-- Two TTL to USB adapters
-- Computer with USB ports
-- Serial communication software (such as PuTTY or Termite)
-- Breadboard and jumper wires
-- Target devices communicating via TTL serial
 
-.. image:: images/setup_diagram.png
-   :alt: Diagram of the setup
+To achieve this, you will need to add additional wires to provide input for a device that will perform the sniffing. This device can be a computer equipped with two TTL to USB converters or an ESP32 module with the ESHome firmware.
 
-Steps
------
-Follow these steps to set up your sniffing station:
+Concept Overview
+----------------
 
-1. **Connect the Adapters**
+Haier appliances typically have four wires to connect to the native dongle: +5V, Ground (GND), RX, and TX. For sniffing, we will need three of these wires (RX, TX, GND). The +5V wire can be used to power the ESP device if it is being used for sniffing.
 
-   Connect each TTL to USB adapter to your computer's USB ports. Note the COM port numbers assigned to each adapter by your operating system. You can find this information in the Device Manager on Windows or using the `dmesg` command on Linux.
-
-   .. image:: images/usb_adapters.png
-      :alt: TTL to USB adapters connected to a computer
-
-2. **Wire the Adapters to the Target Devices**
-
-   Identify the TX (Transmit) and RX (Receive) pins on your target devices. Typically, these will be marked on the device or in its documentation.
-
-   - Connect the TX pin of the first device to the RX pin of the first TTL adapter.
-   - Connect the RX pin of the first device to the TX pin of the second TTL adapter.
-   - Connect the TX pin of the second device to the RX pin of the second TTL adapter.
-   - Connect the ground (GND) of the target devices to the ground pins of both TTL adapters.
-
-   .. image:: images/wiring_diagram.png
-      :alt: Wiring diagram for TTL to USB adapters and target devices
-
-3. **Configure Serial Communication Software**
-
-   Open two instances of your preferred serial communication software. Configure each instance to listen to one of the COM ports assigned to the TTL adapters. Make sure to set the baud rate, data bits, parity, and stop bits according to the specifications of your target devices.
-
-   .. image:: images/setup_diagram.png
-      :alt: Screenshot of serial communication software configuration
-
-4. **Start Sniffing**
-
-   With everything connected and configured, you should start seeing data being transmitted between the target devices in both instances of your serial communication software. One instance will show the data sent from the first device, and the other will show the data sent from the second device.
-
-   .. image:: images/sniffing_data.png
-      :alt: Data being sniffed in serial communication software
-
-Troubleshooting
----------------
-- **No Data Displayed**: Check the connections and ensure that the TX and RX pins are correctly wired. Verify the COM port numbers and settings in the serial communication software.
-- **Garbled Data**: Ensure that the baud rate and other communication settings match those of the target devices.
-- **Intermittent Data**: Check for loose connections and ensure that the ground connections are secure.
-
-Conclusion
-----------
-Using two TTL to USB adapters is an effective way to sniff serial communication between two devices. This method allows you to monitor and debug communication issues, ensuring your systems function as intended.
+We will create two pairs from these three wires: RX and GND, and TX and GND. Each pair will connect to a separate UART port on a PC or ESP device, serving as input data. Only RX and GND will be used on the "sniffer" side, as we are merely listening, not transmitting. This setup allows us to monitor the communication between the Haier dongle and the appliance separately.
 
 .. note::
+    Ensure that cutting wires is acceptable before proceeding.
 
-   Always ensure you have permission to intercept and monitor communication between devices, especially in production environments or with proprietary hardware.
+Using a PC with Two TTL to USB Converters
+-----------------------------------------
 
-.. image:: images/completion.png
-   :alt: Successful completion of the setup
+**Wiring Diagram:**
 
-By following these steps, you can set up a reliable serial communication sniffing station and gain valuable insights into the data exchange between your devices.
+.. image:: images/setup_diagram_pc.png
+
+To capture the data, you will need to use terminal applications such as Termite, HTerm, CoolTerm, etc. The port configuration should be set as follows:
+
+- Baud rate: 9600
+- Data bits: 8
+- Stop bits: 1
+- Parity: None
+
+Using an ESP Module
+-------------------
+
+The approach is similar, but instead of a PC, we will use an ESP device with two UART ports (one for each direction).
+
+**Wiring Diagram:**
+
+.. image:: images/setup_diagram_esp.png
+
+**Sample Configuration for ESP32 Sniffer Board:**
+
+.. code-block:: yaml
+
+    substitutions:
+      device_name: "Dual UART Sniffer for Haier Project"
+      device_id: uart_sniffer
+
+    esphome:
+      name: ${device_id}
+      comment: ${device_name}
+
+    esp32:
+      board: esp32dev
+
+    wifi:
+      ssid: !secret wifi_ssid
+      password: !secret wifi_password
+        
+    api:
+      reboot_timeout: 0s
+
+    ota:
+
+    web_server:
+
+    logger:
+      tx_buffer_size: 4096
+      baud_rate: 0
+      level: DEBUG
+
+    uart:
+      - id: esp_board
+        rx_pin: GPIO3
+        baud_rate: 9600
+        debug:
+          direction: RX
+          dummy_receiver: true
+          sequence:
+            - lambda: UARTDebug::log_hex(uart::UART_DIRECTION_RX, bytes, ' ');
+      - id: haier_appliance
+        rx_pin: GPIO16
+        baud_rate: 9600
+        debug:
+          direction: RX
+          dummy_receiver: true
+          sequence:
+            - lambda: UARTDebug::log_hex(uart::UART_DIRECTION_TX, bytes, ' ');
+
+This configuration will enable you to capture and analyze the communication between the Haier dongle and the appliance effectively.
