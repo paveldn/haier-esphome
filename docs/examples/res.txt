@@ -1,0 +1,18 @@
+ Volume in drive D is Mirror storage
+ Volume Serial Number is 1EBC-0533
+
+ Directory of D:\Work\git\haier-esphome\docs\examples
+
+27/07/2024  13:37    <DIR>          .
+27/07/2024  13:37    <DIR>          ..
+27/07/2024  13:23               186 .base.yaml
+27/07/2024  13:23    <DIR>          .esphome
+27/07/2024  13:32               189 .gitignore
+27/07/2024  13:19             9.469 max-hon.yaml
+27/07/2024  09:15             1.511 max-smartair2.yaml
+27/07/2024  09:33               126 min-hon.yaml
+27/07/2024  13:21               108 min-smartair2.yaml
+27/07/2024  13:37                 0 res.txt
+27/07/2024  13:23             9.655 __test__.yaml
+               8 File(s)         21.244 bytes
+               3 Dir(s)  782.259.322.880 bytes free

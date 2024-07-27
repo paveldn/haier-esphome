@@ -1,0 +1,15 @@
+﻿substitutions:
+  file_name: none
+
+esphome:
+  name: esp32-haier-example
+
+esp32:
+  board: esp32dev
+
+logger:
+  level: DEBUG
+
+wifi:
+  ssid: test_ssid
+  password: test_pass

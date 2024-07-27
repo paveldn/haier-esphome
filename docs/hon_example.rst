@@ -5,18 +5,8 @@ Configuration of your climate will depend on capabilities specific model.
 
 Minimal configuration will look like this:
 
-.. code-block:: yaml
-
-    uart:
-      baud_rate: 9600
-      tx_pin: 17
-      rx_pin: 16
-
-    climate:
-      - platform: haier
-        protocol: hOn
-        name: Haier hOn Climate
-
+.. literalinclude:: examples/min-hon.yaml
+  :language: yaml
 
 Maximum configuration witch will use all possible options will look like this:
 

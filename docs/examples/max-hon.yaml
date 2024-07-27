@@ -1,0 +1,278 @@
+uart:
+  baud_rate: 9600
+  tx_pin: 17
+  rx_pin: 16
+  id: haier_uart
+
+api:
+  services:
+    - service: turn_on
+      then:
+      - climate.haier.power_on: haier_ac
+    - service: turn_off
+      then:
+      - climate.haier.power_off: haier_ac
+
+climate:
+  - platform: haier
+    id: haier_ac
+    protocol: hOn
+    name: Haier hOn Climate
+    uart_id: haier_uart
+    wifi_signal: true
+    beeper: true
+    visual:
+      min_temperature: 16 °C
+      max_temperature: 30 °C
+      temperature_step: 
+        target_temperature: 1
+        current_temperature: 0.5
+    supported_modes:
+      - 'OFF'
+      - HEAT_COOL
+      - COOL
+      - HEAT
+      - DRY
+      - FAN_ONLY
+    supported_swing_modes:
+      - 'OFF'
+      - VERTICAL
+      - HORIZONTAL
+      - BOTH
+    supported_presets:
+      - ECO
+      - BOOST
+      - SLEEP
+    on_alarm_start:
+      then:
+        - homeassistant.service:
+            service: logbook.log
+            data:
+              domain: climate
+              name: Haier hOn Climate
+            data_template:
+              message: "Alarm activated ({{ alarm_code }}): {{alarm_message}}" 
+            variables:
+              alarm_message: !lambda "return message;"
+              alarm_code: !lambda "return code;"
+        - homeassistant.service:
+            service: notify.persistent_notification
+            data:
+              title: "Haier hOn Climate: alarm activated"
+            data_template:
+              message: "Code: {{ alarm_code }}, message: \"{{ alarm_message }}\""
+            variables:
+              alarm_message: !lambda "return message;"
+              alarm_code: !lambda "return code;"
+    on_alarm_end:
+      then:
+        - homeassistant.service:
+            service: logbook.log
+            data:
+              domain: climate
+              name: Haier hOn Climate
+            data_template:
+              message: "Alarm deactivated ({{ alarm_code }}): {{alarm_message}}" 
+            variables:
+              alarm_message: !lambda "return message;"
+              alarm_code: !lambda "return code;"
+
+button:
+  - platform: haier
+    haier_id: haier_ac
+    self_cleaning:
+      name: Haier hOn Climate start self cleaning
+    steri_cleaning:
+      name: Haier hOn Climate start 56°C steri-cleaning
+
+text_sensor:
+  - platform: haier
+    haier_id: haier_ac
+    cleaning_status:
+      name: Haier hOn Climate cleaning status
+    protocol_version:
+      name: Haier hOn Climate protocol version
+
+switch:
+  - platform: template
+    id: haier_ac_beeper_switch
+    entity_category: config
+    name: Haier hOn Climate beeper
+    icon: mdi:volume-high
+    restore_mode: RESTORE_DEFAULT_ON 
+    lambda: |-
+      return id(haier_ac).get_beeper_state();
+    turn_on_action:
+      climate.haier.beeper_on: haier_ac
+    turn_off_action:
+      climate.haier.beeper_off: haier_ac
+  - platform: template
+    id: haier_ac_health_mode
+    name: Haier hOn Climate health mode
+    icon: mdi:leaf
+    restore_mode: RESTORE_DEFAULT_OFF
+    lambda: |-
+      return id(haier_ac).get_health_mode();
+    turn_on_action:
+      climate.haier.health_on: haier_ac
+    turn_off_action:
+      climate.haier.health_off: haier_ac
+  - platform: template
+    id: haier_ac_display_switch
+    name: Haier hOn Climate display
+    icon: mdi:led-on
+    entity_category: config
+    restore_mode: RESTORE_DEFAULT_ON
+    lambda: |-
+      return id(haier_ac).get_display_state();
+    turn_on_action:
+      climate.haier.display_on: haier_ac
+    turn_off_action:
+      climate.haier.display_off: haier_ac
+
+select:
+  - platform: template
+    id: haier_ac_vertical_direction
+    name: Haier hOn Climate airflow vertical
+    entity_category: config
+    icon: mdi:arrow-expand-vertical
+    update_interval: 5s
+    options:
+      - Health Up
+      - Max Up
+      - Up
+      - Center
+      - Down
+      - Max Down
+      - Health Down
+      - Auto
+    lambda: >-
+      switch (id(haier_ac).get_vertical_airflow().value_or(esphome::haier::hon_protocol::VerticalSwingMode::CENTER))
+      {
+          case esphome::haier::hon_protocol::VerticalSwingMode::HEALTH_UP:
+              return std::string("Health Up");
+          case esphome::haier::hon_protocol::VerticalSwingMode::MAX_UP:
+              return std::string("Max Up");
+          case esphome::haier::hon_protocol::VerticalSwingMode::UP:
+              return std::string("Up");
+          default:
+          case esphome::haier::hon_protocol::VerticalSwingMode::CENTER:
+              return std::string("Center");
+          case esphome::haier::hon_protocol::VerticalSwingMode::DOWN:
+              return std::string("Down");
+          case esphome::haier::hon_protocol::VerticalSwingMode::MAX_DOWN:
+              return std::string("Max Down");
+          case esphome::haier::hon_protocol::VerticalSwingMode::HEALTH_DOWN:
+              return std::string("Health Down");
+          case esphome::haier::hon_protocol::VerticalSwingMode::AUTO:
+          case esphome::haier::hon_protocol::VerticalSwingMode::AUTO_SPECIAL:
+              return std::string("Auto");
+      }
+    set_action:
+      - climate.haier.set_vertical_airflow:
+          id: haier_ac
+          vertical_airflow: !lambda >-
+            if (x == "Health Up")
+                return esphome::haier::hon_protocol::VerticalSwingMode::HEALTH_UP;
+            else if (x == "Max Up")
+                return esphome::haier::hon_protocol::VerticalSwingMode::MAX_UP;
+            else if (x == "Up")
+                return esphome::haier::hon_protocol::VerticalSwingMode::UP;
+            else if (x == "Down")
+                return esphome::haier::hon_protocol::VerticalSwingMode::DOWN;
+            else if (x == "Max Down")
+                return esphome::haier::hon_protocol::VerticalSwingMode::MAX_DOWN;
+            else if (x == "Health Down")
+                return esphome::haier::hon_protocol::VerticalSwingMode::HEALTH_DOWN;
+            else if (x == "Auto")
+                return esphome::haier::hon_protocol::VerticalSwingMode::AUTO;
+            else
+                return esphome::haier::hon_protocol::VerticalSwingMode::CENTER;
+  - platform: template
+    id: haier_ac_horizontal_direction
+    name: Haier hOn Climate airflow horizontal
+    entity_category: config
+    icon: mdi:arrow-expand-horizontal
+    update_interval: 5s
+    options:
+      - Max Left
+      - Left
+      - Center
+      - Right
+      - Max Right
+      - Auto
+    lambda: >-
+      switch (id(haier_ac).get_horizontal_airflow().value_or(esphome::haier::hon_protocol::HorizontalSwingMode::CENTER))
+      {
+          case esphome::haier::hon_protocol::HorizontalSwingMode::MAX_LEFT:
+              return std::string("Max Left");
+          case esphome::haier::hon_protocol::HorizontalSwingMode::LEFT:
+              return std::string("Left");
+          default:
+          case esphome::haier::hon_protocol::HorizontalSwingMode::CENTER:
+              return std::string("Center");
+          case esphome::haier::hon_protocol::HorizontalSwingMode::RIGHT:
+              return std::string("Right");
+          case esphome::haier::hon_protocol::HorizontalSwingMode::MAX_RIGHT:
+              return std::string("Max Right");
+          case esphome::haier::hon_protocol::HorizontalSwingMode::AUTO:
+              return std::string("Auto");
+      }
+    set_action:
+      - climate.haier.set_horizontal_airflow:
+          id: haier_ac
+          horizontal_airflow: !lambda >-
+            if (x == "Max Left")
+                return esphome::haier::hon_protocol::HorizontalSwingMode::MAX_LEFT;
+            else if (x == "Left")
+                return esphome::haier::hon_protocol::HorizontalSwingMode::LEFT;
+            else if (x == "Right")
+                return esphome::haier::hon_protocol::HorizontalSwingMode::RIGHT;
+            else if (x == "Max Right")
+                return esphome::haier::hon_protocol::HorizontalSwingMode::MAX_RIGHT;
+            else if (x == "Auto")
+                return esphome::haier::hon_protocol::HorizontalSwingMode::AUTO;
+            else
+                return esphome::haier::hon_protocol::HorizontalSwingMode::CENTER;
+
+sensor:
+  - platform: haier
+    haier_id: haier_ac
+    compressor_current:
+      name: Haier hOn Climate Compressor Current
+    compressor_frequency:
+      name: Haier hOn Climate Compressor Frequency
+    expansion_valve_open_degree:
+      name: Haier hOn Climate Expansion Valve Open Degree
+    humidity:
+      name: Haier hOn Climate Indoor Humidity
+    indoor_coil_temperature:
+      name: Haier hOn Climate Indoor Coil Temperature
+    outdoor_coil_temperature:
+      name: Haier hOn Climate Outdoor Coil Temperature
+    outdoor_defrost_temperature:
+      name: Haier hOn Climate Outdoor Defrost Temperature
+    outdoor_in_air_temperature:
+      name: Haier hOn Climate Outdoor In Air Temperature
+    outdoor_out_air_temperature:
+      name: Haier hOn Climate Outdoor Out Air Temperature
+    outdoor_temperature:
+      name: Haier hOn Climate outdoor temperature
+    power:
+      name: Haier hOn Climate Power
+
+binary_sensor:
+  - platform: haier
+    haier_id: haier_ac
+    compressor_status:
+      name: Haier hOn Climate Compressor Status
+    defrost_status:
+      name: Haier hOn Climate Defrost Status
+    four_way_valve_status:
+      name: Haier hOn Climate Four-way Valve Status
+    indoor_electric_heating_status:
+      name: Haier hOn Climate Indoor Electric Heating Status
+    indoor_fan_status:
+      name: Haier hOn Climate Indoor Fan Status
+    outdoor_fan_status:
+      name: Haier hOn Climate Outdoor Fan Status

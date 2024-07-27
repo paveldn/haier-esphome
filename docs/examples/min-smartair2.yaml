@@ -1,0 +1,8 @@
+uart:
+  baud_rate: 9600
+  tx_pin: 17
+  rx_pin: 16
+
+climate:
+  - platform: haier
+    name: Haier hOn Climate
