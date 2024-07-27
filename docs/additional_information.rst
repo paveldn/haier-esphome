@@ -11,3 +11,4 @@ Additional information
 - `ESPHome Haier Climate Sensors <https://esphome.io/components/sensor/haier.html>`_
 - `ESPHome Haier Climate Binary Sensors <https://esphome.io/components/binary_sensor/haier.html>`_
 - `Esptool.py Documentation <https://docs.espressif.com/projects/esptool/en/latest/esp32/>`_
+- `Sniffing serial communication <./docs/sniffing_serial_communication.rst>`_

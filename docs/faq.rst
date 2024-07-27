@@ -146,3 +146,5 @@ Feature Requests
 - Check the logs for changes in the status packet.
 
 If all messages that look like this "Frame found: type 02, data: 6D 01 ..." are the same, the feature you want to add is not supported by the serial protocol. If you see some changes in the status packet, you can create a feature request on GitHub with the logs you collected.
+
+Another option is to try to record log of communication between original Haier ESP and Haier appliance. You can use `Sniffing serial communication <./docs/sniffing_serial_communication.rst>`_ guide to do that. 
