@@ -5,5 +5,5 @@ uart:
 
 climate:
   - platform: haier
-    protocol: hOn
+    protocol: hon
     name: Haier hOn Climate

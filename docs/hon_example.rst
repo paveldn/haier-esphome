@@ -18,7 +18,7 @@ Minimal configuration will look like this:
     
     climate:
       - platform: haier
-        protocol: hOn
+        protocol: hon
         name: Haier hOn Climate
 
 
@@ -44,7 +44,7 @@ Maximum configuration witch will use all possible options will look like this:
     climate:
       - platform: haier
         id: haier_ac
-        protocol: hOn
+        protocol: hon
         name: Haier hOn Climate
         uart_id: haier_uart
         wifi_signal: true

@@ -67,10 +67,6 @@ Currently, the `M5Stack AtomS3U <https://shop.m5stack.com/products/atoms3u>`_ an
     
 This configuration is a starting point for integrating your Haier AC with an ESP32-S3 based board.
 
-<<<<<<< HEAD
-=======
-
->>>>>>> f04cca5 (FAQ updated)
 Troubleshooting
 ---------------
 

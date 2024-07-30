@@ -16,7 +16,7 @@ api:
 climate:
   - platform: haier
     id: haier_ac
-    protocol: hOn
+    protocol: hon
     name: Haier hOn Climate
     uart_id: haier_uart
     wifi_signal: true

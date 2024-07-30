@@ -1,7 +1,7 @@
 ﻿climate:
   - platform: haier
     id: ${device_id}
-    protocol: hOn
+    protocol: hon
     name: ${device_name}
     uart_id: ${uart_id}
     wifi_signal: ${send_wifi}   # Optional, default true, enables WiFI signal transmission from ESP to AC
