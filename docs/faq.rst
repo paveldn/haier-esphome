@@ -16,10 +16,10 @@ Compatibility and Support
 
 **A:** Unfortunately, there is no guarantee until you try it. The best way is to check the user manual. Usually, if the AC supports ESP modules, there will be information about which application the native module works with. So far, all models that work with smartAir2, hOn, and EVO applications also work with this component, although sometimes additional tuning may be required.
 
-**Q:** How ESP module should be connected to the AC?
-****************************************************
+**Q:** How should the ESP module be connected to the AC?
+********************************************************
 
-**A:** On AC side there is a conector ususally marked as CN34 or CN35 it is a 4 pin connector with pins marked as RXD, TXD, GND, +5V. It is 4 pin 5264 molex connector. On ESP side used USB Type-A connector (it is not real USB just UART with USB connector) or JST SM04B-GHS-TB connector.
+**A:** On the AC side there is a connector usually marked as CN34 or CN35 it is a 4-pin connector with pins marked as RXD, TXD, GND, +5V. It is 4 pin 5264 Molex connector. On the ESP side use a USB Type-A connector (it is not real USB just UART with USB connector) or JST SM04B-GHS-TB connector.
 
 **Q:** Can I use ESP8266 with this component for my Haier AC?
 *************************************************************
@@ -73,7 +73,7 @@ Troubleshooting
 **Q:** I connected the ESP module but all I can see in the logs is "Answer timeout for command 61, phase SENDING_INIT_1" and nothing is working. What should I do?
 ******************************************************************************************************************************************************************
 
-**A:** This warnings means that the ESP module is not receiving any response from the AC. It can be caused by several reasons:
+**A:** These warnings mean that the ESP module is not receiving any response from the AC. It can be caused by several reasons:
 
 - **Configuration Issues:** There might be issues with your ESPHome configuration.
 - **Hardware Problems:** The problem could lie with the ESP module or other hardware components.
@@ -108,7 +108,7 @@ These simulators are compatible with Windows and Linux.
 **Q:** I am seeing the warning "Answer handler error, msg=01, answ=03, err=7". What should I do?
 ************************************************************************************************
 
-**A:** This warning means that the AC denied the control command. It can happen in two cases: either the AC is using a different type of control or the structure of the status packet is different. You can try using the `control_method: SET_SINGLE_PARAMETER`. If that doesn't help, you can try to figure out the size of different parts of the status packet using this method: `Haier protocol overview <./docs/protocol_overview.rst>`_. If nothing helps, you can create an issue on GitHub.
+**A:** This warning means that the AC denied the control command. It can happen in two cases: either the AC is using a different type of control or the structure of the status packet is different. You can try using the `control_method: SET_SINGLE_PARAMETER`. If that doesn't help, you can try to figure out the size of different parts of the status packet using this method: `Haier protocol overview <./protocol_overview.rst>`_. If nothing helps, you can create an issue on GitHub.
 
 **Q:** What does the "Unsupported message received: type xx" message in the logs indicate?
 *******************************************************************************************
@@ -117,12 +117,12 @@ These simulators are compatible with Windows and Linux.
 
 1. **Slow AC Response:** Your AC unit is responding slowly to requests, consider increasing the `response_timeout` parameter from its default value of 200 ms to 400 ms.
 2. **Overloaded ESP:** Your ESP module is too busy to process messages in time, increasing `response_timeout` won't resolve the issue. Instead, try disabling some components, lowering the log level, or upgrading to a more powerful ESP board.
-3. **Unrecognized Messages:** Your AC might be sending new types of messages that the component does not recognize. If adjusting the timeout and optimizing ESP performance don't help, capture the logs and create an issue on GitHub for further assistance.
+3. **Unrecognized Messages:** Your AC might be sending new types of messages that the component does not recognize. If adjusting the timeout and optimizing ESP performance doesn't help, capture the logs and create an issue on GitHub for further assistance.
 
 **Q:** My ESP is communicating with the AC, but I can't control it. Or I can control it, but my sensors show the wrong information.
 ***********************************************************************************************************************************
 
-**A:** Most likely, you have one of two problems: either the wrong control method or the wrong status packet structure. You can try using the `control_method: SET_SINGLE_PARAMETER`. If that doesn't help, you can try to figure out the size of different parts of the status packet using this method: `Haier protocol overview <./docs/protocol_overview.rst>`_.
+**A:** Most likely, you have one of two problems: either the wrong control method or the wrong status packet structure. You can try using the `control_method: SET_SINGLE_PARAMETER`. If that doesn't help, you can try to figure out the size of different parts of the status packet using this method: `Haier protocol overview <./protocol_overview.rst>`_.
 
 Feature Requests
 ----------------
@@ -130,7 +130,7 @@ Feature Requests
 **Q:** My AC has a cool feature that is not supported by your component. Can you add it?
 ****************************************************************************************
 
-**A:** First, you need to figure out if the feature is supported by the serial protocol. There is some functionality that is supported only by the IR remote. The easiest way to check is by using the IR remote:
+**A:** First, you need to figure out if the feature is supported by the serial protocol. Some functionality is supported only by the IR remote. The easiest way to check is by using the IR remote:
 
 - Start capturing logs from your ESP modules.
 - Wait 10 - 15 seconds.
@@ -143,4 +143,4 @@ Feature Requests
 
 If all messages that look like this "Frame found: type 02, data: 6D 01 ..." are the same, the feature you want to add is not supported by the serial protocol. If you see some changes in the status packet, you can create a feature request on GitHub with the logs you collected.
 
-Another option is to try to record log of communication between original Haier ESP and Haier appliance. You can use `Sniffing serial communication <./docs/sniffing_serial_communication.rst>`_ guide to do that. 
+Another option is to try to record a log of communication between the original Haier ESP and the Haier appliance. You can use the `Sniffing serial communication <./sniffing_serial_communication.rst>`_ guide to do that. 
