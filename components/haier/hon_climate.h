@@ -10,6 +10,9 @@
 #ifdef USE_TEXT_SENSOR
 #include "esphome/components/text_sensor/text_sensor.h"
 #endif
+#ifdef USE_SWITCH
+#include "esphome/components/switch/switch.h"
+#endif
 #include "esphome/core/automation.h"
 #include "haier_base.h"
 #include "hon_packet.h"
@@ -28,6 +31,7 @@ enum class HonControlMethod { MONITOR_ONLY = 0, SET_GROUP_PARAMETERS, SET_SINGLE
 struct HonSettings {
   hon_protocol::VerticalSwingMode last_vertiacal_swing;
   hon_protocol::HorizontalSwingMode last_horizontal_swing;
+  bool beeper_state;
 };
 
 class HonClimate : public HaierClimateBase {
@@ -86,6 +90,13 @@ class HonClimate : public HaierClimateBase {
  protected:
   void update_sub_text_sensor_(SubTextSensorType type, const std::string &value);
   text_sensor::TextSensor *sub_text_sensors_[(size_t) SubTextSensorType::SUB_TEXT_SENSOR_TYPE_COUNT]{nullptr};
+#endif
+#ifdef USE_SWITCH
+ public:
+  void set_beeper_switch(switch_::Switch *sw);
+
+ protected:
+  switch_::Switch *beeper_switch_{nullptr};
 #endif
  public:
   HonClimate();
@@ -153,7 +164,6 @@ class HonClimate : public HaierClimateBase {
     bool functions_[5];
   };
 
-  bool beeper_status_;
   CleaningState cleaning_status_;
   bool got_valid_outdoor_temp_;
   esphome::optional<hon_protocol::VerticalSwingMode> pending_vertical_direction_{};

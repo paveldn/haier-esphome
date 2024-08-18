@@ -48,7 +48,6 @@ Maximum configuration witch will use all possible options will look like this:
         name: Haier hOn Climate
         uart_id: haier_uart
         wifi_signal: true
-        beeper: true
         visual:
           min_temperature: 16 °C
           max_temperature: 30 °C

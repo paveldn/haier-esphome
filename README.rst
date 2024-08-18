@@ -63,7 +63,6 @@ This component requires a `UART Bus <https://esphome.io/components/uart#uart>`_ 
         name: Haier AC
         uart_id: ac_port
         wifi_signal: true
-        beeper: true
         display: true
         visual:
           min_temperature: 16 °C

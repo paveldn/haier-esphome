@@ -31,9 +31,15 @@ HonClimate::HonClimate()
 
 HonClimate::~HonClimate() {}
 
-void HonClimate::set_beeper_state(bool state) { this->beeper_status_ = state; }
+void HonClimate::set_beeper_state(bool state) {
+  if (state != this->settings_.beeper_state) {
+    this->settings_.beeper_state = state;
+    this->beeper_switch_->publish_state(state);
+    this->rtc_.save(&this->settings_);
+  } 
+}
 
-bool HonClimate::get_beeper_state() const { return this->beeper_status_; }
+bool HonClimate::get_beeper_state() const { return this->settings_.beeper_state; }
 
 esphome::optional<hon_protocol::VerticalSwingMode> HonClimate::get_vertical_airflow() const {
   return this->current_vertical_swing_;
@@ -474,13 +480,13 @@ haier_protocol::HaierMessage HonClimate::get_power_message(bool state) {
 }
 
 void HonClimate::initialization() {
-  constexpr uint32_t restore_settings_version = 0xE834D8DCUL;
+  constexpr uint32_t restore_settings_version = 0x2A3613DCUL; 
   this->rtc_ = global_preferences->make_preference<HonSettings>(this->get_object_id_hash() ^ restore_settings_version);
   HonSettings recovered;
   if (this->rtc_.load(&recovered)) {
     this->settings_ = recovered;
   } else {
-    this->settings_ = {hon_protocol::VerticalSwingMode::CENTER, hon_protocol::HorizontalSwingMode::CENTER};
+    this->settings_ = {hon_protocol::VerticalSwingMode::CENTER, hon_protocol::HorizontalSwingMode::CENTER, true};
   }
   this->current_vertical_swing_ = this->settings_.last_vertiacal_swing;
   this->current_horizontal_swing_ = this->settings_.last_horizontal_swing;
@@ -638,7 +644,7 @@ haier_protocol::HaierMessage HonClimate::get_control_message() {
     out_data->horizontal_swing_mode = (uint8_t) this->pending_horizontal_direction_.value();
     this->pending_horizontal_direction_.reset();
   }
-  out_data->beeper_status = ((!this->beeper_status_) || (!has_hvac_settings)) ? 1 : 0;
+  out_data->beeper_status = ((!this->settings_.beeper_state) || (!has_hvac_settings)) ? 1 : 0;
   control_out_buffer[4] = 0;  // This byte should be cleared before setting values
   out_data->display_status = this->display_status_ ? 1 : 0;
   out_data->health_mode = this->health_mode_ ? 1 : 0;
@@ -764,6 +770,15 @@ void HonClimate::update_sub_text_sensor_(SubTextSensorType type, const std::stri
     this->sub_text_sensors_[index]->publish_state(value);
 }
 #endif  // USE_TEXT_SENSOR
+
+#ifdef USE_SWITCH
+void HonClimate::set_beeper_switch(switch_::Switch *sw) {
+  this->beeper_switch_ = sw;
+  if (this->beeper_switch_ != nullptr) {
+    this->beeper_switch_->publish_state(this->settings_.beeper_state);
+  }
+}
+#endif  // USE_SWITCH
 
 haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *packet_buffer, uint8_t size) {
   size_t expected_size =
@@ -1017,7 +1032,7 @@ void HonClimate::fill_control_messages_queue_() {
         haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
                                      (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
                                          (uint8_t) hon_protocol::DataParameters::BEEPER_STATUS,
-                                     this->beeper_status_ ? ZERO_BUF : ONE_BUF, 2));
+                                     this->settings_.beeper_state ? ZERO_BUF : ONE_BUF, 2));
   }
   // Health mode
   {

@@ -65,7 +65,6 @@ This component requires a :ref:`uart` to be setup.
         name: Haier AC
         uart_id: ac_port
         wifi_signal: true
-        beeper: true
         display: true
         visual:
           min_temperature: 16 °C
