@@ -353,6 +353,20 @@ void HaierClimateBase::control(const ClimateCall &call) {
   }
 }
 
+void HaierClimateBase::set_display_switch(switch_::Switch *sw) {
+  this->display_switch_ = sw;
+  if ((this->display_switch_ != nullptr) && (this->valid_connection())) {
+    this->display_switch_->publish_state(this->display_status_);
+  }
+}
+
+void HaierClimateBase::set_health_mode_switch(switch_::Switch *sw) {
+  this->health_mode_switch_ = sw;
+  if ((this->health_mode_switch_ != nullptr) && (this->valid_connection())) {
+    this->health_mode_switch_->publish_state(this->health_mode_);
+  }
+}
+
 void HaierClimateBase::HvacSettings::reset() {
   this->valid = false;
   this->mode.reset();

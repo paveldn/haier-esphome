@@ -56,15 +56,16 @@ from esphome.cpp_generator import MockObjClass
 async def to_code(config):
     full_id, parent = await cg.get_variable_with_full_id(config[CONF_HAIER_ID])
 
-#     for switch_type in [CONF_DISPLAY, CONF_HEALTH_MODE]:
-#         if conf := config.get(switch_type):
-#             sw_var = await switch.new_switch(conf)
-#             await cg.register_parented(sw_var, parent)
+    for switch_type in [CONF_DISPLAY, CONF_HEALTH_MODE]:
+        if conf := config.get(switch_type):
+            sw_var = await switch.new_switch(conf)
+            await cg.register_parented(sw_var, parent)
+            cg.add(getattr(parent, f"set_{switch_type}_switch")(sw_var))
     if conf := config.get(CONF_BEEPER):
         if full_id.type is HonClimate:
             sw_var = await switch.new_switch(conf)
             await cg.register_parented(sw_var, parent)
-            cg.add(getattr(parent, f"set_beeper_switch")(sw_var))
+            cg.add(getattr(parent, "set_beeper_switch")(sw_var))
         else:
             raise ValueError("Beeper switch is only supported for hon climate")
 

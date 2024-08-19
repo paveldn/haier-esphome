@@ -8,6 +8,10 @@
 // HaierProtocol
 #include <protocol/haier_protocol.h>
 
+#ifdef USE_SWITCH
+#include "esphome/components/switch/switch.h"
+#endif
+
 namespace esphome {
 namespace haier {
 
@@ -24,6 +28,15 @@ class HaierClimateBase : public esphome::Component,
                          public esphome::climate::Climate,
                          public esphome::uart::UARTDevice,
                          public haier_protocol::ProtocolStream {
+#ifdef USE_SWITCH
+ public:
+  void set_display_switch(switch_::Switch *sw);
+  void set_health_mode_switch(switch_::Switch *sw);
+
+ protected:
+  switch_::Switch *display_switch_{nullptr};
+  switch_::Switch *health_mode_switch_{nullptr};
+#endif
  public:
   HaierClimateBase();
   HaierClimateBase(const HaierClimateBase &) = delete;
