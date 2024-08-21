@@ -52,8 +52,6 @@ bool check_timeout(std::chrono::steady_clock::time_point now, std::chrono::stead
 HaierClimateBase::HaierClimateBase()
     : haier_protocol_(*this),
       protocol_phase_(ProtocolPhases::SENDING_INIT_1),
-      display_status_(true),
-      health_mode_(false),
       force_send_control_(false),
       forced_request_status_(false),
       reset_protocol_request_(false),
@@ -127,20 +125,24 @@ haier_protocol::HaierMessage HaierClimateBase::get_wifi_signal_message_() {
 }
 #endif
 
-bool HaierClimateBase::get_display_state() const { return this->display_status_; }
+bool HaierClimateBase::get_display_state() const {
+  return (this->display_status_ == SwitchState::ON) || (this->display_status_ == SwitchState::PENDING_ON); 
+}
 
 void HaierClimateBase::set_display_state(bool state) {
-  if (this->display_status_ != state) {
-    this->display_status_ = state;
+  if (state != this->get_display_state()) {
+    this->display_status_ = state ? SwitchState::PENDING_ON : SwitchState::PENDING_OFF;
     this->force_send_control_ = true;
   }
 }
 
-bool HaierClimateBase::get_health_mode() const { return this->health_mode_; }
+bool HaierClimateBase::get_health_mode() const {
+  return (this->health_mode_ == SwitchState::ON) || (this->health_mode_ == SwitchState::PENDING_ON);
+}
 
 void HaierClimateBase::set_health_mode(bool state) {
-  if (this->health_mode_ != state) {
-    this->health_mode_ = state;
+  if (state != this->get_health_mode()) {
+    this->health_mode_ = state ? SwitchState::PENDING_ON : SwitchState::PENDING_OFF;
     this->force_send_control_ = true;
   }
 }
@@ -356,14 +358,14 @@ void HaierClimateBase::control(const ClimateCall &call) {
 void HaierClimateBase::set_display_switch(switch_::Switch *sw) {
   this->display_switch_ = sw;
   if ((this->display_switch_ != nullptr) && (this->valid_connection())) {
-    this->display_switch_->publish_state(this->display_status_);
+    this->display_switch_->publish_state(this->get_display_state());
   }
 }
 
 void HaierClimateBase::set_health_mode_switch(switch_::Switch *sw) {
   this->health_mode_switch_ = sw;
   if ((this->health_mode_switch_ != nullptr) && (this->valid_connection())) {
-    this->health_mode_switch_->publish_state(this->health_mode_);
+    this->health_mode_switch_->publish_state(this->get_health_mode());
   }
 }
 

@@ -646,8 +646,10 @@ haier_protocol::HaierMessage HonClimate::get_control_message() {
   }
   out_data->beeper_status = ((!this->settings_.beeper_state) || (!has_hvac_settings)) ? 1 : 0;
   control_out_buffer[4] = 0;  // This byte should be cleared before setting values
-  out_data->display_status = this->display_status_ ? 1 : 0;
-  out_data->health_mode = this->health_mode_ ? 1 : 0;
+  out_data->display_status = this->get_display_state() ? 1 : 0;
+  this->display_status_ = (SwitchState)((uint8_t)this->display_status_ & 0b01);
+  out_data->health_mode = this->get_health_mode() ? 1 : 0;
+  this->health_mode_ = (SwitchState)((uint8_t)this->health_mode_ & 0b01);
   return haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
                                       (uint16_t) hon_protocol::SubcommandsControl::SET_GROUP_PARAMETERS,
                                       control_out_buffer, this->real_control_packet_size_);
@@ -898,28 +900,26 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
     }
     should_publish = should_publish || (!old_fan_mode.has_value()) || (old_fan_mode.value() != fan_mode.value());
   }
-  {
-    // Display status
-    // should be before "Climate mode" because it is changing this->mode
-    if (packet.control.ac_power != 0) {
-      // if AC is off display status always ON so process it only when AC is on
-      bool disp_status = packet.control.display_status != 0;
-      if (disp_status != this->display_status_) {
-        // Do something only if display status changed
-        if (this->mode == CLIMATE_MODE_OFF) {
-          // AC just turned on from remote need to turn off display
-          this->force_send_control_ = true;
-        } else {
-          this->display_status_ = disp_status;
-        }
+  // Display status
+  // should be before "Climate mode" because it is changing this->mode
+  if (packet.control.ac_power != 0) {
+    // if AC is off display status always ON so process it only when AC is on
+    bool disp_status = packet.control.display_status != 0;
+    if (disp_status != this->get_display_state()) {
+      // Do something only if display status changed
+      if (this->mode == CLIMATE_MODE_OFF) {
+        // AC just turned on from remote need to turn off display
+        this->force_send_control_ = true;
+      } else if ((((uint8_t)this->health_mode_) & 0b10) == 0) {
+        this->display_status_ = disp_status ? SwitchState::ON : SwitchState::OFF;
       }
     }
   }
-  {
-    // Health mode
-    bool old_health_mode = this->health_mode_;
-    this->health_mode_ = packet.control.health_mode == 1;
-    should_publish = should_publish || (old_health_mode != this->health_mode_);
+  // Health mode
+  if ((((uint8_t)this->health_mode_) & 0b10) == 0) {
+    bool old_health_mode = this->get_health_mode();
+    this->health_mode_ = packet.control.health_mode == 1 ? SwitchState::ON : SwitchState::OFF;
+    should_publish = should_publish || (old_health_mode != this->get_health_mode());
   }
   {
     CleaningState new_cleaning;
@@ -1040,7 +1040,8 @@ void HonClimate::fill_control_messages_queue_() {
         haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
                                      (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
                                          (uint8_t) hon_protocol::DataParameters::HEALTH_MODE,
-                                     this->health_mode_ ? ONE_BUF : ZERO_BUF, 2));
+                                     this->get_health_mode() ? ONE_BUF : ZERO_BUF, 2));
+    this->health_mode_ = (SwitchState)((uint8_t)this->health_mode_ & 0b01); 
   }
   // Climate mode
   bool new_power = this->mode != CLIMATE_MODE_OFF;
