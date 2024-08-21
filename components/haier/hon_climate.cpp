@@ -34,7 +34,9 @@ HonClimate::~HonClimate() {}
 void HonClimate::set_beeper_state(bool state) {
   if (state != this->settings_.beeper_state) {
     this->settings_.beeper_state = state;
+#ifdef USE_SWITCH
     this->beeper_switch_->publish_state(state);
+#endif
     this->rtc_.save(&this->settings_);
   } 
 }
