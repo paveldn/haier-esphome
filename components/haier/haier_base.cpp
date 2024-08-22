@@ -289,6 +289,14 @@ void HaierClimateBase::loop() {
   }
   this->process_phase(now);
   this->haier_protocol_.loop();
+#ifdef USE_SWITCH
+  if ((this->display_switch_ != nullptr) && (this->display_switch_->state != this->get_display_state())) {
+    this->display_switch_->publish_state(this->get_display_state());
+  }
+  if ((this->health_mode_switch_ != nullptr) && (this->health_mode_switch_->state != this->get_health_mode())) {
+    this->health_mode_switch_->publish_state(this->get_health_mode());
+  }
+#endif // USE_SWITCH  
 }
 
 void HaierClimateBase::process_protocol_reset() {
