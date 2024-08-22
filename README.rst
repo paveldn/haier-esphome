@@ -499,9 +499,39 @@ Configuration variables:
 
 - **haier_id** (**Required**, `ID <https://esphome.io/guides/configuration-types.html#config-id>`_): The id of Haier climate component
 - **self_cleaning** (*Optional*): A button that starts Haier climate self cleaning.
-  All options from `Text Sensor <https://esphome.io/components/button/index.html#base-button-configuration>`_.
+  All options from `Button <https://esphome.io/components/button/index.html#base-button-configuration>`_.
 - **steri_cleaning** (*Optional*): A button that starts Haier climate 56°C Steri-Clean.
-  All options from `Text Sensor <https://esphome.io/components/button/index.html#base-button-configuration>`_.
+  All options from `Button <https://esphome.io/components/button/index.html#base-button-configuration>`_.
+
+.. Generated from esphome-docs/switch/haier.rst
+
+Haier Climate Switches
+======================
+
+Additional switches to support additional features for Haier AC.
+
+.. code-block:: yaml
+
+    # Example configuration entry
+    switch:
+      - platform: haier
+        beeper:
+          name: Haier beeper
+        health_mode:
+          name: Haier health mode
+        display:
+          name: Haier display
+
+Configuration variables:
+------------------------
+
+- **haier_id** (**Required**, `ID <https://esphome.io/guides/configuration-types.html#config-id>`_): The id of Haier climate component
+- **beeper** (*Optional*): (supported only by hOn) A switch that enables or disables Haier climate sound feedback. 
+  All options from `Switch <https://esphome.io/components/switch/index.html#base-switch-configuration>`_.
+- **health_mode** (*Optional*): A switch that enables or disables Haier climate health mode (`UV light sterilization <https://www.haierhvac.eu/en/node/1809>`__).
+  All options from `Switch <https://esphome.io/components/switch/index.html#base-switch-configuration>`_.
+- **display** (*Optional*): A switch that enables or disables Haier climate led display.
+  All options from `Switch <https://esphome.io/components/switch/index.html#base-switch-configuration>`_.
 
 .. Generated from esp32_backup.rst
 

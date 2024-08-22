@@ -8,6 +8,7 @@ doc_file_path = [
     "/".join(["esphome-docs", "binary_sensor", "haier.rst"]),
     "/".join(["esphome-docs", "text_sensor", "haier.rst"]),
     "/".join(["esphome-docs", "button", "haier.rst"]),
+    "/".join(["esphome-docs", "switch", "haier.rst"]),    
     "esp32_backup.rst",
     "additional_information.rst",
 ]
@@ -26,7 +27,8 @@ def process_esphome_refs(line, l_num):
         (":ref:`Sensor <config-sensor>`", "`Sensor <https://esphome.io/components/sensor/index.html#config-sensor>`_"),
         (":ref:`Binary Sensor <config-binary_sensor>`", "`Binary Sensor <https://esphome.io/components/binary_sensor/index.html#base-binary-sensor-configuration>`_"),
         (":ref:`Text Sensor <config-text_sensor>`", "`Text Sensor <https://esphome.io/components/text_sensor/index.html#base-text-sensor-configuration>`_"),
-        (":ref:`Button <config-button>`", "`Text Sensor <https://esphome.io/components/button/index.html#base-button-configuration>`_"),
+        (":ref:`Button <config-button>`", "`Button <https://esphome.io/components/button/index.html#base-button-configuration>`_"),
+        (":ref:`Switch <config-switch>`", "`Switch <https://esphome.io/components/switch/index.html#base-switch-configuration>`_"),
 
     ]
     res = line
