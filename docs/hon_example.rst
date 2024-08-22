@@ -123,11 +123,11 @@ Maximum configuration witch will use all possible options will look like this:
     switch:
       - platform: haier
         beeper:
-          name: ${device_name} beeper
+          name: Haier hOn Climate beeper
         health_mode:
-          name: ${device_name} health mode
+          name: Haier hOn Climate health mode
         display:
-          name: ${device_name} display
+          name: Haier hOn Climate display
     
     select:
       - platform: template

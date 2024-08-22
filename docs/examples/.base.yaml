@@ -1,7 +1,4 @@
-﻿substitutions:
-  file_name: none
-
-esphome:
+﻿esphome:
   name: esp32-haier-example
 
 esp32:
@@ -13,4 +10,10 @@ logger:
 wifi:
   ssid: test_ssid
   password: test_pass
+
+external_components:
+  source:
+    type: local
+    path: ./components
+  components: [ haier ]
 

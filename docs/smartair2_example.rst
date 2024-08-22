@@ -72,7 +72,7 @@ Maximum configuration witch will use all possible options will look like this:
     switch:
       - platform: haier
         health_mode:
-          name: ${device_name} health mode
+          name: Haier SmartAir2 Climate health mode
         display:
-          name: ${device_name} display
+          name: Haier SmartAir2 Climate display
 
