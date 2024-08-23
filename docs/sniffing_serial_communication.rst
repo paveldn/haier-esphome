@@ -23,7 +23,9 @@ Using a PC with Two TTL to USB Converters
 
 **Wiring Diagram:**
 
-.. image:: images/setup_diagram_pc.png
+.. raw:: HTML
+
+  <p><a href="./images/setup_diagram_pc.jpg"><img src="./images/setup_diagram_pc.jpg?raw=true" height="70%" width="70%"></a></p>
 
 To capture the data, you will need to use terminal applications such as Termite, HTerm, CoolTerm, etc. The port configuration should be set as follows:
 
@@ -39,7 +41,9 @@ The approach is similar, but instead of a PC, we will use an ESP device with two
 
 **Wiring Diagram:**
 
-.. image:: images/setup_diagram_esp.png
+.. raw:: HTML
+
+  <p><a href="./images/setup_diagram_esp.jpg"><img src="./images/setup_diagram_esp.jpg?raw=true" height="70%" width="70%"></a></p>
 
 **Sample Configuration for ESP32 Sniffer Board:**
 
