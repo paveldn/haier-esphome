@@ -1,0 +1,22 @@
+{
+    "files.associations": {
+      "functional": "cpp",
+      "set": "cpp",
+      "chrono": "cpp",
+      "system_error": "cpp",
+      "xlocale": "cpp",
+      "array": "cpp",
+      "vector": "cpp",
+      "xstring": "cpp",
+      "xutility": "cpp",
+      "filesystem": "cpp",
+      "xlocinfo": "cpp",
+      "ostream": "cpp",
+      "istream": "cpp",
+      "sstream": "cpp"
+    },
+    "files.exclude": {
+      "**/.esphome": true,
+      "**/__pycache__": true
+    }
+}

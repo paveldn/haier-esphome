@@ -33,12 +33,12 @@ CONFIG_SCHEMA = cv.Schema(
             DisplaySwitch,
             icon=ICON_LED_ON,
             entity_category=ENTITY_CATEGORY_CONFIG,
-            default_restore_mode="DISABLED",
+            default_restore_mode="RESTORE_DEFAULT_ON",
         ),
         cv.Optional(CONF_HEALTH_MODE): switch.switch_schema(
             HealthModeSwitch,
             icon=ICON_LEAF,
-            default_restore_mode="DISABLED",
+            default_restore_mode="RESTORE_DEFAULT_OFF",
         ),
         # Beeper switch is only supported for HonClimate
         cv.Optional(CONF_BEEPER): switch.switch_schema(
