@@ -8,12 +8,12 @@ logger:
   level: DEBUG
 
 wifi:
-  ssid: test_ssid
-  password: test_pass
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
 
 external_components:
   source:
     type: local
-    path: ./components
+    path: ../../components
   components: [ haier ]
 

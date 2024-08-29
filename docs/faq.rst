@@ -33,39 +33,7 @@ Compatibility and Support
 
 However, ESP modules equipped with the ESP32-S3 chip have native USB support and can potentially communicate using UART protocol if the USB Type-A connector is directly connected to the ESP pins without an intermediary chip. This setup allows for creating an ESPHome configuration that utilizes the same pins for UART communication.
 
-Currently, the `M5Stack AtomS3U <https://shop.m5stack.com/products/atoms3u>`_ and `Lilygo T-Dongle S3 <https://www.lilygo.cc/products/t-dongle-s3?variant=42455191519413>`_ confirmed board that supports this configuration, though there may be others.
-
-**Sample ESPHome Configuration that works for both M5Stack AtomS3U and Lilygo T-Dongle S3:**
-
-.. code-block:: yaml
-
-    esphome:
-      name: haier
-      platformio_options:
-        board_build.flash_mode: dio
-
-    esp32:
-      board: esp32-s3-devkitc-1
-      framework:
-        type: arduino
-
-    wifi:
-      ssid: !secret wifi_ssid
-      password: !secret wifi_password
-
-    uart:
-      baud_rate: 9600
-      tx_pin: 19
-      rx_pin: 20
-
-    logger:
-      level: WARN
-
-    climate:
-      - platform: haier
-        name: Haier AC
-    
-This configuration is a starting point for integrating your Haier AC with an ESP32-S3 based board.
+Here you can find `list of confirmed board that supports that have native USB support and can communicate using UART protocol <./usb_2_uart_boards.rst>`_ with sample configuration for each case.
 
 Troubleshooting
 ---------------
@@ -77,7 +45,7 @@ Troubleshooting
 
 - **Configuration Issues:** There might be issues with your ESPHome configuration.
 - **Hardware Problems:** The problem could lie with the ESP module or other hardware components.
-- **Wiring Issues:** Incorrect wiring or problems with the pins could be causing communication failures.
+- **Wiring Issues:** Incorrect wiring or problems with the pins could be causing communication failures. Most common mistake is to swap RX and TX pins.
 - **Protocol Mismatch:** The AC might use a different protocol for communication or may not support serial communication at all.
 
 **Troubleshooting Steps:**
