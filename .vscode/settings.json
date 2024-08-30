@@ -13,7 +13,8 @@
       "xlocinfo": "cpp",
       "ostream": "cpp",
       "istream": "cpp",
-      "sstream": "cpp"
+      "sstream": "cpp",
+      "optional": "cpp"
     },
     "files.exclude": {
       "**/.esphome": true,

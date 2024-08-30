@@ -39,7 +39,6 @@ climate:
       - HORIZONTAL
       - BOTH
     supported_presets:
-      - ECO
       - BOOST
       - SLEEP
     on_alarm_start:

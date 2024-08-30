@@ -27,6 +27,7 @@ HonClimate::HonClimate()
                                                                                                    0x00, 0x00} {
   this->fan_mode_speed_ = (uint8_t) hon_protocol::FanMode::FAN_MID;
   this->other_modes_fan_speed_ = (uint8_t) hon_protocol::FanMode::FAN_AUTO;
+  this->traits_.add_supported_fan_mode(CLIMATE_FAN_QUIET);
 }
 
 HonClimate::~HonClimate() {}
@@ -546,16 +547,26 @@ haier_protocol::HaierMessage HonClimate::get_control_message() {
       switch (climate_control.fan_mode.value()) {
         case CLIMATE_FAN_LOW:
           out_data->fan_mode = (uint8_t) hon_protocol::FanMode::FAN_LOW;
+          out_data->quiet_mode = 0;
           break;
         case CLIMATE_FAN_MEDIUM:
           out_data->fan_mode = (uint8_t) hon_protocol::FanMode::FAN_MID;
+          out_data->quiet_mode = 0;
           break;
         case CLIMATE_FAN_HIGH:
           out_data->fan_mode = (uint8_t) hon_protocol::FanMode::FAN_HIGH;
+          out_data->quiet_mode = 0;
           break;
         case CLIMATE_FAN_AUTO:
-          if (mode != CLIMATE_MODE_FAN_ONLY)  // if we are not in fan only mode
+          if (mode != CLIMATE_MODE_FAN_ONLY) {  // if we are not in fan only mode
             out_data->fan_mode = (uint8_t) hon_protocol::FanMode::FAN_AUTO;
+            out_data->quiet_mode = 0;
+          }
+          break;
+        case CLIMATE_FAN_QUIET:
+          if ((mode != CLIMATE_MODE_FAN_ONLY) && (mode != CLIMATE_MODE_OFF)) {  // if we are not in fan only mode
+            out_data->quiet_mode = 1;
+          }
           break;
         default:
           ESP_LOGE("Control", "Unsupported fan mode");
@@ -597,13 +608,6 @@ haier_protocol::HaierMessage HonClimate::get_control_message() {
       switch (climate_control.preset.value()) {
         case CLIMATE_PRESET_NONE:
           out_data->quiet_mode = 0;
-          out_data->fast_mode = 0;
-          out_data->sleep_mode = 0;
-          out_data->ten_degree = 0;
-          break;
-        case CLIMATE_PRESET_ECO:
-          // Eco is not supported in Fan only mode
-          out_data->quiet_mode = (this->mode != CLIMATE_MODE_FAN_ONLY) ? 1 : 0;
           out_data->fast_mode = 0;
           out_data->sleep_mode = 0;
           out_data->ten_degree = 0;
@@ -846,9 +850,7 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
   {
     // Extra modes/presets
     optional<ClimatePreset> old_preset = this->preset;
-    if (packet.control.quiet_mode != 0) {
-      this->preset = CLIMATE_PRESET_ECO;
-    } else if (packet.control.fast_mode != 0) {
+    if (packet.control.fast_mode != 0) {
       this->preset = CLIMATE_PRESET_BOOST;
     } else if (packet.control.sleep_mode != 0) {
       this->preset = CLIMATE_PRESET_SLEEP;
@@ -881,24 +883,36 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
     } else {
       this->other_modes_fan_speed_ = packet.control.fan_mode;
     }
-    switch (packet.control.fan_mode) {
-      case (uint8_t) hon_protocol::FanMode::FAN_AUTO:
-        if (packet.control.ac_mode != (uint8_t) hon_protocol::ConditioningMode::FAN) {
-          this->fan_mode = CLIMATE_FAN_AUTO;
-        } else {
-          // Shouldn't accept fan speed auto in fan-only mode even if AC reports it
-          ESP_LOGI(TAG, "Fan speed Auto is not supported in Fan only AC mode, ignoring");
-        }
-        break;
-      case (uint8_t) hon_protocol::FanMode::FAN_MID:
-        this->fan_mode = CLIMATE_FAN_MEDIUM;
-        break;
-      case (uint8_t) hon_protocol::FanMode::FAN_LOW:
-        this->fan_mode = CLIMATE_FAN_LOW;
-        break;
-      case (uint8_t) hon_protocol::FanMode::FAN_HIGH:
-        this->fan_mode = CLIMATE_FAN_HIGH;
-        break;
+    bool fan_mode_processed = false;
+    if (packet.control.quiet_mode != 0) {
+      if (packet.control.ac_mode != (uint8_t) hon_protocol::ConditioningMode::FAN) {
+        this->fan_mode = CLIMATE_FAN_QUIET;
+        fan_mode_processed = true;
+      } else {
+        // Shouldn't accept quiet mode in fan-only mode even if AC reports it
+        ESP_LOGI(TAG, "Quiet mode is not supported in Fan only AC mode, ignoring");
+      }
+    }
+    if (!fan_mode_processed) {
+      switch (packet.control.fan_mode) {
+        case (uint8_t) hon_protocol::FanMode::FAN_AUTO:
+          if (packet.control.ac_mode != (uint8_t) hon_protocol::ConditioningMode::FAN) {
+            this->fan_mode = CLIMATE_FAN_AUTO;
+          } else {
+            // Shouldn't accept fan speed auto in fan-only mode even if AC reports it
+            ESP_LOGI(TAG, "Fan speed Auto is not supported in Fan only AC mode, ignoring");
+          }
+          break;
+        case (uint8_t) hon_protocol::FanMode::FAN_MID:
+          this->fan_mode = CLIMATE_FAN_MEDIUM;
+          break;
+        case (uint8_t) hon_protocol::FanMode::FAN_LOW:
+          this->fan_mode = CLIMATE_FAN_LOW;
+          break;
+        case (uint8_t) hon_protocol::FanMode::FAN_HIGH:
+          this->fan_mode = CLIMATE_FAN_HIGH;
+          break;
+      }
     }
     should_publish = should_publish || (!old_fan_mode.has_value()) || (old_fan_mode.value() != fan_mode.value());
   }
@@ -1126,30 +1140,20 @@ void HonClimate::fill_control_messages_queue_() {
     uint8_t away_mode_buf[] = {0x00, 0xFF};
     if (!new_power) {
       // If AC is off - no presets allowed
-      quiet_mode_buf[1] = 0x00;
       fast_mode_buf[1] = 0x00;
       away_mode_buf[1] = 0x00;
     } else if (climate_control.preset.has_value()) {
       switch (climate_control.preset.value()) {
         case CLIMATE_PRESET_NONE:
-          quiet_mode_buf[1] = 0x00;
-          fast_mode_buf[1] = 0x00;
-          away_mode_buf[1] = 0x00;
-          break;
-        case CLIMATE_PRESET_ECO:
-          // Eco is not supported in Fan only mode
-          quiet_mode_buf[1] = (this->mode != CLIMATE_MODE_FAN_ONLY) ? 0x01 : 0x00;
           fast_mode_buf[1] = 0x00;
           away_mode_buf[1] = 0x00;
           break;
         case CLIMATE_PRESET_BOOST:
-          quiet_mode_buf[1] = 0x00;
           // Boost is not supported in Fan only mode
           fast_mode_buf[1] = (this->mode != CLIMATE_MODE_FAN_ONLY) ? 0x01 : 0x00;
           away_mode_buf[1] = 0x00;
           break;
         case CLIMATE_PRESET_AWAY:
-          quiet_mode_buf[1] = 0x00;
           fast_mode_buf[1] = 0x00;
           away_mode_buf[1] = (this->mode == CLIMATE_MODE_HEAT) ? 0x01 : 0x00;
           break;
@@ -1159,13 +1163,6 @@ void HonClimate::fill_control_messages_queue_() {
       }
     }
     auto presets = this->traits_.get_supported_presets();
-    if ((quiet_mode_buf[1] != 0xFF) && ((presets.find(climate::ClimatePreset::CLIMATE_PRESET_ECO) != presets.end()))) {
-      this->control_messages_queue_.push(
-          haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
-                                       (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
-                                           (uint8_t) hon_protocol::DataParameters::QUIET_MODE,
-                                       quiet_mode_buf, 2));
-    }
     if ((fast_mode_buf[1] != 0xFF) && ((presets.find(climate::ClimatePreset::CLIMATE_PRESET_BOOST) != presets.end()))) {
       this->control_messages_queue_.push(
           haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
@@ -1225,20 +1222,39 @@ void HonClimate::fill_control_messages_queue_() {
     switch (climate_control.fan_mode.value()) {
       case CLIMATE_FAN_LOW:
         fan_mode_buf[1] = (uint8_t) hon_protocol::FanMode::FAN_LOW;
+        quiet_mode_buf[1] = 0;
         break;
       case CLIMATE_FAN_MEDIUM:
         fan_mode_buf[1] = (uint8_t) hon_protocol::FanMode::FAN_MID;
+        quiet_mode_buf[1] = 0;
         break;
       case CLIMATE_FAN_HIGH:
         fan_mode_buf[1] = (uint8_t) hon_protocol::FanMode::FAN_HIGH;
+        quiet_mode_buf[1] = 0;
         break;
       case CLIMATE_FAN_AUTO:
-        if (mode != CLIMATE_MODE_FAN_ONLY)  // if we are not in fan only mode
+        if (mode != CLIMATE_MODE_FAN_ONLY) {  // if we are not in fan only mode
           fan_mode_buf[1] = (uint8_t) hon_protocol::FanMode::FAN_AUTO;
+          quiet_mode_buf[1] = 0;
+        }
+        break;
+      case CLIMATE_FAN_QUIET:
+        if ((mode != CLIMATE_MODE_FAN_ONLY) && (mode != CLIMATE_MODE_OFF)) {  // if we are not in fan only mode
+          quiet_mode_buf[1] = 1;
+        } else {
+          ESP_LOGI(TAG, "Quiet mode is not supported in Fan only AC mode, ignoring");
+        }
         break;
       default:
         ESP_LOGE("Control", "Unsupported fan mode");
         break;
+    }
+    if (quiet_mode_buf[1] != 0xFF) {
+      this->control_messages_queue_.push(
+          haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
+                                       (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
+                                           (uint8_t) hon_protocol::DataParameters::QUIET_MODE,
+                                       quiet_mode_buf, 2));
     }
     if (fan_mode_buf[1] != 0xFF) {
       this->control_messages_queue_.push(

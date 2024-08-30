@@ -82,7 +82,6 @@ This component requires a `UART Bus <https://esphome.io/components/uart#uart>`_ 
         - BOTH
       supported_presets:
         - AWAY
-        - ECO
         - BOOST
         - SLEEP
       on_alarm_start:
@@ -123,7 +122,7 @@ Configuration variables:
 - **beeper** (*Optional*, boolean): Can be used to disable beeping on commands from AC. Supported only by hOn protocol.
 - **supported_modes** (*Optional*, list): Can be used to disable some of AC modes. Possible values: ``'OFF'``, ``HEAT_COOL``, ``COOL``, ``HEAT``, ``DRY``, ``FAN_ONLY``.
 - **supported_swing_modes** (*Optional*, list): Can be used to disable some swing modes if your AC does not support it. Possible values: ``'OFF'``, ``VERTICAL``, ``HORIZONTAL``, ``BOTH``.
-- **supported_presets** (*Optional*, list): Can be used to disable some presets. Possible values for smartair2 are: ``AWAY``, ``BOOST``, ``COMFORT``. Possible values for hOn are: ``AWAY``, ``ECO``, ``BOOST``, ``SLEEP``. ``AWAY`` preset can be enabled only in ``HEAT`` mode, it is disabled by default.
+- **supported_presets** (*Optional*, list): Can be used to disable some presets. Possible values for smartair2 are: ``AWAY``, ``BOOST``, ``COMFORT``. Possible values for hOn are: ``AWAY``, ``BOOST``, ``SLEEP``. ``AWAY`` preset can be enabled only in ``HEAT`` mode, it is disabled by default.
 - **on_alarm_start** (*Optional*, `Automation <https://esphome.io/guides/automations#automation>`_): (supported only by hOn) Automation to perform when AC activates a new alarm. See `on_alarm_start Trigger`_.
 - **on_alarm_end** (*Optional*, `Automation <https://esphome.io/guides/automations#automation>`_): (supported only by hOn) Automation to perform when AC deactivates a new alarm. See `on_alarm_end Trigger`_.
 - **on_status_message** (*Optional*, `Automation <https://esphome.io/guides/automations#automation>`_): Automation to perform when status message received from AC. See `on_status_message Trigger`_.

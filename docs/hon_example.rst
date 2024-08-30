@@ -67,7 +67,6 @@ Maximum configuration witch will use all possible options will look like this:
           - HORIZONTAL
           - BOTH
         supported_presets:
-          - ECO
           - BOOST
           - SLEEP
         on_alarm_start:
