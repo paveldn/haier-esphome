@@ -185,7 +185,7 @@ class HonClimate : public HaierClimateBase {
   esphome::optional<hon_protocol::VerticalSwingMode> current_vertical_swing_{};
   esphome::optional<hon_protocol::HorizontalSwingMode> current_horizontal_swing_{};
   HonSettings settings_;
-  ESPPreferenceObject rtc_;
+  ESPPreferenceObject hon_rtc_;
 };
 
 class HaierAlarmStartTrigger : public Trigger<uint8_t, const char *> {

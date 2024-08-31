@@ -24,6 +24,11 @@ enum class ActionRequest : uint8_t {
   START_STERI_CLEAN = 5,  // only hOn
 };
 
+struct HaierBaseSettings {
+  bool health_mode;
+  bool display_state;
+};
+
 class HaierClimateBase : public esphome::Component,
                          public esphome::climate::Climate,
                          public esphome::uart::UARTDevice,
@@ -95,7 +100,8 @@ class HaierClimateBase : public esphome::Component,
   virtual void process_phase(std::chrono::steady_clock::time_point now) = 0;
   virtual haier_protocol::HaierMessage get_control_message() = 0;          // NOLINT(readability-identifier-naming)
   virtual haier_protocol::HaierMessage get_power_message(bool state) = 0;  // NOLINT(readability-identifier-naming)
-  virtual void initialization(){};
+  virtual void save_settings();
+  virtual void initialization();
   virtual bool prepare_pending_action();
   virtual void process_protocol_reset();
   esphome::climate::ClimateTraits traits() override;
@@ -167,6 +173,7 @@ class HaierClimateBase : public esphome::Component,
   std::chrono::steady_clock::time_point last_status_request_;          // To request AC status
   std::chrono::steady_clock::time_point last_signal_request_;          // To send WiFI signal level
   CallbackManager<void(const char *, size_t)> status_message_callback_{};
+  ESPPreferenceObject base_rtc_;
 };
 
 class StatusMessageTrigger : public Trigger<const char *, size_t> {

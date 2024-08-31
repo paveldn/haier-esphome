@@ -38,7 +38,7 @@ void HonClimate::set_beeper_state(bool state) {
 #ifdef USE_SWITCH
     this->beeper_switch_->publish_state(state);
 #endif
-    this->rtc_.save(&this->settings_);
+    this->hon_rtc_.save(&this->settings_);
   } 
 }
 
@@ -483,10 +483,11 @@ haier_protocol::HaierMessage HonClimate::get_power_message(bool state) {
 }
 
 void HonClimate::initialization() {
+  HaierClimateBase::initialization();
   constexpr uint32_t restore_settings_version = 0x2A3613DCUL; 
-  this->rtc_ = global_preferences->make_preference<HonSettings>(this->get_object_id_hash() ^ restore_settings_version);
+  this->hon_rtc_ = global_preferences->make_preference<HonSettings>(this->get_object_id_hash() ^ restore_settings_version);
   HonSettings recovered;
-  if (this->rtc_.load(&recovered)) {
+  if (this->hon_rtc_.load(&recovered)) {
     this->settings_ = recovered;
   } else {
     this->settings_ = {hon_protocol::VerticalSwingMode::CENTER, hon_protocol::HorizontalSwingMode::CENTER, true};
@@ -1016,7 +1017,7 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
     if (save_settings) {
       this->settings_.last_vertiacal_swing = this->current_vertical_swing_.value();
       this->settings_.last_horizontal_swing = this->current_horizontal_swing_.value();
-      this->rtc_.save(&this->settings_);
+      this->hon_rtc_.save(&this->settings_);
     }
     should_publish = should_publish || (old_swing_mode != this->swing_mode);
   }
