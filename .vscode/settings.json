@@ -16,8 +16,9 @@
       "sstream": "cpp",
       "optional": "cpp"
     },
+    "files.trimTrailingWhitespace": true,
     "files.exclude": {
-      "**/.esphome": true,
+      "**/.esphome": false,
       "**/__pycache__": true
     }
 }
