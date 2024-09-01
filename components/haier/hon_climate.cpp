@@ -38,10 +38,22 @@ void HonClimate::set_beeper_state(bool state) {
     this->beeper_switch_->publish_state(state);
 #endif
     this->hon_rtc_.save(&this->settings_);
-  } 
+  }
 }
 
 bool HonClimate::get_beeper_state() const { return this->settings_.beeper_state; }
+
+void HonClimate::set_quiet_mode_state(bool state) {
+  if (state != this->settings_.quiet_mode_state) {
+    this->settings_.quiet_mode_state = state;
+#ifdef USE_SWITCH
+    this->quiet_mode_switch_->publish_state(state);
+#endif
+    this->hon_rtc_.save(&this->settings_);
+  }
+}
+
+bool HonClimate::get_quiet_mode_state() const { return this->settings_.quiet_mode_state; }
 
 esphome::optional<hon_protocol::VerticalSwingMode> HonClimate::get_vertical_airflow() const {
   return this->current_vertical_swing_;
@@ -483,13 +495,13 @@ haier_protocol::HaierMessage HonClimate::get_power_message(bool state) {
 
 void HonClimate::initialization() {
   HaierClimateBase::initialization();
-  constexpr uint32_t restore_settings_version = 0x2A3613DCUL; 
+  constexpr uint32_t restore_settings_version = 0x57EB59DDUL;
   this->hon_rtc_ = global_preferences->make_preference<HonSettings>(this->get_object_id_hash() ^ restore_settings_version);
   HonSettings recovered;
   if (this->hon_rtc_.load(&recovered)) {
     this->settings_ = recovered;
   } else {
-    this->settings_ = {hon_protocol::VerticalSwingMode::CENTER, hon_protocol::HorizontalSwingMode::CENTER, true};
+    this->settings_ = {hon_protocol::VerticalSwingMode::CENTER, hon_protocol::HorizontalSwingMode::CENTER, true, false};
   }
   this->current_vertical_swing_ = this->settings_.last_vertiacal_swing;
   this->current_horizontal_swing_ = this->settings_.last_horizontal_swing;
@@ -783,6 +795,13 @@ void HonClimate::set_beeper_switch(switch_::Switch *sw) {
     this->beeper_switch_->publish_state(this->settings_.beeper_state);
   }
 }
+
+void HonClimate::set_quiet_mode_switch(switch_::Switch *sw) {
+  this->quiet_mode_switch_ = sw;
+  if (this->quiet_mode_switch_ != nullptr) {
+    this->quiet_mode_switch_->publish_state(this->settings_.quiet_mode_state);
+  }
+}
 #endif  // USE_SWITCH
 
 haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *packet_buffer, uint8_t size) {
@@ -1044,7 +1063,7 @@ void HonClimate::fill_control_messages_queue_() {
                                      (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
                                          (uint8_t) hon_protocol::DataParameters::HEALTH_MODE,
                                      this->get_health_mode() ? ONE_BUF : ZERO_BUF, 2));
-    this->health_mode_ = (SwitchState)((uint8_t)this->health_mode_ & 0b01); 
+    this->health_mode_ = (SwitchState)((uint8_t)this->health_mode_ & 0b01);
   }
   // Climate mode
   bool new_power = this->mode != CLIMATE_MODE_OFF;

@@ -1,0 +1,4 @@
+switch:
+  - platform: haier
+    quiet_mode:
+      name: ${device_name} quiet mode

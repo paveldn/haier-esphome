@@ -32,6 +32,7 @@ struct HonSettings {
   hon_protocol::VerticalSwingMode last_vertiacal_swing;
   hon_protocol::HorizontalSwingMode last_horizontal_swing;
   bool beeper_state;
+  bool quiet_mode_state;
 };
 
 class HonClimate : public HaierClimateBase {
@@ -94,9 +95,11 @@ class HonClimate : public HaierClimateBase {
 #ifdef USE_SWITCH
  public:
   void set_beeper_switch(switch_::Switch *sw);
+  void set_quiet_mode_switch(switch_::Switch *sw);
 
  protected:
   switch_::Switch *beeper_switch_{nullptr};
+  switch_::Switch *quiet_mode_switch_{nullptr};
 #endif
  public:
   HonClimate();
@@ -106,6 +109,8 @@ class HonClimate : public HaierClimateBase {
   void dump_config() override;
   void set_beeper_state(bool state);
   bool get_beeper_state() const;
+  void set_quiet_mode_state(bool state);
+  bool get_quiet_mode_state() const;
   esphome::optional<hon_protocol::VerticalSwingMode> get_vertical_airflow() const;
   void set_vertical_airflow(hon_protocol::VerticalSwingMode direction);
   esphome::optional<hon_protocol::HorizontalSwingMode> get_horizontal_airflow() const;

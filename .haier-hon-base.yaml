@@ -8,6 +8,7 @@ packages:
   display_switch: !include configs/switch/display.yaml
   beeper_switch: !include configs/switch/beeper.yaml
   health_mode_switch: !include configs/switch/health_mode.yaml
+  quiet_mode_switch: !include configs/switch/quiet_mode.yaml
   restart_switch: !include configs/switch/restart.yaml
   # Vertical airflow direction setting. Works only if the vertical swing is
   # off. You can remove this control if you don't need it
