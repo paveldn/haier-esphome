@@ -14,7 +14,8 @@
       "ostream": "cpp",
       "istream": "cpp",
       "sstream": "cpp",
-      "optional": "cpp"
+      "optional": "cpp",
+      "queue": "cpp"
     },
     "files.trimTrailingWhitespace": true,
     "files.exclude": {

@@ -191,6 +191,7 @@ class HonClimate : public HaierClimateBase {
   esphome::optional<hon_protocol::HorizontalSwingMode> current_horizontal_swing_{};
   HonSettings settings_;
   ESPPreferenceObject hon_rtc_;
+  SwitchState quiet_mode_state_{SwitchState::OFF};
 };
 
 class HaierAlarmStartTrigger : public Trigger<uint8_t, const char *> {
