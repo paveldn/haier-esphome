@@ -127,6 +127,8 @@ Maximum configuration witch will use all possible options will look like this:
           name: Haier hOn Climate health mode
         display:
           name: Haier hOn Climate display
+        quiet_mode:
+          name: Haier hOn Climate quiet mode
     
     select:
       - platform: template

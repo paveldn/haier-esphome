@@ -520,16 +520,20 @@ Additional switches to support additional features for Haier AC.
           name: Haier health mode
         display:
           name: Haier display
+        quiet_mode:
+          name: Haier quiet mode
 
 Configuration variables:
 ------------------------
 
 - **haier_id** (**Required**, `ID <https://esphome.io/guides/configuration-types.html#config-id>`_): The id of Haier climate component
-- **beeper** (*Optional*): (supported only by hOn) A switch that enables or disables Haier climate sound feedback. 
+- **beeper** (*Optional*): (supported only by hOn) A switch that enables or disables Haier climate sound feedback.
   All options from `Switch <https://esphome.io/components/switch/index.html#base-switch-configuration>`_.
 - **health_mode** (*Optional*): A switch that enables or disables Haier climate health mode (`UV light sterilization <https://www.haierhvac.eu/en/node/1809>`__).
   All options from `Switch <https://esphome.io/components/switch/index.html#base-switch-configuration>`_.
 - **display** (*Optional*): A switch that enables or disables Haier climate led display.
+  All options from `Switch <https://esphome.io/components/switch/index.html#base-switch-configuration>`_.
+- **quiet_mode** (*Optional*): (supported only by hOn) A switch that enables or disables Haier climate quiet mode. Quiet mode not supported in Fan only mode.
   All options from `Switch <https://esphome.io/components/switch/index.html#base-switch-configuration>`_.
 
 .. Generated from esp32_backup.rst
