@@ -658,7 +658,7 @@ haier_protocol::HaierMessage HonClimate::get_control_message() {
     // Clean quiet mode state pending flag
     this->quiet_mode_state_ = (SwitchState) ((uint8_t) this->quiet_mode_state_ & 0b01);
   }
-  out_data->beeper_status = ((!this->settings_.beeper_state) || (!has_hvac_settings)) ? 1 : 0;
+  out_data->beeper_status = ((!this->get_beeper_state()) || (!has_hvac_settings)) ? 1 : 0;
   control_out_buffer[4] = 0;  // This byte should be cleared before setting values
   out_data->display_status = this->get_display_state() ? 1 : 0;
   this->display_status_ = (SwitchState)((uint8_t)this->display_status_ & 0b01);
@@ -791,7 +791,7 @@ void HonClimate::update_sub_text_sensor_(SubTextSensorType type, const std::stri
 void HonClimate::set_beeper_switch(switch_::Switch *sw) {
   this->beeper_switch_ = sw;
   if (this->beeper_switch_ != nullptr) {
-    this->beeper_switch_->publish_state(this->settings_.beeper_state);
+    this->beeper_switch_->publish_state(this->get_beeper_state());
   }
 }
 
@@ -1007,14 +1007,17 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
   {
     // Swing mode
     ClimateSwingMode old_swing_mode = this->swing_mode;
-    if (packet.control.horizontal_swing_mode == (uint8_t) hon_protocol::HorizontalSwingMode::AUTO) {
-      if (packet.control.vertical_swing_mode == (uint8_t) hon_protocol::VerticalSwingMode::AUTO) {
+    const std::set<ClimateSwingMode>& swing_modes = traits_.get_supported_swing_modes();
+    bool vertical_swing_supported = swing_modes.find(CLIMATE_SWING_VERTICAL) != swing_modes.end();
+    bool horizontal_swing_supported = swing_modes.find(CLIMATE_SWING_HORIZONTAL) != swing_modes.end();
+    if (horizontal_swing_supported && (packet.control.horizontal_swing_mode == (uint8_t) hon_protocol::HorizontalSwingMode::AUTO)) {
+      if (vertical_swing_supported && (packet.control.vertical_swing_mode == (uint8_t) hon_protocol::VerticalSwingMode::AUTO)) {
         this->swing_mode = CLIMATE_SWING_BOTH;
       } else {
         this->swing_mode = CLIMATE_SWING_HORIZONTAL;
       }
     } else {
-      if (packet.control.vertical_swing_mode == (uint8_t) hon_protocol::VerticalSwingMode::AUTO) {
+      if (vertical_swing_supported && (packet.control.vertical_swing_mode == (uint8_t) hon_protocol::VerticalSwingMode::AUTO)) {
         this->swing_mode = CLIMATE_SWING_VERTICAL;
       } else {
         this->swing_mode = CLIMATE_SWING_OFF;
@@ -1063,7 +1066,7 @@ void HonClimate::fill_control_messages_queue_() {
         haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
                                      (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
                                          (uint8_t) hon_protocol::DataParameters::BEEPER_STATUS,
-                                     this->settings_.beeper_state ? ZERO_BUF : ONE_BUF, 2));
+                                     this->get_beeper_state() ? ZERO_BUF : ONE_BUF, 2));
   }
   // Health mode
   {
