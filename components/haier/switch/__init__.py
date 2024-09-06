@@ -60,6 +60,7 @@ CONFIG_SCHEMA = cv.Schema(
     }
 )
 
+
 async def to_code(config):
     full_id, parent = await cg.get_variable_with_full_id(config[CONF_HAIER_ID])
 
@@ -75,5 +76,6 @@ async def to_code(config):
                 await cg.register_parented(sw_var, parent)
                 cg.add(getattr(parent, f"set_{switch_type}_switch")(sw_var))
             else:
-                raise ValueError(f"{switch_type} switch is only supported for hon climate")
-
+                raise ValueError(
+                    f"{switch_type} switch is only supported for hon climate"
+                )

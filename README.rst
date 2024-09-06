@@ -107,10 +107,8 @@ This component requires a `UART Bus <https://esphome.io/components/uart#uart>`_ 
 Configuration variables:
 ------------------------
 
-- **id** (*Optional*, `ID <https://esphome.io/guides/configuration-types.html#config-id>`_): Manually specify the ID used for code generation.
 - **uart_id** (*Optional*, `ID <https://esphome.io/guides/configuration-types.html#config-id>`_): ID of the UART port to communicate with AC.
 - **protocol** (*Optional*, string): Defines communication protocol with AC. Possible values: ``hon`` or ``smartair2``. The default value is ``smartair2``.
-- **name** (**Required**, string): The name of the climate device.
 - **wifi_signal** (*Optional*, boolean): If ``true`` - send wifi signal level to AC.
 - **answer_timeout** (*Optional*, `Time <https://esphome.io/guides/configuration-types.html#config-time>`_): Responce timeout. The default value is ``200ms``.
 - **alternative_swing_control** (*Optional*, boolean): (supported by smartAir2 only) If ``true`` - use alternative values to control swing mode. Use only if the original control method is not working for your AC.

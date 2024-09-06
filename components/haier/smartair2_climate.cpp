@@ -377,9 +377,9 @@ haier_protocol::HaierMessage Smartair2Climate::get_control_message() {
     }
   }
   out_data->display_status = this->get_display_state() ? 0 : 1;
-  this->display_status_ = (SwitchState)((uint8_t)this->display_status_ & 0b01);
+  this->display_status_ = (SwitchState) ((uint8_t) this->display_status_ & 0b01);
   out_data->health_mode = this->get_health_mode() ? 1 : 0;
-  this->health_mode_ = (SwitchState)((uint8_t)this->health_mode_ & 0b01);
+  this->health_mode_ = (SwitchState) ((uint8_t) this->health_mode_ & 0b01);
   return haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL, 0x4D5F, control_out_buffer,
                                       sizeof(smartair2_protocol::HaierPacketControl));
 }
@@ -451,20 +451,20 @@ haier_protocol::HandlerError Smartair2Climate::process_status_message_(const uin
   // Display status
   // should be before "Climate mode" because it is changing this->mode
   if (packet.control.ac_power != 0) {
-      // if AC is off display status always ON so process it only when AC is on
-      bool disp_status = packet.control.display_status == 0;
+    // if AC is off display status always ON so process it only when AC is on
+    bool disp_status = packet.control.display_status == 0;
     if (disp_status != this->get_display_state()) {
       // Do something only if display status changed
       if (this->mode == CLIMATE_MODE_OFF) {
         // AC just turned on from remote need to turn off display
         this->force_send_control_ = true;
-      } else if ((((uint8_t)this->health_mode_) & 0b10) == 0) {
+      } else if ((((uint8_t) this->health_mode_) & 0b10) == 0) {
         this->display_status_ = disp_status ? SwitchState::ON : SwitchState::OFF;
       }
     }
   }
   // Health mode
-  if ((((uint8_t)this->health_mode_) & 0b10) == 0) {
+  if ((((uint8_t) this->health_mode_) & 0b10) == 0) {
     bool old_health_mode = this->get_health_mode();
     this->health_mode_ = packet.control.health_mode == 1 ? SwitchState::ON : SwitchState::OFF;
     should_publish = should_publish || (old_health_mode != this->get_health_mode());

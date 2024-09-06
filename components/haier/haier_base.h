@@ -146,7 +146,7 @@ class HaierClimateBase : public esphome::Component,
     ActionRequest action;
     esphome::optional<haier_protocol::HaierMessage> message;
   };
-  enum class SwitchState{
+  enum class SwitchState {
     OFF = 0b00,
     ON = 0b01,
     PENDING_OFF = 0b10,
