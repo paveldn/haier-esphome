@@ -126,14 +126,14 @@ haier_protocol::HaierMessage HaierClimateBase::get_wifi_signal_message_() {
 #endif
 
 void HaierClimateBase::save_settings() {
-  HaierBaseSettings settings { this->get_health_mode(), this->get_display_state() };
+  HaierBaseSettings settings{this->get_health_mode(), this->get_display_state()};
   if (!this->base_rtc_.save(&settings)) {
     ESP_LOGW(TAG, "Failed to save settings");
   }
 }
 
 bool HaierClimateBase::get_display_state() const {
-  return (this->display_status_ == SwitchState::ON) || (this->display_status_ == SwitchState::PENDING_ON); 
+  return (this->display_status_ == SwitchState::ON) || (this->display_status_ == SwitchState::PENDING_ON);
 }
 
 void HaierClimateBase::set_display_state(bool state) {
@@ -305,7 +305,7 @@ void HaierClimateBase::loop() {
   if ((this->health_mode_switch_ != nullptr) && (this->health_mode_switch_->state != this->get_health_mode())) {
     this->health_mode_switch_->publish_state(this->get_health_mode());
   }
-#endif // USE_SWITCH  
+#endif  // USE_SWITCH
 }
 
 void HaierClimateBase::process_protocol_reset() {
@@ -349,13 +349,14 @@ bool HaierClimateBase::prepare_pending_action() {
 ClimateTraits HaierClimateBase::traits() { return traits_; }
 
 void HaierClimateBase::initialization() {
-  constexpr uint32_t restore_settings_version = 0xA77D21EF; 
-  this->base_rtc_ = global_preferences->make_preference<HaierBaseSettings>(this->get_object_id_hash() ^ restore_settings_version);
+  constexpr uint32_t restore_settings_version = 0xA77D21EF;
+  this->base_rtc_ =
+      global_preferences->make_preference<HaierBaseSettings>(this->get_object_id_hash() ^ restore_settings_version);
   HaierBaseSettings recovered;
   if (!this->base_rtc_.load(&recovered)) {
-    recovered = { false, true };
+    recovered = {false, true};
   }
-  this->display_status_= recovered.display_state ? SwitchState::PENDING_ON : SwitchState::PENDING_OFF;
+  this->display_status_ = recovered.display_state ? SwitchState::PENDING_ON : SwitchState::PENDING_OFF;
   this->health_mode_ = recovered.health_mode ? SwitchState::PENDING_ON : SwitchState::PENDING_OFF;
 #ifdef USE_SWITCH
   if (this->display_switch_ != nullptr) {
