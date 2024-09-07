@@ -15,7 +15,10 @@
       "istream": "cpp",
       "sstream": "cpp",
       "optional": "cpp",
-      "queue": "cpp"
+      "queue": "cpp",
+      "iosfwd": "cpp",
+      "xlocbuf": "cpp",
+      "atomic": "cpp"
     },
     "files.trimTrailingWhitespace": true,
     "files.exclude": {
