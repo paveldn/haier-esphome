@@ -5,6 +5,10 @@
 #include "esphome/core/helpers.h"
 #include "hon_climate.h"
 #include "hon_packet.h"
+#ifdef USE_SELECT
+#include "select/vertical_airflow.h"
+#include "select/horizontal_airflow.h"
+#endif
 
 using namespace esphome::climate;
 using namespace esphome::uart;
@@ -805,6 +809,22 @@ void HonClimate::set_quiet_mode_switch(switch_::Switch *sw) {
   }
 }
 #endif  // USE_SWITCH
+
+#ifdef USE_SELECT
+void HonClimate::set_vertical_airflow_select(select::Select *sel) {
+//  this->vertical_airflow_select_ = sel;
+//  if (this->current_vertical_swing_.has_value() && (this->vertical_airflow_select_ != nullptr)) {
+//    this->vertical_airflow_select_->publish_state(VerticalAirflowSelect::vertical_airflow_to_string(this->current_vertical_swing_.value()));
+//  }
+}
+
+void HonClimate::set_horizontal_airflow_select(select::Select *sel) {
+//  this->horizontal_airflow_select_ = sel;
+//  if (this->horizontal_airflow_select_ != nullptr) {
+//    this->horizontal_airflow_select_->publish_state((uint8_t) this->settings_.last_horizontal_swing);
+//  }
+}
+#endif  // USE_SELECT
 
 haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *packet_buffer, uint8_t size) {
   size_t expected_size =
