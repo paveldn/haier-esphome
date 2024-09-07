@@ -13,6 +13,9 @@
 #ifdef USE_SWITCH
 #include "esphome/components/switch/switch.h"
 #endif
+#ifdef USE_SELECT
+#include "esphome/components/select/select.h"
+#endif
 #include "esphome/core/automation.h"
 #include "haier_base.h"
 #include "hon_packet.h"
@@ -100,6 +103,15 @@ class HonClimate : public HaierClimateBase {
  protected:
   switch_::Switch *beeper_switch_{nullptr};
   switch_::Switch *quiet_mode_switch_{nullptr};
+#endif
+#ifdef USE_SELECT
+public:
+  void set_vertical_airflow_select(select::Select *sel);
+  void set_horizontal_airflow_select(select::Select *sel);
+
+ protected:
+  select::Select *vertical_airflow_select_{nullptr};
+  select::Select *horizontal_airflow_select_{nullptr};
 #endif
  public:
   HonClimate();
