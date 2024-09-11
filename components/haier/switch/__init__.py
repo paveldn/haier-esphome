@@ -62,6 +62,7 @@ CONFIG_SCHEMA = cv.Schema(
     }
 )
 
+
 def _final_validate(config):
     full_config = fv.full_config.get()
     for switch_type in [CONF_BEEPER, CONF_QUIET_MODE]:
@@ -69,14 +70,16 @@ def _final_validate(config):
         if config.get(switch_type):
             climate_path = full_config.get_path_for_id(config[CONF_HAIER_ID])[:-1]
             climate_conf = full_config.get_config_for_path(climate_path)
-            protocol_type= climate_conf.get(CONF_PROTOCOL)
+            protocol_type = climate_conf.get(CONF_PROTOCOL)
             if protocol_type.casefold() != PROTOCOL_HON.casefold():
                 raise cv.Invalid(
                     f"{switch_type} switch is only supported for hon climate"
                 )
     return config
 
+
 FINAL_VALIDATE_SCHEMA = _final_validate
+
 
 async def to_code(config):
     parent = await cg.get_variable(config[CONF_HAIER_ID])
@@ -86,4 +89,3 @@ async def to_code(config):
             sw_var = await switch.new_switch(conf)
             await cg.register_parented(sw_var, parent)
             cg.add(getattr(parent, f"set_{switch_type}_switch")(sw_var))
-
