@@ -15,10 +15,10 @@ jobs:
       fail-fast: false
       matrix:
         file:
-          - docs/examples/max-hon.yaml
-          - docs/examples/max-smartair2.yaml
-          - docs/examples/min-hon.yaml
-          - docs/examples/min-smartair2.yaml
+          - max-hon.yaml
+          - max-smartair2.yaml
+          - min-hon.yaml
+          - min-smartair2.yaml
     steps:
       - name: Checkout code
         uses: actions/checkout@v4.1.3
@@ -27,7 +27,7 @@ jobs:
       - name: Version esphome
         run: esphome version
       - name: Prepering test file
-        run: cat docs/examples/.base.yaml ${{ matrix.file }} > ./docs/examples/__test__.yaml
+        run: cat docs/examples/.base.yaml docs/examples/${{ matrix.file }} > ./docs/examples/__test__.yaml
       - name: Preparing secrets.yaml
         run: |
           echo "wifi_ssid: test_ssid" > ./docs/examples/secrets.yaml
@@ -41,8 +41,8 @@ jobs:
       fail-fast: false
       matrix:
         file:
-          - docs/examples/usb_s3.yaml
-          - docs/examples/usb_c3u.yaml
+          - usb_s3.yaml
+          - usb_c3u.yaml
     steps:
       - name: Checkout code
         uses: actions/checkout@v4.1.3
@@ -55,4 +55,4 @@ jobs:
           echo "wifi_ssid: test_ssid" > ./docs/examples/secrets.yaml
           echo "wifi_password: test_pass" >> ./docs/examples/secrets.yaml
       - name: Build ESPHome config
-        run: esphome compile ${{ matrix.file }}
+        run: esphome compile docs/examples/${{ matrix.file }}
