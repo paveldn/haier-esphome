@@ -131,109 +131,12 @@ Maximum configuration witch will use all possible options will look like this:
           name: Haier hOn Climate quiet mode
     
     select:
-      - platform: template
-        id: haier_ac_vertical_direction
-        name: Haier hOn Climate airflow vertical
-        entity_category: config
-        icon: mdi:arrow-expand-vertical
-        update_interval: 5s
-        options:
-          - Health Up
-          - Max Up
-          - Up
-          - Center
-          - Down
-          - Max Down
-          - Health Down
-          - Auto
-        lambda: >-
-          switch (id(haier_ac).get_vertical_airflow().value_or(esphome::haier::hon_protocol::VerticalSwingMode::CENTER))
-          {
-              case esphome::haier::hon_protocol::VerticalSwingMode::HEALTH_UP:
-                  return std::string("Health Up");
-              case esphome::haier::hon_protocol::VerticalSwingMode::MAX_UP:
-                  return std::string("Max Up");
-              case esphome::haier::hon_protocol::VerticalSwingMode::UP:
-                  return std::string("Up");
-              default:
-              case esphome::haier::hon_protocol::VerticalSwingMode::CENTER:
-                  return std::string("Center");
-              case esphome::haier::hon_protocol::VerticalSwingMode::DOWN:
-                  return std::string("Down");
-              case esphome::haier::hon_protocol::VerticalSwingMode::MAX_DOWN:
-                  return std::string("Max Down");
-              case esphome::haier::hon_protocol::VerticalSwingMode::HEALTH_DOWN:
-                  return std::string("Health Down");
-              case esphome::haier::hon_protocol::VerticalSwingMode::AUTO:
-              case esphome::haier::hon_protocol::VerticalSwingMode::AUTO_SPECIAL:
-                  return std::string("Auto");
-          }
-        set_action:
-          - climate.haier.set_vertical_airflow:
-              id: haier_ac
-              vertical_airflow: !lambda >-
-                if (x == "Health Up")
-                    return esphome::haier::hon_protocol::VerticalSwingMode::HEALTH_UP;
-                else if (x == "Max Up")
-                    return esphome::haier::hon_protocol::VerticalSwingMode::MAX_UP;
-                else if (x == "Up")
-                    return esphome::haier::hon_protocol::VerticalSwingMode::UP;
-                else if (x == "Down")
-                    return esphome::haier::hon_protocol::VerticalSwingMode::DOWN;
-                else if (x == "Max Down")
-                    return esphome::haier::hon_protocol::VerticalSwingMode::MAX_DOWN;
-                else if (x == "Health Down")
-                    return esphome::haier::hon_protocol::VerticalSwingMode::HEALTH_DOWN;
-                else if (x == "Auto")
-                    return esphome::haier::hon_protocol::VerticalSwingMode::AUTO;
-                else
-                    return esphome::haier::hon_protocol::VerticalSwingMode::CENTER;
-      - platform: template
-        id: haier_ac_horizontal_direction
-        name: Haier hOn Climate airflow horizontal
-        entity_category: config
-        icon: mdi:arrow-expand-horizontal
-        update_interval: 5s
-        options:
-          - Max Left
-          - Left
-          - Center
-          - Right
-          - Max Right
-          - Auto
-        lambda: >-
-          switch (id(haier_ac).get_horizontal_airflow().value_or(esphome::haier::hon_protocol::HorizontalSwingMode::CENTER))
-          {
-              case esphome::haier::hon_protocol::HorizontalSwingMode::MAX_LEFT:
-                  return std::string("Max Left");
-              case esphome::haier::hon_protocol::HorizontalSwingMode::LEFT:
-                  return std::string("Left");
-              default:
-              case esphome::haier::hon_protocol::HorizontalSwingMode::CENTER:
-                  return std::string("Center");
-              case esphome::haier::hon_protocol::HorizontalSwingMode::RIGHT:
-                  return std::string("Right");
-              case esphome::haier::hon_protocol::HorizontalSwingMode::MAX_RIGHT:
-                  return std::string("Max Right");
-              case esphome::haier::hon_protocol::HorizontalSwingMode::AUTO:
-                  return std::string("Auto");
-          }
-        set_action:
-          - climate.haier.set_horizontal_airflow:
-              id: haier_ac
-              horizontal_airflow: !lambda >-
-                if (x == "Max Left")
-                    return esphome::haier::hon_protocol::HorizontalSwingMode::MAX_LEFT;
-                else if (x == "Left")
-                    return esphome::haier::hon_protocol::HorizontalSwingMode::LEFT;
-                else if (x == "Right")
-                    return esphome::haier::hon_protocol::HorizontalSwingMode::RIGHT;
-                else if (x == "Max Right")
-                    return esphome::haier::hon_protocol::HorizontalSwingMode::MAX_RIGHT;
-                else if (x == "Auto")
-                    return esphome::haier::hon_protocol::HorizontalSwingMode::AUTO;
-                else
-                    return esphome::haier::hon_protocol::HorizontalSwingMode::CENTER;
+      - platform: haier
+        haier_id: haier_ac
+        vertical_airflow:
+          name: Haier hOn Climate airflow vertical
+        horizontal_airflow:
+          name: Haier hOn Climate airflow horizontal
     
     sensor:
       - platform: haier
