@@ -343,5 +343,5 @@ See Also
 - :doc:`Haier Climate Buttons </components/button/haier>`
 - :doc:`Haier Climate Switches </components/switch/haier>`
 - :doc:`/components/climate/index`
-- :apiref:`haier/climate/haier.h`
+- :apiref:`haier/climate/haier_base.h`
 - :ghedit:`Edit`
