@@ -2,6 +2,8 @@
    Please, don't change. In case you need to make corrections or changes change
    source documentation in ./doc folder or script.
 
+.. Generated from see_also.rst
+
 .. Generated from esphome-docs/climate/haier.rst
 
 Haier Climate
@@ -567,10 +569,9 @@ flash_4M.bin**
 
 After this, you can flash firmware using ESPHome tools (dashboard,
 website, esphome command, etc)
-.. Generated from additional_information.rst
 
-Additional information
-======================
+See Also
+========
 
 - `FAQ <./docs/faq.rst>`_
 - `HaierProtocol <https://github.com/paveldn/HaierProtocol>`_
@@ -578,8 +579,14 @@ Additional information
 - `Haier protocol overview <./docs/protocol_overview.rst>`_
 - `Example of climate configuration for smartair2 protocol <./docs/smartair2_example.rst>`_
 - `Example of climate configuration for hOn protocol <./docs/hon_example.rst>`_
+- `Esptool.py Documentation <https://docs.espressif.com/projects/esptool/en/latest/esp32/>`_
+- `Sniffing serial communication <./docs/sniffing_serial_communication.rst>`_
 - `ESPHome Haier Climate <https://esphome.io/components/climate/haier.html>`_
 - `ESPHome Haier Climate Sensors <https://esphome.io/components/sensor/haier.html>`_
 - `ESPHome Haier Climate Binary Sensors <https://esphome.io/components/binary_sensor/haier.html>`_
-- `Esptool.py Documentation <https://docs.espressif.com/projects/esptool/en/latest/esp32/>`_
-- `Sniffing serial communication <./docs/sniffing_serial_communication.rst>`_
+- `ESPHome Haier Climate Text Sensors <https://esphome.io/components/text_sensor/haier.html>`_
+- `ESPHome Haier Climate Buttons <https://esphome.io/components/button/haier.html>`_
+- `ESPHome Haier Climate Switches <https://esphome.io/components/switch/haier.html>`_
+- `Climate Component <https://esphome.io/components/climate/>`_
+- `API Reference <https://esphome.io/api/haier__base_8h.html>`_
+- `Sensor Filters <https://esphome.io/components/sensor/#sensor-filters>`_
