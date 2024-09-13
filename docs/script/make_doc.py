@@ -2,13 +2,13 @@ import re
 import os
 import sys
 
-doc_file_path = [ 
+doc_file_path = [
     "/".join(["esphome-docs", "climate", "haier.rst"]),
     "/".join(["esphome-docs", "sensor", "haier.rst"]),
     "/".join(["esphome-docs", "binary_sensor", "haier.rst"]),
     "/".join(["esphome-docs", "text_sensor", "haier.rst"]),
     "/".join(["esphome-docs", "button", "haier.rst"]),
-    "/".join(["esphome-docs", "switch", "haier.rst"]),    
+    "/".join(["esphome-docs", "switch", "haier.rst"]),
     "esp32_backup.rst",
     "additional_information.rst",
 ]
@@ -29,7 +29,7 @@ def process_esphome_refs(line, l_num):
         (":ref:`Text Sensor <config-text_sensor>`", "`Text Sensor <https://esphome.io/components/text_sensor/index.html#base-text-sensor-configuration>`_"),
         (":ref:`Button <config-button>`", "`Button <https://esphome.io/components/button/index.html#base-button-configuration>`_"),
         (":ref:`Switch <config-switch>`", "`Switch <https://esphome.io/components/switch/index.html#base-switch-configuration>`_"),
-
+        (":ref:`Select <config-select>`", "`Select <https://esphome.io/components/select/index.html#base-select-configuration>`_"),
     ]
     res = line
     for o, r in esphome_refs:
