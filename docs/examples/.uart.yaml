@@ -1,0 +1,6 @@
+
+uart:
+  baud_rate: 9600
+  tx_pin: 17
+  rx_pin: 16
+  id: ac_port
