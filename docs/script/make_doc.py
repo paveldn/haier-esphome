@@ -44,10 +44,9 @@ def process_esphome_refs(line, l_num):
     res = line
     for o, r in esphome_refs:
         res = res.replace(o, r)
-    if res.find(":ref:") != -1:
-        print(f"\tWarning: ref found, line #{l_num}")
-    if res.find(":doc:") != -1:
-        print(f"\tWarning: doc found, line #{l_num}")
+    for tag in [":ref:", ":doc:", ":apiref:", ":ghedit:"]:
+        if tag in res:
+            print(f"\tWarning: \"{tag}\" found, line #{l_num}")
     return res
 
 def process_figure(section, output_file, pth):
