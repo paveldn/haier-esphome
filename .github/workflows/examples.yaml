@@ -43,6 +43,7 @@ jobs:
         file:
           - usb_s3.yaml
           - usb_c3u.yaml
+          - uart_sniffer.yaml
     steps:
       - name: Checkout code
         uses: actions/checkout@v4.1.3
