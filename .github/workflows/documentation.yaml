@@ -56,3 +56,13 @@ jobs:
       run: python docs/script/process_examples.py docs/examples/sniffing_serial_communication.rst docs/sniffing_serial_communication.tmp
     - name: Compare temp file with sniffing_serial_communication.rst
       run: diff -u --strip-trailing-cr docs/sniffing_serial_communication.rst docs/sniffing_serial_communication.tmp
+  climate_haier_doc:
+    name: Check ESPHome climate haier
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4.1.3
+    - name: Run script and save results
+      run: python docs/script/process_examples.py docs/examples/climate_haier.rst docs/climate_haier.tmp no_header
+    - name: Compare temp file with ESPHome climate haier
+      run: diff -u --strip-trailing-cr docs/climate_haier.tmp docs/esphome-docs/climate/haier.rst
