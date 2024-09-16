@@ -1,4 +1,4 @@
-﻿esphome:
+esphome:
   name: esp32-haier-example
 
 esp32:

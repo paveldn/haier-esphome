@@ -82,28 +82,28 @@ This component requires a `UART Bus <https://esphome.io/components/uart#uart>`_ 
         - VERTICAL
         - HORIZONTAL
         - BOTH
-      supported_presets:
+        supported_presets:
         - AWAY
         - BOOST
         - SLEEP
-      on_alarm_start:
-        then:
-          - logger.log:
-              level: WARN
-              format: "Alarm activated. Code: %d. Message: \"%s\""
-              args: [ code, message]
-      on_alarm_end:
-        then:
-          - logger.log:
-              level: INFO
-              format: "Alarm deactivated. Code: %d. Message: \"%s\""
-              args: [ code, message]
-      on_status_message:
-        then:
-          - logger.log:
-              level: INFO
-              format: "New status message received, size=%d, subcmd=%02X%02X"
-              args: [ 'data_size', 'data[0]', 'data[1]' ]
+        on_alarm_start:
+          then:
+            - logger.log:
+                level: WARN
+                format: "Alarm activated. Code: %d. Message: \"%s\""
+                args: [ code, message]
+        on_alarm_end:
+          then:
+            - logger.log:
+                level: INFO
+                format: "Alarm deactivated. Code: %d. Message: \"%s\""
+                args: [ code, message]
+        on_status_message:
+          then:
+            - logger.log:
+                level: INFO
+                format: "New status message received, size=%d, subcmd=%02X%02X"
+                args: [ 'data_size', 'data[0]', 'data[1]' ]
 
 
 Configuration variables:
