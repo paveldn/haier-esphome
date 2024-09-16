@@ -59,7 +59,7 @@ Currently, only one board with ESP32-C3 confirmed that have native USB support a
 
 .. code-block:: yaml
 
-    ﻿esphome:
+    esphome:
       name: haier
       platformio_options:
         board_build.flash_mode: dio

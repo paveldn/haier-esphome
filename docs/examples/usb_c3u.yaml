@@ -1,4 +1,4 @@
-﻿esphome:
+esphome:
   name: haier
   platformio_options:
     board_build.flash_mode: dio
