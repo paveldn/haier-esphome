@@ -92,7 +92,8 @@ This automation will be triggered when a new alarm is activated by AC. The error
 .. code-block:: yaml
 
     climate:
-      - protocol: hon
+      - platform: haier
+        protocol: hon
         on_alarm_start:
           then:
             - logger.log:
@@ -110,7 +111,8 @@ This automation will be triggered when a previously activated alarm is deactivat
 .. code-block:: yaml
 
     climate:
-      - protocol: hon
+      - platform: haier
+        protocol: hon
         on_alarm_end:
           then:
             - logger.log:
@@ -129,7 +131,8 @@ This trigger can be used to support some features that unique for the model and 
 .. code-block:: yaml
 
     climate:
-      - protocol: hon
+      - platform: haier
+        protocol: hon
         on_status_message:
           then:
             - logger.log:
