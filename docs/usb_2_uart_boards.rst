@@ -13,9 +13,9 @@ ESP32-S3 based boards
 
 Currently, the following boards have native USB support and can communicate using UART protocol:
 
-- `M5Stack AtomS3U <https://shop.m5stack.com/products/atoms3u>`_ 
-- `Lilygo T-Dongle S3 <https://www.lilygo.cc/products/t-dongle-s3?variant=42455191519413>`_ 
-- `M5Stamp ESP32S3 Module <https://shop.m5stack.com/products/m5stamp-esp32s3-module>`_ with USB-C to USB-A male adapter.  
+- `M5Stack AtomS3U <https://shop.m5stack.com/products/atoms3u>`_
+- `Lilygo T-Dongle S3 <https://www.lilygo.cc/products/t-dongle-s3?variant=42455191519413>`_
+- `M5Stamp ESP32S3 Module <https://shop.m5stack.com/products/m5stamp-esp32s3-module>`_ with USB-C to USB-A male adapter.
 
 **Sample ESPHome Configuration that works for all this boards:**
 
@@ -53,7 +53,7 @@ ESP32-C3 based boards
 
 Currently, only one board with ESP32-C3 confirmed that have native USB support and can communicate using UART protocol:
 
-- `M5Stamp C3U (white color) <https://shop.m5stack.com/products/m5stamp-c3u-mate-with-pin-headers>`_ with USB-C to USB-A male adapter. **But be careful: M5Stamp C3 board (black color, without U at the end) have a dedicated chip for USB and can't be used for UART communication!** 
+- `M5Stamp C3U (white color) <https://shop.m5stack.com/products/m5stamp-c3u-mate-with-pin-headers>`_ with USB-C to USB-A male adapter. **But be careful: M5Stamp C3 board (black color, without U at the end) have a dedicated chip for USB and can't be used for UART communication!**
 
 **Sample ESPHome Configuration that works for this board:**
 
@@ -83,5 +83,49 @@ Currently, only one board with ESP32-C3 confirmed that have native USB support a
     
     climate:
       - platform: haier
+        name: Haier AC
+
+
+ESP32-C6 based boards
+---------------------
+
+Curently ESP32-C6 based boards are not supported by platformio version that used by ESPHome. But it is posible to use it with custom platform and SDK version.
+Curently, only confirmed board with ESP32-C6 that can be used for UART over USB communication:
+
+- `M5Stack NanoC6 Dev Kit <https://shop.m5stack.com/products/m5stack-nanoc6-dev-kit>`_ with USB-C to USB-A male adapter.
+
+**Sample ESPHome Configuration that works for this board:**
+
+.. code-block:: yaml
+
+    esphome:
+      name: haier
+    
+    esp32:
+      board: esp32-c6-devkitc-1
+      variant: esp32c6
+      flash_size: 8MB
+      framework:
+        type: esp-idf
+        sdkconfig_options:
+          CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG: y
+        version: 5.3.1
+        platform_version: 6.8.1
+    
+    wifi:
+      ssid: !secret wifi_ssid
+      password: !secret wifi_password
+    
+    uart:
+      baud_rate: 9600
+      tx_pin: 12
+      rx_pin: 13
+    
+    logger:
+      level: WARN
+    
+    climate:
+      - platform: haier
+        protocol: hon
         name: Haier AC
 
