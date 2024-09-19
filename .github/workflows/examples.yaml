@@ -22,6 +22,7 @@ jobs:
           - {main: esphome_climate_example.yaml, additional: "docs/examples/.base.yaml docs/examples/.uart.yaml"}
           - {main: usb_s3.yaml, additional: ""}
           - {main: usb_c3u.yaml, additional: ""}
+          - {main: usb_c6.yaml, additional: ""}
           - {main: uart_sniffer.yaml, additional: ""}
     steps:
       - name: Checkout code
