@@ -5,10 +5,6 @@
 #include "esphome/core/helpers.h"
 #include "hon_climate.h"
 #include "hon_packet.h"
-#ifdef USE_SELECT
-#include "select/vertical_airflow.h"
-#include "select/horizontal_airflow.h"
-#endif
 
 using namespace esphome::climate;
 using namespace esphome::uart;
