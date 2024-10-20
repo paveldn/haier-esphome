@@ -505,6 +505,32 @@ Configuration variables:
 - **steri_cleaning** (*Optional*): A button that starts Haier climate 56°C Steri-Clean.
   All options from `Button <https://esphome.io/components/button/index.html#base-button-configuration>`_.
 
+.. Generated from esphome-docs/select/haier.rst
+
+Haier Climate Select
+====================
+
+Select components to support vertical and horizontal airflow directions settings for Haier AC.
+
+.. code-block:: yaml
+
+    # Example configuration entry
+    select:
+      - platform: haier
+        horizontal_airflow:
+          name: Haier airflow horizontal
+        vertical_airflow:
+          name: Haier airflow vertical
+
+Configuration variables:
+------------------------
+
+- **haier_id** (**Required**, `ID <https://esphome.io/guides/configuration-types.html#config-id>`_): The id of Haier climate component
+- **horizontal_airflow** (*Optional*): (supported only by hOn) Select component to control horizontal airflow mode (if supported by AC).
+  All options from `Select <https://esphome.io/components/select/index.html#base-select-configuration>`_.
+- **vertical_airflow** (*Optional*): (supported only by hOn) Select component to control vertical airflow mode (if supported by AC).
+  All options from `Select <https://esphome.io/components/select/index.html#base-select-configuration>`_.
+
 .. Generated from esphome-docs/switch/haier.rst
 
 Haier Climate Switches
