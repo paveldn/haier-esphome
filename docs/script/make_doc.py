@@ -9,6 +9,7 @@ doc_file_path = [
     "/".join(["esphome-docs", "binary_sensor", "haier.rst"]),
     "/".join(["esphome-docs", "text_sensor", "haier.rst"]),
     "/".join(["esphome-docs", "button", "haier.rst"]),
+    "/".join(["esphome-docs", "select", "haier.rst"]),
     "/".join(["esphome-docs", "switch", "haier.rst"]),
     "esp32_backup.rst",
 ]
