@@ -9,8 +9,6 @@ esphome:
 
 rp2040:
   board: rpipicow
-  framework:
-    platform_version: https://github.com/maxgerhardt/platform-raspberrypi.git
 
 logger:
   level: DEBUG
@@ -23,6 +21,6 @@ uart:
 
 packages:
   local_haier: !include .local-haier.yaml
-  haier_base: !include ../.haier-hon-base.yaml 
+  haier_base: !include ../.haier-hon-base.yaml
   wifi: !include .wifi-base.yaml
 
