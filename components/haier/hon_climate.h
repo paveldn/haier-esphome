@@ -23,6 +23,11 @@
 namespace esphome {
 namespace haier {
 
+#ifdef USE_SELECT
+extern const std::vector<hon_protocol::HorizontalSwingMode> HORIZONTAL_SWING_MODES_ORDER;
+extern const std::vector<hon_protocol::VerticalSwingMode> VERTICAL_SWING_MODES_ORDER;
+#endif
+
 enum class CleaningState : uint8_t {
   NO_CLEANING = 0,
   SELF_CLEAN = 1,
