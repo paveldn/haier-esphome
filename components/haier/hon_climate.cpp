@@ -12,6 +12,28 @@ using namespace esphome::uart;
 namespace esphome {
 namespace haier {
 
+#ifdef USE_SELECT
+const std::vector<hon_protocol::VerticalSwingMode> VERTICAL_SWING_MODES_ORDER = {
+  hon_protocol::VerticalSwingMode::AUTO,
+  hon_protocol::VerticalSwingMode::HEALTH_UP,
+  hon_protocol::VerticalSwingMode::MAX_UP,
+  hon_protocol::VerticalSwingMode::UP,
+  hon_protocol::VerticalSwingMode::CENTER,
+  hon_protocol::VerticalSwingMode::DOWN,
+  hon_protocol::VerticalSwingMode::MAX_DOWN,
+  hon_protocol::VerticalSwingMode::HEALTH_DOWN,
+};
+
+const std::vector<hon_protocol::HorizontalSwingMode> HORIZONTAL_SWING_MODES_ORDER = {
+  hon_protocol::HorizontalSwingMode::AUTO,
+  hon_protocol::HorizontalSwingMode::MAX_LEFT,
+  hon_protocol::HorizontalSwingMode::LEFT,
+  hon_protocol::HorizontalSwingMode::CENTER,
+  hon_protocol::HorizontalSwingMode::RIGHT,
+  hon_protocol::HorizontalSwingMode::MAX_RIGHT,
+};
+#endif // USE_SELECT
+
 static const char *const TAG = "haier.climate";
 constexpr size_t SIGNAL_LEVEL_UPDATE_INTERVAL_MS = 10000;
 constexpr int PROTOCOL_OUTDOOR_TEMPERATURE_OFFSET = -64;
