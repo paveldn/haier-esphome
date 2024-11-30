@@ -5,7 +5,7 @@ Haier Climate Switches
     :description: Instructions for setting up additional switches for Haier climate devices.
     :image: haier.svg
 
-Additional switches to support additional features for Haier AC.
+ Switches to support additional features for Haier AC.
 
 .. code-block:: yaml
 
