@@ -1069,19 +1069,17 @@ void HonClimate::fill_control_messages_queue_() {
   climate_control = this->current_hvac_settings_;
   // Beeper command
   {
-    this->control_messages_queue_.push(
-        haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
-                                     (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
-                                         (uint8_t) hon_protocol::DataParameters::BEEPER_STATUS,
-                                     this->get_beeper_state() ? ZERO_BUF : ONE_BUF, 2));
+    this->control_messages_queue_.emplace(haier_protocol::FrameType::CONTROL,
+                                          (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
+                                              (uint8_t) hon_protocol::DataParameters::BEEPER_STATUS,
+                                          this->get_beeper_state() ? ZERO_BUF : ONE_BUF, 2);
   }
   // Health mode
   {
-    this->control_messages_queue_.push(
-        haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
-                                     (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
-                                         (uint8_t) hon_protocol::DataParameters::HEALTH_MODE,
-                                     this->get_health_mode() ? ONE_BUF : ZERO_BUF, 2));
+    this->control_messages_queue_.emplace(haier_protocol::FrameType::CONTROL,
+                                          (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
+                                              (uint8_t) hon_protocol::DataParameters::HEALTH_MODE,
+                                          this->get_health_mode() ? ONE_BUF : ZERO_BUF, 2);
     this->health_mode_ = (SwitchState) ((uint8_t) this->health_mode_ & 0b01);
   }
   // Climate mode
@@ -1099,51 +1097,46 @@ void HonClimate::fill_control_messages_queue_() {
       case CLIMATE_MODE_HEAT_COOL:
         new_power = true;
         buffer[1] = (uint8_t) hon_protocol::ConditioningMode::AUTO;
-        this->control_messages_queue_.push(
-            haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
-                                         (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
-                                             (uint8_t) hon_protocol::DataParameters::AC_MODE,
-                                         buffer, 2));
+        this->control_messages_queue_.emplace(haier_protocol::FrameType::CONTROL,
+                                              (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
+                                                  (uint8_t) hon_protocol::DataParameters::AC_MODE,
+                                              buffer, 2);
         fan_mode_buf[1] = this->other_modes_fan_speed_;
         break;
       case CLIMATE_MODE_HEAT:
         new_power = true;
         buffer[1] = (uint8_t) hon_protocol::ConditioningMode::HEAT;
-        this->control_messages_queue_.push(
-            haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
-                                         (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
-                                             (uint8_t) hon_protocol::DataParameters::AC_MODE,
-                                         buffer, 2));
+        this->control_messages_queue_.emplace(haier_protocol::FrameType::CONTROL,
+                                              (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
+                                                  (uint8_t) hon_protocol::DataParameters::AC_MODE,
+                                              buffer, 2);
         fan_mode_buf[1] = this->other_modes_fan_speed_;
         break;
       case CLIMATE_MODE_DRY:
         new_power = true;
         buffer[1] = (uint8_t) hon_protocol::ConditioningMode::DRY;
-        this->control_messages_queue_.push(
-            haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
-                                         (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
-                                             (uint8_t) hon_protocol::DataParameters::AC_MODE,
-                                         buffer, 2));
+        this->control_messages_queue_.emplace(haier_protocol::FrameType::CONTROL,
+                                              (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
+                                                  (uint8_t) hon_protocol::DataParameters::AC_MODE,
+                                              buffer, 2);
         fan_mode_buf[1] = this->other_modes_fan_speed_;
         break;
       case CLIMATE_MODE_FAN_ONLY:
         new_power = true;
         buffer[1] = (uint8_t) hon_protocol::ConditioningMode::FAN;
-        this->control_messages_queue_.push(
-            haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
-                                         (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
-                                             (uint8_t) hon_protocol::DataParameters::AC_MODE,
-                                         buffer, 2));
+        this->control_messages_queue_.emplace(haier_protocol::FrameType::CONTROL,
+                                              (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
+                                                  (uint8_t) hon_protocol::DataParameters::AC_MODE,
+                                              buffer, 2);
         fan_mode_buf[1] = this->other_modes_fan_speed_;  // Auto doesn't work in fan only mode
         break;
       case CLIMATE_MODE_COOL:
         new_power = true;
         buffer[1] = (uint8_t) hon_protocol::ConditioningMode::COOL;
-        this->control_messages_queue_.push(
-            haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
-                                         (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
-                                             (uint8_t) hon_protocol::DataParameters::AC_MODE,
-                                         buffer, 2));
+        this->control_messages_queue_.emplace(haier_protocol::FrameType::CONTROL,
+                                              (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
+                                                  (uint8_t) hon_protocol::DataParameters::AC_MODE,
+                                              buffer, 2);
         fan_mode_buf[1] = this->other_modes_fan_speed_;
         break;
       default:
@@ -1153,11 +1146,10 @@ void HonClimate::fill_control_messages_queue_() {
   }
   // Climate power
   {
-    this->control_messages_queue_.push(
-        haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
-                                     (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
-                                         (uint8_t) hon_protocol::DataParameters::AC_POWER,
-                                     new_power ? ONE_BUF : ZERO_BUF, 2));
+    this->control_messages_queue_.emplace(haier_protocol::FrameType::CONTROL,
+                                          (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
+                                              (uint8_t) hon_protocol::DataParameters::AC_POWER,
+                                          new_power ? ONE_BUF : ZERO_BUF, 2);
   }
   // CLimate preset
   {
@@ -1199,36 +1191,32 @@ void HonClimate::fill_control_messages_queue_() {
     }
     auto presets = this->traits_.get_supported_presets();
     if (quiet_mode_buf[1] != 0xFF) {
-      this->control_messages_queue_.push(
-          haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
-                                       (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
-                                           (uint8_t) hon_protocol::DataParameters::QUIET_MODE,
-                                       quiet_mode_buf, 2));
+      this->control_messages_queue_.emplace(haier_protocol::FrameType::CONTROL,
+                                            (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
+                                                (uint8_t) hon_protocol::DataParameters::QUIET_MODE,
+                                            quiet_mode_buf, 2);
     }
     if ((fast_mode_buf[1] != 0xFF) && ((presets.find(climate::ClimatePreset::CLIMATE_PRESET_BOOST) != presets.end()))) {
-      this->control_messages_queue_.push(
-          haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
-                                       (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
-                                           (uint8_t) hon_protocol::DataParameters::FAST_MODE,
-                                       fast_mode_buf, 2));
+      this->control_messages_queue_.emplace(haier_protocol::FrameType::CONTROL,
+                                            (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
+                                                (uint8_t) hon_protocol::DataParameters::FAST_MODE,
+                                            fast_mode_buf, 2);
     }
     if ((away_mode_buf[1] != 0xFF) && ((presets.find(climate::ClimatePreset::CLIMATE_PRESET_AWAY) != presets.end()))) {
-      this->control_messages_queue_.push(
-          haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
-                                       (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
-                                           (uint8_t) hon_protocol::DataParameters::TEN_DEGREE,
-                                       away_mode_buf, 2));
+      this->control_messages_queue_.emplace(haier_protocol::FrameType::CONTROL,
+                                            (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
+                                                (uint8_t) hon_protocol::DataParameters::TEN_DEGREE,
+                                            away_mode_buf, 2);
     }
   }
   // Target temperature
   if (climate_control.target_temperature.has_value() && (this->mode != ClimateMode::CLIMATE_MODE_FAN_ONLY)) {
     uint8_t buffer[2] = {0x00, 0x00};
     buffer[1] = ((uint8_t) climate_control.target_temperature.value()) - 16;
-    this->control_messages_queue_.push(
-        haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
-                                     (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
-                                         (uint8_t) hon_protocol::DataParameters::SET_POINT,
-                                     buffer, 2));
+    this->control_messages_queue_.emplace(haier_protocol::FrameType::CONTROL,
+                                          (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
+                                              (uint8_t) hon_protocol::DataParameters::SET_POINT,
+                                          buffer, 2);
   }
   // Vertical swing mode
   if (climate_control.swing_mode.has_value()) {
@@ -1248,16 +1236,14 @@ void HonClimate::fill_control_messages_queue_() {
       case CLIMATE_SWING_BOTH:
         break;
     }
-    this->control_messages_queue_.push(
-        haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
-                                     (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
-                                         (uint8_t) hon_protocol::DataParameters::HORIZONTAL_SWING_MODE,
-                                     horizontal_swing_buf, 2));
-    this->control_messages_queue_.push(
-        haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
-                                     (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
-                                         (uint8_t) hon_protocol::DataParameters::VERTICAL_SWING_MODE,
-                                     vertical_swing_buf, 2));
+    this->control_messages_queue_.emplace(haier_protocol::FrameType::CONTROL,
+                                          (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
+                                              (uint8_t) hon_protocol::DataParameters::HORIZONTAL_SWING_MODE,
+                                          horizontal_swing_buf, 2);
+    this->control_messages_queue_.emplace(haier_protocol::FrameType::CONTROL,
+                                          (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
+                                              (uint8_t) hon_protocol::DataParameters::VERTICAL_SWING_MODE,
+                                          vertical_swing_buf, 2);
   }
   // Fan mode
   if (climate_control.fan_mode.has_value()) {
@@ -1280,11 +1266,10 @@ void HonClimate::fill_control_messages_queue_() {
         break;
     }
     if (fan_mode_buf[1] != 0xFF) {
-      this->control_messages_queue_.push(
-          haier_protocol::HaierMessage(haier_protocol::FrameType::CONTROL,
-                                       (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
-                                           (uint8_t) hon_protocol::DataParameters::FAN_MODE,
-                                       fan_mode_buf, 2));
+      this->control_messages_queue_.emplace(haier_protocol::FrameType::CONTROL,
+                                            (uint16_t) hon_protocol::SubcommandsControl::SET_SINGLE_PARAMETER +
+                                                (uint8_t) hon_protocol::DataParameters::FAN_MODE,
+                                            fan_mode_buf, 2);
     }
   }
 }
