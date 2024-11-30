@@ -536,7 +536,7 @@ Configuration variables:
 Haier Climate Switches
 ======================
 
-Additional switches to support additional features for Haier AC.
+ Switches to support additional features for Haier AC.
 
 .. code-block:: yaml
 
