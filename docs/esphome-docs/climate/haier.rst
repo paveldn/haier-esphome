@@ -9,7 +9,7 @@ This is an implementation of the ESPHome component to control HVAC on the base o
 
 There are two versions of the Haier protocol: the older version uses an application called SmartAir2 while the newer version uses an application called hOn. Both protocols are compatible on the transport level but utilize different commands to control appliances.
 
-Older Haier models controlled by the SmartAir2 application are using the KZW-W002 module. This module can't be reused, and you need to replace it with an ESP or RPI Pico W module. The USB connector on the board doesn't support the USB protocol. It is a UART port that just uses a USB connector. To connect the ESP board to your AC you can cut a USB type A cable and connect wires to the climate connector.
+Older Haier models controlled by the SmartAir2 application are using the KZW-W002 module. This module can’t be reused, and you need to replace it with an ESP or RPI Pico W module. The USB connector on the board doesn’t support the USB protocol. It is a UART port that just uses a USB connector. To connect the ESP board to your AC you can cut a USB type A cable and connect wires to the climate connector.
 
 .. list-table:: Haier UART pinout
     :header-rows: 1
@@ -41,7 +41,7 @@ Older Haier models controlled by the SmartAir2 application are using the KZW-W00
 
     KZW-W002 module pinout
 
-Newer Haier models using a module called ESP32-for-Haier. It is an ESP32 single-core board with an ESP32-S0WD chip. In some cases, you can reuse this module and flash it with ESPHome, but some new modules don't support this. They look the same but have encryption enabled.
+Newer Haier models using a module called ESP32-for-Haier. It is an ESP32 single-core board with an ESP32-S0WD chip. In some cases, you can reuse this module and flash it with ESPHome, but some new modules don’t support this. They look the same but have encryption enabled.
 
 **Warning!** The new generation of ESP32-Haier devices has encryption enabled, so they can only be flashed with firmware that is signed with a private key. There is no way to make them work with ESPHome, so if you try to do it, the board will get into a boot loop with the error ``rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)`` The only way to recover this board is to flash it with the original image. So before starting your experiments make a backup image.
 
@@ -82,28 +82,28 @@ This component requires a :ref:`UART bus <uart>` to be setup.
         - VERTICAL
         - HORIZONTAL
         - BOTH
-      supported_presets:
+        supported_presets:
         - AWAY
         - BOOST
         - SLEEP
-      on_alarm_start:
-        then:
-          - logger.log:
-              level: WARN
-              format: "Alarm activated. Code: %d. Message: \"%s\""
-              args: [ code, message]
-      on_alarm_end:
-        then:
-          - logger.log:
-              level: INFO
-              format: "Alarm deactivated. Code: %d. Message: \"%s\""
-              args: [ code, message]
-      on_status_message:
-        then:
-          - logger.log:
-              level: INFO
-              format: "New status message received, size=%d, subcmd=%02X%02X"
-              args: [ 'data_size', 'data[0]', 'data[1]' ]
+        on_alarm_start:
+          then:
+            - logger.log:
+                level: WARN
+                format: "Alarm activated. Code: %d. Message: \"%s\""
+                args: [ code, message]
+        on_alarm_end:
+          then:
+            - logger.log:
+                level: INFO
+                format: "Alarm deactivated. Code: %d. Message: \"%s\""
+                args: [ code, message]
+        on_status_message:
+          then:
+            - logger.log:
+                level: INFO
+                format: "New status message received, size=%d, subcmd=%02X%02X"
+                args: [ 'data_size', 'data[0]', 'data[1]' ]
 
 
 Configuration variables:
@@ -141,7 +141,8 @@ This automation will be triggered when a new alarm is activated by AC. The error
 .. code-block:: yaml
 
     climate:
-      - protocol: hon
+      - platform: haier
+        protocol: hon
         on_alarm_start:
           then:
             - logger.log:
@@ -159,7 +160,8 @@ This automation will be triggered when a previously activated alarm is deactivat
 .. code-block:: yaml
 
     climate:
-      - protocol: hon
+      - platform: haier
+        protocol: hon
         on_alarm_end:
           then:
             - logger.log:
@@ -178,7 +180,8 @@ This trigger can be used to support some features that unique for the model and 
 .. code-block:: yaml
 
     climate:
-      - protocol: hon
+      - platform: haier
+        protocol: hon
         on_status_message:
           then:
             - logger.log:
