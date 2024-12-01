@@ -1013,9 +1013,11 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
       if (new_quiet_mode != this->get_quiet_mode_state()) {
         this->quiet_mode_state_ = new_quiet_mode ? SwitchState::ON : SwitchState::OFF;
         this->settings_.quiet_mode_state = new_quiet_mode;
+#ifdef USE_SWITCH
         if (this->quiet_mode_switch_ != nullptr) {
           this->quiet_mode_switch_->publish_state(new_quiet_mode);
         }
+#endif  // USE_SWITCH
         this->hon_rtc_.save(&this->settings_);
       }
     }
