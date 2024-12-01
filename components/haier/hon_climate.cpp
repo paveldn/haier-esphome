@@ -35,7 +35,9 @@ void HonClimate::set_beeper_state(bool state) {
   if (state != this->settings_.beeper_state) {
     this->settings_.beeper_state = state;
 #ifdef USE_SWITCH
-    this->beeper_switch_->publish_state(state);
+    if (this->beeper_switch_ != nullptr) {
+      this->beeper_switch_->publish_state(state);
+    }
 #endif
     this->hon_rtc_.save(&this->settings_);
   }
@@ -45,10 +47,17 @@ bool HonClimate::get_beeper_state() const { return this->settings_.beeper_state;
 
 void HonClimate::set_quiet_mode_state(bool state) {
   if (state != this->get_quiet_mode_state()) {
-    this->quiet_mode_state_ = state ? SwitchState::PENDING_ON : SwitchState::PENDING_OFF;
+    if ((this->mode != ClimateMode::CLIMATE_MODE_OFF) && (this->mode != ClimateMode::CLIMATE_MODE_FAN_ONLY)) {
+      this->quiet_mode_state_ = state ? SwitchState::PENDING_ON : SwitchState::PENDING_OFF;
+      this->force_send_control_ = true;
+    } else {
+      this->quiet_mode_state_ = state ? SwitchState::ON : SwitchState::OFF;
+    }
     this->settings_.quiet_mode_state = state;
 #ifdef USE_SWITCH
-    this->quiet_mode_switch_->publish_state(state);
+    if (this->quiet_mode_switch_ != nullptr) {
+      this->quiet_mode_switch_->publish_state(state);
+    }
 #endif
     this->hon_rtc_.save(&this->settings_);
   }
@@ -509,7 +518,7 @@ void HonClimate::initialization() {
   }
   this->current_vertical_swing_ = this->settings_.last_vertiacal_swing;
   this->current_horizontal_swing_ = this->settings_.last_horizontal_swing;
-  this->quiet_mode_state_ = this->settings_.quiet_mode_state ? SwitchState::PENDING_ON : SwitchState::PENDING_OFF;
+  this->quiet_mode_state_ = this->settings_.quiet_mode_state ? SwitchState::ON : SwitchState::OFF;
 }
 
 haier_protocol::HaierMessage HonClimate::get_control_message() {
@@ -932,7 +941,7 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
       if (this->mode == CLIMATE_MODE_OFF) {
         // AC just turned on from remote need to turn off display
         this->force_send_control_ = true;
-      } else if ((((uint8_t) this->health_mode_) & 0b10) == 0) {
+      } else if ((((uint8_t) this->display_status_) & 0b10) == 0) {
         this->display_status_ = disp_status ? SwitchState::ON : SwitchState::OFF;
       }
     }
@@ -1004,6 +1013,9 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
       if (new_quiet_mode != this->get_quiet_mode_state()) {
         this->quiet_mode_state_ = new_quiet_mode ? SwitchState::ON : SwitchState::OFF;
         this->settings_.quiet_mode_state = new_quiet_mode;
+        if (this->quiet_mode_switch_ != nullptr) {
+          this->quiet_mode_switch_->publish_state(new_quiet_mode);
+        }
         this->hon_rtc_.save(&this->settings_);
       }
     }
