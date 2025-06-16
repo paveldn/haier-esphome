@@ -15,7 +15,7 @@ doc_file_path = [
 
 def process_esphome_refs(line, l_num):
     esphome_refs = [
-        (":ref:`uart`", "`UART Bus <https://esphome.io/components/uart#uart>`_"),
+        (":ref:`UART bus <uart>`", "`UART Bus <https://esphome.io/components/uart#uart>`_"),
         (":ref:`config-id`", "`ID <https://esphome.io/guides/configuration-types.html#config-id>`_"),
         (":ref:`config-time`", "`Time <https://esphome.io/guides/configuration-types.html#config-time>`_"),
         (":ref:`Automation <automation>`", "`Automation <https://esphome.io/guides/automations#automation>`_"),
