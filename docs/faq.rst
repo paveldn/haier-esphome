@@ -50,7 +50,7 @@ Troubleshooting
 
 **Troubleshooting Steps:**
 
-1. Check the Wiring: Ensure all connections are secure. Try using different pins for communication.
+1. Check the Wiring: Ensure all connections are secure. Try using different pins for communication. The internal board wiring might not reflect the diagrams. Try swapping the RX and TX assignments physically or via software in the esphome configuration.
 2. Test with Different Hardware: If possible, test with a different ESP module or AC unit to isolate the issue.
 3. Use a Simulator: If you're familiar with C++ and cmake, consider using a simulator to diagnose the issue. I have simulator applications for both the hOn and smartAir2 protocols:
 
