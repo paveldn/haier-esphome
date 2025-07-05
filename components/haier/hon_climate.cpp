@@ -204,7 +204,6 @@ haier_protocol::HandlerError HonClimate::status_handler_(haier_protocol::FrameTy
     } else {
       if (!this->last_status_message_) {
         this->real_control_packet_size_ = sizeof(hon_protocol::HaierPacketControl) + this->extra_control_packet_bytes_;
-        this->real_sensors_packet_size_ = sizeof(hon_protocol::HaierPacketSensors) + this->extra_sensors_packet_bytes_;
         this->last_status_message_.reset();
         this->last_status_message_ = std::unique_ptr<uint8_t[]>(new uint8_t[this->real_control_packet_size_]);
       };
@@ -825,7 +824,7 @@ void HonClimate::set_quiet_mode_switch(switch_::Switch *sw) {
 
 haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *packet_buffer, uint8_t size) {
   size_t expected_size =
-      2 + this->status_message_header_size_ + this->real_control_packet_size_ + this->real_sensors_packet_size_;
+      2 + this->status_message_header_size_ + this->real_control_packet_size_ + this->sensors_packet_size_;
   if (size < expected_size) {
     ESP_LOGW(TAG, "Unexpected message size %d (expexted >= %d)", size, expected_size);
     return haier_protocol::HandlerError::WRONG_MESSAGE_STRUCTURE;
@@ -865,8 +864,9 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
   } packet;
   memcpy(&packet.control, packet_buffer + 2 + this->status_message_header_size_,
          sizeof(hon_protocol::HaierPacketControl));
+  memset(&packet.sensors, 0, sizeof(hon_protocol::HaierPacketSensors));
   memcpy(&packet.sensors, packet_buffer + 2 + this->status_message_header_size_ + this->real_control_packet_size_,
-         sizeof(hon_protocol::HaierPacketSensors));
+         std::min(sizeof(hon_protocol::HaierPacketSensors), this->sensors_packet_size_));
   if (packet.sensors.error_status != 0) {
     ESP_LOGW(TAG, "HVAC error, code=0x%02X", packet.sensors.error_status);
   }

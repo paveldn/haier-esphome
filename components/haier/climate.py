@@ -40,7 +40,6 @@ PROTOCOL_MAX_TEMPERATURE = 30.0
 PROTOCOL_TARGET_TEMPERATURE_STEP = 1.0
 PROTOCOL_CURRENT_TEMPERATURE_STEP = 0.5
 PROTOCOL_CONTROL_PACKET_SIZE = 10
-PROTOCOL_MIN_SENSORS_PACKET_SIZE = 18
 PROTOCOL_DEFAULT_SENSORS_PACKET_SIZE = 22
 PROTOCOL_STATUS_MESSAGE_HEADER_SIZE = 0
 
@@ -253,7 +252,7 @@ CONFIG_SCHEMA = cv.All(
                     cv.Optional(
                         CONF_SENSORS_PACKET_SIZE,
                         default=PROTOCOL_DEFAULT_SENSORS_PACKET_SIZE,
-                    ): cv.int_range(min=PROTOCOL_MIN_SENSORS_PACKET_SIZE, max=50),
+                    ): cv.int_range(min=8, max=50),
                     cv.Optional(
                         CONF_STATUS_MESSAGE_HEADER_SIZE,
                         default=PROTOCOL_STATUS_MESSAGE_HEADER_SIZE,
@@ -499,9 +498,7 @@ async def to_code(config):
         )
     if CONF_SENSORS_PACKET_SIZE in config:
         cg.add(
-            var.set_extra_sensors_packet_bytes_size(
-                config[CONF_SENSORS_PACKET_SIZE] - PROTOCOL_MIN_SENSORS_PACKET_SIZE
-            )
+            var.set_sensors_packet_bytes_size(config[CONF_SENSORS_PACKET_SIZE])
         )
     if CONF_STATUS_MESSAGE_HEADER_SIZE in config:
         cg.add(
