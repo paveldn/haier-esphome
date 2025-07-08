@@ -252,7 +252,7 @@ CONFIG_SCHEMA = cv.All(
                     cv.Optional(
                         CONF_SENSORS_PACKET_SIZE,
                         default=PROTOCOL_DEFAULT_SENSORS_PACKET_SIZE,
-                    ): cv.int_range(min=8, max=50),
+                    ): cv.int_range(min=6, max=50),
                     cv.Optional(
                         CONF_STATUS_MESSAGE_HEADER_SIZE,
                         default=PROTOCOL_STATUS_MESSAGE_HEADER_SIZE,
