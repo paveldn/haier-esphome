@@ -11,7 +11,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
     - name: Run script and save results
       run: python docs/script/make_doc.py README.tmp
     - name: Compare temp file with readme.rst
@@ -21,7 +25,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
     - name: Run script and save results
       run: python docs/script/process_examples.py docs/examples/hon_example.rst docs/hon_example.tmp
     - name: Compare temp file with hon_example.rst
@@ -31,7 +39,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
     - name: Run script and save results
       run: python docs/script/process_examples.py docs/examples/smartair2_example.rst docs/smartair2_example.tmp
     - name: Compare temp file with smartair2_example.rst
@@ -41,7 +53,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
     - name: Run script and save results
       run: python docs/script/process_examples.py docs/examples/usb_2_uart_boards.rst docs/usb_2_uart_boards.tmp
     - name: Compare temp file with usb_2_uart_boards.rst
