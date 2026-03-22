@@ -21,7 +21,7 @@ jobs:
           - min-smartair2.yaml
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4.1.3
+        uses: actions/checkout@v4
       - name: Install esphome
         run: pip3 install -U esphome
       - name: Version esphome
@@ -45,7 +45,7 @@ jobs:
           - usb_c3u.yaml
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4.1.3
+        uses: actions/checkout@v4
       - name: Install esphome
         run: pip3 install -U esphome
       - name: Version esphome
