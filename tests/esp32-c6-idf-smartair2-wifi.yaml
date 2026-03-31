@@ -1,0 +1,28 @@
+substitutions:
+  device_name: "Haier AC"
+  device_id: "haier_climate"
+  uart_id: "ac_port"
+  send_wifi: "true"
+
+esphome:
+  name: esp32-c6-idf-smartair2-wifi
+
+esp32:
+  board: esp32-c6-devkitc-1
+  variant: esp32c6
+  framework:
+    type: esp-idf
+
+uart:
+  baud_rate: 9600
+  tx_pin: 12
+  rx_pin: 13
+  id: ${uart_id}
+
+logger:
+  level: DEBUG
+
+packages:
+  local_haier: !include .local-haier.yaml
+  haier_base: !include ../.haier-smartair2-base.yaml
+  wifi: !include .wifi-base.yaml

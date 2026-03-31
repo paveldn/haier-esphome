@@ -23,6 +23,8 @@ jobs:
           - esp32-idf-hon-wifi.yaml
           - esp32-idf-smartair2-ethernet.yaml
           - esp32-idf-smartair2-wifi.yaml
+          - esp32-c6-idf-hon-wifi.yaml
+          - esp32-c6-idf-smartair2-wifi.yaml
           - esp8266-hon-wifi.yaml
           - esp8266-smartair2-wifi.yaml
           - rpipicow-hon-wifi.yaml
