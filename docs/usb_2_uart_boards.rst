@@ -107,10 +107,6 @@ Curently, only confirmed board with ESP32-C6 that can be used for UART over USB 
       flash_size: 8MB
       framework:
         type: esp-idf
-        sdkconfig_options:
-          CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG: y
-        version: 5.3.1
-        platform_version: 6.8.1
     
     wifi:
       ssid: !secret wifi_ssid
