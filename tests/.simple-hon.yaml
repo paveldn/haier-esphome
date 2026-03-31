@@ -1,4 +1,13 @@
 ﻿climate:
   - platform: haier
     protocol: hon
+    id: haier_ac
     name: ${device_name}
+
+select:
+  - platform: haier
+    haier_id: haier_ac
+    vertical_airflow:
+      name: ${device_name} airflow vertical
+    horizontal_airflow:
+      name: ${device_name} airflow horizontal

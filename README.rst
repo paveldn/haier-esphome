@@ -291,7 +291,7 @@ Turn off health mode.
 ``climate.haier.set_vertical_airflow`` Action
 *********************************************
 
-(supported only by hOn) Set direction for vertical airflow if the vertical swing is disabled. Possible values: ``Auto``, ``Health_Up``, ``Max_Up``, ``Up``, ``Center``, ``Down``, ``Max_Down``, ``Health_Down``.
+(supported only by hOn) Set direction for vertical airflow if the vertical swing is disabled. Possible values: ``Health_Up``, ``Max_Up``, ``Up``, ``Center``, ``Down``, ``Max_Down``, ``Health_Down``.
 
 .. code-block:: yaml
 
@@ -304,7 +304,7 @@ Turn off health mode.
 ``climate.haier.set_horizontal_airflow`` Action
 ***********************************************
 
-(supported only by hOn) Set direction for horizontal airflow if the horizontal swing is disabled. Possible values: ``Auto``, ``Max_Left``, ``Left``, ``Center``, ``Right``, ``Max_Right``.
+(supported only by hOn) Set direction for horizontal airflow if the horizontal swing is disabled. Possible values: ``Max_Left``, ``Left``, ``Center``, ``Right``, ``Max_Right``.
 
 .. code-block:: yaml
 
@@ -538,9 +538,9 @@ Configuration variables:
 ------------------------
 
 - **haier_id** (**Required**, `ID <https://esphome.io/guides/configuration-types.html#config-id>`_): The id of Haier climate component
-- **horizontal_airflow** (*Optional*): (supported only by hOn) Select component to control horizontal airflow mode (if supported by AC). The current state becomes ``Auto`` while horizontal swing is enabled.
+- **horizontal_airflow** (*Optional*): (supported only by hOn) Select component to control horizontal airflow mode (if supported by AC). This select has no state while horizontal swing is enabled.
   All options from `Select <https://esphome.io/components/select/index.html#base-select-configuration>`_.
-- **vertical_airflow** (*Optional*): (supported only by hOn) Select component to control vertical airflow mode (if supported by AC). The current state becomes ``Auto`` while vertical swing is enabled.
+- **vertical_airflow** (*Optional*): (supported only by hOn) Select component to control vertical airflow mode (if supported by AC). This select has no state while vertical swing is enabled.
   All options from `Select <https://esphome.io/components/select/index.html#base-select-configuration>`_.
 
 .. Generated from esphome-docs/switch/haier.rst

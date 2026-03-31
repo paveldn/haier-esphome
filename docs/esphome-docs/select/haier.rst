@@ -33,9 +33,9 @@ Configuration variables:
 ------------------------
 
 - **haier_id** (**Required**, :ref:`config-id`): The id of Haier climate component
-- **horizontal_airflow** (*Optional*): (supported only by hOn) Select component to control horizontal airflow mode (if supported by AC). The current state becomes ``Auto`` while horizontal swing is enabled.
+- **horizontal_airflow** (*Optional*): (supported only by hOn) Select component to control horizontal airflow mode (if supported by AC). This select has no state while horizontal swing is enabled.
   All options from :ref:`Select <config-select>`.
-- **vertical_airflow** (*Optional*): (supported only by hOn) Select component to control vertical airflow mode (if supported by AC). The current state becomes ``Auto`` while vertical swing is enabled.
+- **vertical_airflow** (*Optional*): (supported only by hOn) Select component to control vertical airflow mode (if supported by AC). This select has no state while vertical swing is enabled.
   All options from :ref:`Select <config-select>`.
 
 See Also

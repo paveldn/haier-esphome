@@ -3,6 +3,7 @@
 #include <chrono>
 #include <string>
 #include "esphome/components/climate/climate.h"
+#include "esphome/core/controller_registry.h"
 #include "esphome/components/uart/uart.h"
 #include "esphome/core/helpers.h"
 #include "hon_climate.h"
@@ -16,7 +17,6 @@ namespace haier {
 
 #ifdef USE_SELECT
 const std::vector<hon_protocol::VerticalSwingMode> VERTICAL_SWING_MODES_ORDER = {
-  hon_protocol::VerticalSwingMode::AUTO,
   hon_protocol::VerticalSwingMode::HEALTH_UP,
   hon_protocol::VerticalSwingMode::MAX_UP,
   hon_protocol::VerticalSwingMode::UP,
@@ -27,7 +27,6 @@ const std::vector<hon_protocol::VerticalSwingMode> VERTICAL_SWING_MODES_ORDER = 
 };
 
 const std::vector<hon_protocol::HorizontalSwingMode> HORIZONTAL_SWING_MODES_ORDER = {
-  hon_protocol::HorizontalSwingMode::AUTO,
   hon_protocol::HorizontalSwingMode::MAX_LEFT,
   hon_protocol::HorizontalSwingMode::LEFT,
   hon_protocol::HorizontalSwingMode::CENTER,
@@ -35,30 +34,22 @@ const std::vector<hon_protocol::HorizontalSwingMode> HORIZONTAL_SWING_MODES_ORDE
   hon_protocol::HorizontalSwingMode::MAX_RIGHT,
 };
 
-static const std::array<const char *, 8> VERTICAL_SWING_MODE_OPTIONS = {
-    "Auto", "Health Up", "Max Up", "Up", "Center", "Down", "Max Down", "Health Down"};
-static const std::array<const char *, 6> HORIZONTAL_SWING_MODE_OPTIONS = {
-    "Auto", "Max Left", "Left", "Center", "Right", "Max Right"};
-
-static std::string vertical_swing_mode_to_string_(hon_protocol::VerticalSwingMode mode) {
-  if (mode == hon_protocol::VerticalSwingMode::AUTO_SPECIAL) {
-    return VERTICAL_SWING_MODE_OPTIONS[0];
-  }
-  auto mode_it = std::find(VERTICAL_SWING_MODES_ORDER.begin(), VERTICAL_SWING_MODES_ORDER.end(), mode);
-  if (mode_it == VERTICAL_SWING_MODES_ORDER.end()) {
-    ESP_LOGW("haier.climate", "Unsupported vertical airflow mode: 0x%X", static_cast<uint8_t>(mode));
-    return VERTICAL_SWING_MODE_OPTIONS[4];
-  }
-  return VERTICAL_SWING_MODE_OPTIONS[mode_it - VERTICAL_SWING_MODES_ORDER.begin()];
+static bool vertical_swing_mode_is_selectable_(hon_protocol::VerticalSwingMode mode) {
+  return (mode != hon_protocol::VerticalSwingMode::AUTO) && (mode != hon_protocol::VerticalSwingMode::AUTO_SPECIAL);
 }
 
-static std::string horizontal_swing_mode_to_string_(hon_protocol::HorizontalSwingMode mode) {
-  auto mode_it = std::find(HORIZONTAL_SWING_MODES_ORDER.begin(), HORIZONTAL_SWING_MODES_ORDER.end(), mode);
-  if (mode_it == HORIZONTAL_SWING_MODES_ORDER.end()) {
-    ESP_LOGW("haier.climate", "Unsupported horizontal airflow mode: 0x%X", static_cast<uint8_t>(mode));
-    return HORIZONTAL_SWING_MODE_OPTIONS[3];
+static bool horizontal_swing_mode_is_selectable_(hon_protocol::HorizontalSwingMode mode) {
+  return mode != hon_protocol::HorizontalSwingMode::AUTO;
+}
+
+static void clear_airflow_select_state_(select::Select *sel) {
+  if (sel == nullptr) {
+    return;
   }
-  return HORIZONTAL_SWING_MODE_OPTIONS[mode_it - HORIZONTAL_SWING_MODES_ORDER.begin()];
+  sel->set_has_state(false);
+#if defined(USE_SELECT) && defined(USE_CONTROLLER_REGISTRY)
+  ControllerRegistry::notify_select_update(sel);
+#endif
 }
 #endif // USE_SELECT
 
@@ -872,17 +863,51 @@ void HonClimate::set_quiet_mode_switch(switch_::Switch *sw) {
 #ifdef USE_SELECT
 void HonClimate::set_vertical_airflow_select(select::Select *sel) {
   this->vertical_airflow_select_ = sel;
-  if ((this->vertical_airflow_select_ != nullptr) && this->current_vertical_swing_.has_value()) {
-    this->vertical_airflow_select_->publish_state(vertical_swing_mode_to_string_(this->current_vertical_swing_.value()));
-  }
+  this->update_vertical_airflow_select_state_();
 }
 
 void HonClimate::set_horizontal_airflow_select(select::Select *sel) {
   this->horizontal_airflow_select_ = sel;
-  if ((this->horizontal_airflow_select_ != nullptr) && this->current_horizontal_swing_.has_value()) {
-    this->horizontal_airflow_select_->publish_state(
-        horizontal_swing_mode_to_string_(this->current_horizontal_swing_.value()));
+  this->update_horizontal_airflow_select_state_();
+}
+
+void HonClimate::update_vertical_airflow_select_state_() {
+  if (this->vertical_airflow_select_ == nullptr) {
+    return;
   }
+  if (!this->current_vertical_swing_.has_value() ||
+      !vertical_swing_mode_is_selectable_(this->current_vertical_swing_.value())) {
+    clear_airflow_select_state_(this->vertical_airflow_select_);
+    return;
+  }
+  auto mode_it = std::find(VERTICAL_SWING_MODES_ORDER.begin(), VERTICAL_SWING_MODES_ORDER.end(),
+                           this->current_vertical_swing_.value());
+  if (mode_it == VERTICAL_SWING_MODES_ORDER.end()) {
+    ESP_LOGW(TAG, "Unsupported vertical airflow mode: 0x%X", static_cast<uint8_t>(this->current_vertical_swing_.value()));
+    clear_airflow_select_state_(this->vertical_airflow_select_);
+    return;
+  }
+  this->vertical_airflow_select_->publish_state(static_cast<size_t>(mode_it - VERTICAL_SWING_MODES_ORDER.begin()));
+}
+
+void HonClimate::update_horizontal_airflow_select_state_() {
+  if (this->horizontal_airflow_select_ == nullptr) {
+    return;
+  }
+  if (!this->current_horizontal_swing_.has_value() ||
+      !horizontal_swing_mode_is_selectable_(this->current_horizontal_swing_.value())) {
+    clear_airflow_select_state_(this->horizontal_airflow_select_);
+    return;
+  }
+  auto mode_it = std::find(HORIZONTAL_SWING_MODES_ORDER.begin(), HORIZONTAL_SWING_MODES_ORDER.end(),
+                           this->current_horizontal_swing_.value());
+  if (mode_it == HORIZONTAL_SWING_MODES_ORDER.end()) {
+    ESP_LOGW(TAG, "Unsupported horizontal airflow mode: 0x%X",
+             static_cast<uint8_t>(this->current_horizontal_swing_.value()));
+    clear_airflow_select_state_(this->horizontal_airflow_select_);
+    return;
+  }
+  this->horizontal_airflow_select_->publish_state(static_cast<size_t>(mode_it - HORIZONTAL_SWING_MODES_ORDER.begin()));
 }
 #endif  // USE_SELECT
 
@@ -1131,13 +1156,8 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
       this->hon_rtc_.save(&this->settings_);
     }
 #ifdef USE_SELECT
-    if (this->vertical_airflow_select_ != nullptr) {
-      this->vertical_airflow_select_->publish_state(vertical_swing_mode_to_string_(this->current_vertical_swing_.value()));
-    }
-    if (this->horizontal_airflow_select_ != nullptr) {
-      this->horizontal_airflow_select_->publish_state(
-          horizontal_swing_mode_to_string_(this->current_horizontal_swing_.value()));
-    }
+    this->update_vertical_airflow_select_state_();
+    this->update_horizontal_airflow_select_state_();
 #endif  // USE_SELECT
     should_publish = should_publish || (old_swing_mode != this->swing_mode);
   }

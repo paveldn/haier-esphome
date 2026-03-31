@@ -21,7 +21,6 @@ ICON_ARROW_HORIZONTAL =  "mdi:arrow-expand-horizontal"
 ICON_ARROW_VERTICAL = "mdi:arrow-expand-vertical"
 
 AIRFLOW_VERTICAL_DIRECTION_OPTIONS = [
-    "Auto",
     "Health Up",
     "Max Up",
     "Up",
@@ -32,7 +31,6 @@ AIRFLOW_VERTICAL_DIRECTION_OPTIONS = [
 ]
 
 AIRFLOW_HORIZONTAL_DIRECTION_OPTIONS = [
-    "Auto",
     "Max Left",
     "Left",
     "Center",

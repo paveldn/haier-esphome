@@ -116,6 +116,8 @@ public:
   void set_horizontal_airflow_select(select::Select *sel);
 
  protected:
+  void update_vertical_airflow_select_state_();
+  void update_horizontal_airflow_select_state_();
   select::Select *vertical_airflow_select_{nullptr};
   select::Select *horizontal_airflow_select_{nullptr};
 #endif

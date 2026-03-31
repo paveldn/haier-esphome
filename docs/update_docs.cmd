@@ -6,13 +6,13 @@ echo                                  Updaiting ESPHome haier climate doc
 echo ===============================================================================================================
 python %base_path%script/process_examples.py %base_path%examples/climate_haier.rst %base_path%esphome-docs/climate/haier.rst no_header
 echo ===============================================================================================================
-echo                                  Updaiting README.rst
-echo ===============================================================================================================
-python %base_path%script/make_doc.py README.rst
-echo ===============================================================================================================
 echo                                  Updaiting ESPHome haier select doc
 echo ===============================================================================================================
 python %base_path%script/process_examples.py %base_path%examples/select_haier.rst %base_path%esphome-docs/select/haier.rst no_header
+echo ===============================================================================================================
+echo                                  Updaiting README.rst
+echo ===============================================================================================================
+python %base_path%script/make_doc.py README.rst
 echo ===============================================================================================================
 echo                                  Updaiting docs/hon_example.rst
 echo ===============================================================================================================
