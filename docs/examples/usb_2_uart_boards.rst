@@ -31,7 +31,6 @@ Currently, only one board with ESP32-C3 confirmed that have native USB support a
 ESP32-C6 based boards
 ---------------------
 
-Curently ESP32-C6 based boards are not supported by platformio version that used by ESPHome. But it is posible to use it with custom platform and SDK version.
 Curently, only confirmed board with ESP32-C6 that can be used for UART over USB communication:
 
 - `M5Stack NanoC6 Dev Kit <https://shop.m5stack.com/products/m5stack-nanoc6-dev-kit>`_ with USB-C to USB-A male adapter.
