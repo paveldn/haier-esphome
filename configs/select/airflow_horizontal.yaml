@@ -1,4 +1,5 @@
 select:
   - platform: haier
+    haier_id: ${device_id}
     horizontal_airflow:
       name: ${device_name} airflow horizontal

@@ -291,7 +291,7 @@ Turn off health mode.
 ``climate.haier.set_vertical_airflow`` Action
 *********************************************
 
-(supported only by hOn) Set direction for vertical airflow if the vertical swing is disabled. Possible values: Health_Up, Max_Up, Up, Center, Down, Health_Down.
+(supported only by hOn) Set direction for vertical airflow if the vertical swing is disabled. Possible values: ``Auto``, ``Health_Up``, ``Max_Up``, ``Up``, ``Center``, ``Down``, ``Max_Down``, ``Health_Down``.
 
 .. code-block:: yaml
 
@@ -304,7 +304,7 @@ Turn off health mode.
 ``climate.haier.set_horizontal_airflow`` Action
 ***********************************************
 
-(supported only by hOn) Set direction for horizontal airflow if the horizontal swing is disabled. Possible values: ``Max_Left``, ``Left``, ``Center``, ``Right``, ``Max_Right``.
+(supported only by hOn) Set direction for horizontal airflow if the horizontal swing is disabled. Possible values: ``Auto``, ``Max_Left``, ``Left``, ``Center``, ``Right``, ``Max_Right``.
 
 .. code-block:: yaml
 
@@ -312,7 +312,7 @@ Turn off health mode.
       then:
         - climate.haier.set_horizontal_airflow:
           id: device_id
-          vertical_airflow: Right
+          horizontal_airflow: Right
 
 ``climate.haier.start_self_cleaning`` Action
 ********************************************
@@ -512,23 +512,35 @@ Haier Climate Select
 
 Select components to support vertical and horizontal airflow directions settings for Haier AC.
 
+Vertical airflow select:
+
 .. code-block:: yaml
 
-    # Example configuration entry
     select:
       - platform: haier
-        horizontal_airflow:
-          name: Haier airflow horizontal
+        haier_id: ${device_id}
         vertical_airflow:
-          name: Haier airflow vertical
+          name: ${device_name} airflow vertical
+
+
+Horizontal airflow select:
+
+.. code-block:: yaml
+
+    select:
+      - platform: haier
+        haier_id: ${device_id}
+        horizontal_airflow:
+          name: ${device_name} airflow horizontal
+
 
 Configuration variables:
 ------------------------
 
 - **haier_id** (**Required**, `ID <https://esphome.io/guides/configuration-types.html#config-id>`_): The id of Haier climate component
-- **horizontal_airflow** (*Optional*): (supported only by hOn) Select component to control horizontal airflow mode (if supported by AC).
+- **horizontal_airflow** (*Optional*): (supported only by hOn) Select component to control horizontal airflow mode (if supported by AC). The current state becomes ``Auto`` while horizontal swing is enabled.
   All options from `Select <https://esphome.io/components/select/index.html#base-select-configuration>`_.
-- **vertical_airflow** (*Optional*): (supported only by hOn) Select component to control vertical airflow mode (if supported by AC).
+- **vertical_airflow** (*Optional*): (supported only by hOn) Select component to control vertical airflow mode (if supported by AC). The current state becomes ``Auto`` while vertical swing is enabled.
   All options from `Select <https://esphome.io/components/select/index.html#base-select-configuration>`_.
 
 .. Generated from esphome-docs/switch/haier.rst
@@ -615,6 +627,7 @@ See Also
 - `ESPHome Haier Climate Binary Sensors <https://esphome.io/components/binary_sensor/haier.html>`_
 - `ESPHome Haier Climate Text Sensors <https://esphome.io/components/text_sensor/haier.html>`_
 - `ESPHome Haier Climate Buttons <https://esphome.io/components/button/haier.html>`_
+- `ESPHome Haier Climate Select <https://esphome.io/components/select/haier.html>`_
 - `ESPHome Haier Climate Switches <https://esphome.io/components/switch/haier.html>`_
 - `Climate Component <https://esphome.io/components/climate/>`_
 - `API Reference <https://esphome.io/api/haier__base_8h.html>`_

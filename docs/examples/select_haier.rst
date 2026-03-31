@@ -9,25 +9,11 @@ Select components to support vertical and horizontal airflow directions settings
 
 Vertical airflow select:
 
-.. code-block:: yaml
-
-    select:
-      - platform: haier
-        haier_id: ${device_id}
-        vertical_airflow:
-          name: ${device_name} airflow vertical
-
+.. example_yaml:: ../../configs/select/airflow_vertical.yaml
 
 Horizontal airflow select:
 
-.. code-block:: yaml
-
-    select:
-      - platform: haier
-        haier_id: ${device_id}
-        horizontal_airflow:
-          name: ${device_name} airflow horizontal
-
+.. example_yaml:: ../../configs/select/airflow_horizontal.yaml
 
 Configuration variables:
 ------------------------

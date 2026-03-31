@@ -242,7 +242,7 @@ Turn off health mode.
 ``climate.haier.set_vertical_airflow`` Action
 *********************************************
 
-(supported only by hOn) Set direction for vertical airflow if the vertical swing is disabled. Possible values: Health_Up, Max_Up, Up, Center, Down, Health_Down.
+(supported only by hOn) Set direction for vertical airflow if the vertical swing is disabled. Possible values: ``Auto``, ``Health_Up``, ``Max_Up``, ``Up``, ``Center``, ``Down``, ``Max_Down``, ``Health_Down``.
 
 .. code-block:: yaml
 
@@ -255,7 +255,7 @@ Turn off health mode.
 ``climate.haier.set_horizontal_airflow`` Action
 ***********************************************
 
-(supported only by hOn) Set direction for horizontal airflow if the horizontal swing is disabled. Possible values: ``Max_Left``, ``Left``, ``Center``, ``Right``, ``Max_Right``.
+(supported only by hOn) Set direction for horizontal airflow if the horizontal swing is disabled. Possible values: ``Auto``, ``Max_Left``, ``Left``, ``Center``, ``Right``, ``Max_Right``.
 
 .. code-block:: yaml
 
@@ -263,7 +263,7 @@ Turn off health mode.
       then:
         - climate.haier.set_horizontal_airflow:
           id: device_id
-          vertical_airflow: Right
+          horizontal_airflow: Right
 
 ``climate.haier.start_self_cleaning`` Action
 ********************************************
@@ -295,6 +295,7 @@ See Also
 - :doc:`Haier Climate Binary Sensors </components/binary_sensor/haier>`
 - :doc:`Haier Climate Text Sensors </components/text_sensor/haier>`
 - :doc:`Haier Climate Buttons </components/button/haier>`
+- :doc:`Haier Climate Select </components/select/haier>`
 - :doc:`Haier Climate Switches </components/switch/haier>`
 - :doc:`/components/climate/index`
 - :apiref:`haier/climate/haier_base.h`

@@ -40,6 +40,7 @@ def process_esphome_refs(line, l_num):
         (":doc:`Haier Climate Binary Sensors </components/binary_sensor/haier>`", "`ESPHome Haier Climate Binary Sensors <https://esphome.io/components/binary_sensor/haier.html>`_"),
         (":doc:`Haier Climate Text Sensors </components/text_sensor/haier>`", "`ESPHome Haier Climate Text Sensors <https://esphome.io/components/text_sensor/haier.html>`_"),
         (":doc:`Haier Climate Buttons </components/button/haier>`", "`ESPHome Haier Climate Buttons <https://esphome.io/components/button/haier.html>`_"),
+        (":doc:`Haier Climate Select </components/select/haier>`", "`ESPHome Haier Climate Select <https://esphome.io/components/select/haier.html>`_"),
         (":doc:`Haier Climate Switches </components/switch/haier>`", "`ESPHome Haier Climate Switches <https://esphome.io/components/switch/haier.html>`_"),
     ]
     res = line

@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <array>
 #include <chrono>
 #include <string>
 #include "esphome/components/climate/climate.h"
@@ -32,6 +34,32 @@ const std::vector<hon_protocol::HorizontalSwingMode> HORIZONTAL_SWING_MODES_ORDE
   hon_protocol::HorizontalSwingMode::RIGHT,
   hon_protocol::HorizontalSwingMode::MAX_RIGHT,
 };
+
+static const std::array<const char *, 8> VERTICAL_SWING_MODE_OPTIONS = {
+    "Auto", "Health Up", "Max Up", "Up", "Center", "Down", "Max Down", "Health Down"};
+static const std::array<const char *, 6> HORIZONTAL_SWING_MODE_OPTIONS = {
+    "Auto", "Max Left", "Left", "Center", "Right", "Max Right"};
+
+static std::string vertical_swing_mode_to_string_(hon_protocol::VerticalSwingMode mode) {
+  if (mode == hon_protocol::VerticalSwingMode::AUTO_SPECIAL) {
+    return VERTICAL_SWING_MODE_OPTIONS[0];
+  }
+  auto mode_it = std::find(VERTICAL_SWING_MODES_ORDER.begin(), VERTICAL_SWING_MODES_ORDER.end(), mode);
+  if (mode_it == VERTICAL_SWING_MODES_ORDER.end()) {
+    ESP_LOGW("haier.climate", "Unsupported vertical airflow mode: 0x%X", static_cast<uint8_t>(mode));
+    return VERTICAL_SWING_MODE_OPTIONS[4];
+  }
+  return VERTICAL_SWING_MODE_OPTIONS[mode_it - VERTICAL_SWING_MODES_ORDER.begin()];
+}
+
+static std::string horizontal_swing_mode_to_string_(hon_protocol::HorizontalSwingMode mode) {
+  auto mode_it = std::find(HORIZONTAL_SWING_MODES_ORDER.begin(), HORIZONTAL_SWING_MODES_ORDER.end(), mode);
+  if (mode_it == HORIZONTAL_SWING_MODES_ORDER.end()) {
+    ESP_LOGW("haier.climate", "Unsupported horizontal airflow mode: 0x%X", static_cast<uint8_t>(mode));
+    return HORIZONTAL_SWING_MODE_OPTIONS[3];
+  }
+  return HORIZONTAL_SWING_MODE_OPTIONS[mode_it - HORIZONTAL_SWING_MODES_ORDER.begin()];
+}
 #endif // USE_SELECT
 
 static const char *const TAG = "haier.climate";
@@ -843,17 +871,18 @@ void HonClimate::set_quiet_mode_switch(switch_::Switch *sw) {
 
 #ifdef USE_SELECT
 void HonClimate::set_vertical_airflow_select(select::Select *sel) {
-//  this->vertical_airflow_select_ = sel;
-//  if (this->current_vertical_swing_.has_value() && (this->vertical_airflow_select_ != nullptr)) {
-//    this->vertical_airflow_select_->publish_state(VerticalAirflowSelect::vertical_airflow_to_string(this->current_vertical_swing_.value()));
-//  }
+  this->vertical_airflow_select_ = sel;
+  if ((this->vertical_airflow_select_ != nullptr) && this->current_vertical_swing_.has_value()) {
+    this->vertical_airflow_select_->publish_state(vertical_swing_mode_to_string_(this->current_vertical_swing_.value()));
+  }
 }
 
 void HonClimate::set_horizontal_airflow_select(select::Select *sel) {
-//  this->horizontal_airflow_select_ = sel;
-//  if (this->horizontal_airflow_select_ != nullptr) {
-//    this->horizontal_airflow_select_->publish_state((uint8_t) this->settings_.last_horizontal_swing);
-//  }
+  this->horizontal_airflow_select_ = sel;
+  if ((this->horizontal_airflow_select_ != nullptr) && this->current_horizontal_swing_.has_value()) {
+    this->horizontal_airflow_select_->publish_state(
+        horizontal_swing_mode_to_string_(this->current_horizontal_swing_.value()));
+  }
 }
 #endif  // USE_SELECT
 
@@ -1101,6 +1130,15 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
       this->settings_.last_horizontal_swing = this->current_horizontal_swing_.value();
       this->hon_rtc_.save(&this->settings_);
     }
+#ifdef USE_SELECT
+    if (this->vertical_airflow_select_ != nullptr) {
+      this->vertical_airflow_select_->publish_state(vertical_swing_mode_to_string_(this->current_vertical_swing_.value()));
+    }
+    if (this->horizontal_airflow_select_ != nullptr) {
+      this->horizontal_airflow_select_->publish_state(
+          horizontal_swing_mode_to_string_(this->current_horizontal_swing_.value()));
+    }
+#endif  // USE_SELECT
     should_publish = should_publish || (old_swing_mode != this->swing_mode);
   }
   this->last_valid_status_timestamp_ = std::chrono::steady_clock::now();

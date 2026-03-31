@@ -2,14 +2,12 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import select
 from esphome.const import (
-    CONF_OPTIONS,
     ENTITY_CATEGORY_CONFIG,
 )
 from ..climate import (
     CONF_HAIER_ID,
     HonClimate,
     haier_ns,
-    hon_protocol_ns,
     CONF_VERTICAL_AIRFLOW,
     CONF_HORIZONTAL_AIRFLOW,
 )
@@ -17,9 +15,6 @@ from ..climate import (
 CODEOWNERS = ["@paveldn"]
 VerticalAirflowSelect = haier_ns.class_("VerticalAirflowSelect", select.Select)
 HorizontalAirflowSelect = haier_ns.class_("HorizontalAirflowSelect", select.Select)
-
-VerticalSwingMode = hon_protocol_ns.enum("VerticalSwingMode", True)
-HorizontalSwingMode = hon_protocol_ns.enum("HorizontalSwingMode", True)
 
 # Additional icons
 ICON_ARROW_HORIZONTAL =  "mdi:arrow-expand-horizontal"
@@ -62,7 +57,7 @@ CONFIG_SCHEMA = cv.Schema(
 )
 
 async def to_code(config):
-    full_id, parent = await cg.get_variable_with_full_id(config[CONF_HAIER_ID])
+    parent = await cg.get_variable(config[CONF_HAIER_ID])
 
     if conf := config.get(CONF_VERTICAL_AIRFLOW):
         sel_var = await select.new_select(conf, options=AIRFLOW_VERTICAL_DIRECTION_OPTIONS)
