@@ -14,6 +14,14 @@ using namespace esphome::uart;
 namespace esphome {
 namespace haier {
 
+static bool vertical_axis_is_auto_(climate::ClimateSwingMode swing_mode) {
+  return (swing_mode == climate::CLIMATE_SWING_VERTICAL) || (swing_mode == climate::CLIMATE_SWING_BOTH);
+}
+
+static bool horizontal_axis_is_auto_(climate::ClimateSwingMode swing_mode) {
+  return (swing_mode == climate::CLIMATE_SWING_HORIZONTAL) || (swing_mode == climate::CLIMATE_SWING_BOTH);
+}
+
 #ifdef USE_SELECT
 const std::vector<hon_protocol::VerticalSwingMode> VERTICAL_SWING_MODES_ORDER = {
   hon_protocol::VerticalSwingMode::HEALTH_UP,
@@ -32,14 +40,6 @@ const std::vector<hon_protocol::HorizontalSwingMode> HORIZONTAL_SWING_MODES_ORDE
   hon_protocol::HorizontalSwingMode::RIGHT,
   hon_protocol::HorizontalSwingMode::MAX_RIGHT,
 };
-
-static bool vertical_axis_is_auto_(climate::ClimateSwingMode swing_mode) {
-  return (swing_mode == climate::CLIMATE_SWING_VERTICAL) || (swing_mode == climate::CLIMATE_SWING_BOTH);
-}
-
-static bool horizontal_axis_is_auto_(climate::ClimateSwingMode swing_mode) {
-  return (swing_mode == climate::CLIMATE_SWING_HORIZONTAL) || (swing_mode == climate::CLIMATE_SWING_BOTH);
-}
 
 #endif // USE_SELECT
 
