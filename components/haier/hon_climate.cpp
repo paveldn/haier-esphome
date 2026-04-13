@@ -830,7 +830,7 @@ void HonClimate::process_alarm_message_(const uint8_t *packet, uint8_t size, boo
           }
         }
         this->update_sub_text_sensor_(
-            SubTextSensorType::ACTIVE_ALARMS,
+            SubTextSensorType::ACTIVE_ALARMS_TEXT,
             alarm_text.empty() ? "No alarm" : alarm_text);
       }
 #endif
@@ -862,7 +862,7 @@ void HonClimate::process_alarm_message_(const uint8_t *packet, uint8_t size, boo
           }
         }
         this->update_sub_text_sensor_(
-            SubTextSensorType::ACTIVE_ALARMS,
+            SubTextSensorType::ACTIVE_ALARMS_TEXT,
             alarm_text.empty() ? "No alarm" : alarm_text);
       }
 #endif
