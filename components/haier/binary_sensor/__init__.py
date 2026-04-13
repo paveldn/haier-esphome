@@ -50,7 +50,7 @@ SENSOR_TYPES = {
     ),
     CONF_ALARM_ACTIVE: binary_sensor.binary_sensor_schema(
         icon=ICON_ALARM,
-        device_class=binary_sensor.BinarySensorDeviceClass.PROBLEM,
+        device_class="problem",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 
