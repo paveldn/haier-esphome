@@ -866,6 +866,9 @@ void HonClimate::process_alarm_message_(const uint8_t *packet, uint8_t size, boo
             alarm_text.empty() ? "No alarm" : alarm_text);
       }
 #endif
+#ifdef USE_BINARY_SENSOR
+      this->update_sub_binary_sensor_(SubBinarySensorType::ALARM_ACTIVE, this->active_alarm_count_ > 0);
+#endif
     }
   }
 }
