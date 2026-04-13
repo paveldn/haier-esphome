@@ -834,6 +834,9 @@ void HonClimate::process_alarm_message_(const uint8_t *packet, uint8_t size, boo
             alarm_text.empty() ? "No alarm" : alarm_text);
       }
 #endif
+#ifdef USE_BINARY_SENSOR
+      this->update_sub_binary_sensor_(SubBinarySensorType::ALARM_ACTIVE, this->active_alarm_count_ > 0);
+#endif
     } else {
       float alarm_count = 0.0f;
       static uint8_t nibble_bits_count[] = {0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4};
