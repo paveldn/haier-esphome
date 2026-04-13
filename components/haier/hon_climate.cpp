@@ -1660,7 +1660,7 @@ void HonClimate::process_protocol_reset() {
   }
 #endif  // USE_SENSOR
 #ifdef USE_TEXT_SENSOR
-  this->update_sub_text_sensor_(SubTextSensorType::ACTIVE_ALARMS, "No alarm");
+  this->update_sub_text_sensor_(SubTextSensorType::ACTIVE_ALARMS_TEXT, "No alarm");
 #endif  // USE_TEXT_SENSOR
   this->got_valid_outdoor_temp_ = false;
   this->hvac_hardware_info_.reset();
