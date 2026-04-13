@@ -15,11 +15,13 @@ CONF_COMPRESSOR_STATUS = "compressor_status"
 CONF_INDOOR_FAN_STATUS = "indoor_fan_status"
 CONF_FOUR_WAY_VALVE_STATUS = "four_way_valve_status"
 CONF_INDOOR_ELECTRIC_HEATING_STATUS = "indoor_electric_heating_status"
+CONF_ALARM_ACTIVE = "alarm_active"  # Add this line
 
 # Additional icons
 ICON_SNOWFLAKE_THERMOMETER = "mdi:snowflake-thermometer"
 ICON_HVAC = "mdi:hvac"
 ICON_VALVE = "mdi:valve"
+ICON_ALARM = "mdi:alarm-light"  # Add this line
 
 SENSOR_TYPES = {
     CONF_OUTDOOR_FAN_STATUS: binary_sensor.binary_sensor_schema(
@@ -46,6 +48,12 @@ SENSOR_TYPES = {
         icon=ICON_RADIATOR,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
+    CONF_ALARM_ACTIVE: binary_sensor.binary_sensor_schema(
+        icon=ICON_ALARM,
+        device_class=binary_sensor.BinarySensorDeviceClass.PROBLEM,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+
 }
 
 CONFIG_SCHEMA = cv.Schema(
