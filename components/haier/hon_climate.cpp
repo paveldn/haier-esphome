@@ -804,6 +804,28 @@ void HonClimate::process_alarm_message_(const uint8_t *packet, uint8_t size, boo
                 this->alarm_end_callback_.call(alarm_code, alarm_message);
                 this->active_alarm_count_ -= 1.0f;
               }
+#ifdef USE_TEXT_SENSOR
+              // Build active alarms string and publish to text sensor
+              {
+                std::string alarm_text;
+                for (int ai = active_alarms_size - 1; ai >= 0; ai--) {
+                  uint8_t alarm_bit_scan = 1;
+                  for (int bi = 0; bi < 8; bi++) {
+                    if (packet[2 + ai] & alarm_bit_scan) {
+                      uint8_t code = (active_alarms_size - 1 - ai) * 8 + bi;
+                      if (!alarm_text.empty()) alarm_text += ", ";
+                      alarm_text += code < esphome::haier::hon_protocol::HON_ALARM_COUNT
+                                        ? esphome::haier::hon_protocol::HON_ALARM_MESSAGES[code]
+                                        : "Unknown(" + std::to_string(code) + ")";
+                    }
+                    alarm_bit_scan <<= 1;
+                  }
+                }
+                this->update_sub_text_sensor_(
+                    SubTextSensorType::ACTIVE_ALARMS,
+                    alarm_text.empty() ? "No alarm" : alarm_text);
+              }
+#endif
             }
             alarm_bit <<= 1;
             alarm_code++;
@@ -1611,6 +1633,9 @@ void HonClimate::process_protocol_reset() {
       sub_sensor->publish_state(NAN);
   }
 #endif  // USE_SENSOR
+#ifdef USE_TEXT_SENSOR
+  this->update_sub_text_sensor_(SubTextSensorType::ACTIVE_ALARMS, "No alarm");
+#endif  // USE_TEXT_SENSOR
   this->got_valid_outdoor_temp_ = false;
   this->hvac_hardware_info_.reset();
   this->last_status_message_.reset(nullptr);
