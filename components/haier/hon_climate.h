@@ -79,6 +79,7 @@ class HonClimate : public HaierClimateBase {
     FOUR_WAY_VALVE_STATUS,
     INDOOR_ELECTRIC_HEATING_STATUS,
     SUB_BINARY_SENSOR_TYPE_COUNT,
+    ALARM_ACTIVE,
   };
   void set_sub_binary_sensor(SubBinarySensorType type, binary_sensor::BinarySensor *sens);
 
