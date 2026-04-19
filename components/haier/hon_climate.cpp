@@ -50,6 +50,7 @@ constexpr int PROTOCOL_OUTDOOR_TEMPERATURE_OFFSET = -64;
 constexpr uint8_t CONTROL_MESSAGE_RETRIES = 5;
 constexpr std::chrono::milliseconds CONTROL_MESSAGE_RETRIES_INTERVAL = std::chrono::milliseconds(500);
 constexpr size_t ALARM_STATUS_REQUEST_INTERVAL_MS = 600000;
+constexpr size_t AIRFLOW_SELECT_DEBOUNCE_MS = 10000;
 const uint8_t ONE_BUF[] = {0x00, 0x01};
 const uint8_t ZERO_BUF[] = {0x00, 0x00};
 
@@ -107,6 +108,13 @@ esphome::optional<hon_protocol::VerticalSwingMode> HonClimate::get_vertical_airf
       (this->current_vertical_swing_.value() == hon_protocol::VerticalSwingMode::AUTO_SPECIAL)) {
     return this->settings_.last_vertical_swing;
   }
+  // During debounce period after user set, return saved setting to avoid jump-back
+  if (this->vertical_direction_set_time_.has_value() &&
+      std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
+                                                            this->vertical_direction_set_time_.value())
+              .count() < AIRFLOW_SELECT_DEBOUNCE_MS) {
+    return this->settings_.last_vertical_swing;
+  }
   return this->current_vertical_swing_;
 };
 
@@ -125,6 +133,7 @@ void HonClimate::set_vertical_airflow(hon_protocol::VerticalSwingMode direction)
 #ifdef USE_SELECT
   this->update_vertical_airflow_select_state_();
 #endif
+  this->vertical_direction_set_time_ = std::chrono::steady_clock::now();
 }
 
 esphome::optional<hon_protocol::HorizontalSwingMode> HonClimate::get_horizontal_airflow() const {
@@ -132,6 +141,13 @@ esphome::optional<hon_protocol::HorizontalSwingMode> HonClimate::get_horizontal_
     return this->current_horizontal_swing_;
   }
   if (this->current_horizontal_swing_.value() == hon_protocol::HorizontalSwingMode::AUTO) {
+    return this->settings_.last_horizontal_swing;
+  }
+  // During debounce period after user set, return saved setting to avoid jump-back
+  if (this->horizontal_direction_set_time_.has_value() &&
+      std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
+                                                            this->horizontal_direction_set_time_.value())
+              .count() < AIRFLOW_SELECT_DEBOUNCE_MS) {
     return this->settings_.last_horizontal_swing;
   }
   return this->current_horizontal_swing_;
@@ -151,6 +167,7 @@ void HonClimate::set_horizontal_airflow(hon_protocol::HorizontalSwingMode direct
 #ifdef USE_SELECT
   this->update_horizontal_airflow_select_state_();
 #endif
+  this->horizontal_direction_set_time_ = std::chrono::steady_clock::now();
 }
 
 std::string HonClimate::get_cleaning_status_text() const {
@@ -920,6 +937,13 @@ void HonClimate::update_vertical_airflow_select_state_() {
   if (this->vertical_airflow_select_ == nullptr) {
     return;
   }
+  // Skip update during debounce period after user-initiated change
+  if (this->vertical_direction_set_time_.has_value() &&
+      std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
+                                                            this->vertical_direction_set_time_.value())
+              .count() < AIRFLOW_SELECT_DEBOUNCE_MS) {
+    return;
+  }
   auto mode_it = std::find(VERTICAL_SWING_MODES_ORDER.begin(), VERTICAL_SWING_MODES_ORDER.end(),
                            this->settings_.last_vertical_swing);
   if (mode_it == VERTICAL_SWING_MODES_ORDER.end()) {
@@ -936,6 +960,13 @@ void HonClimate::update_vertical_airflow_select_state_() {
 
 void HonClimate::update_horizontal_airflow_select_state_() {
   if (this->horizontal_airflow_select_ == nullptr) {
+    return;
+  }
+  // Skip update during debounce period after user-initiated change
+  if (this->horizontal_direction_set_time_.has_value() &&
+      std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
+                                                            this->horizontal_direction_set_time_.value())
+              .count() < AIRFLOW_SELECT_DEBOUNCE_MS) {
     return;
   }
   auto mode_it = std::find(HORIZONTAL_SWING_MODES_ORDER.begin(), HORIZONTAL_SWING_MODES_ORDER.end(),
@@ -1187,10 +1218,21 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
     // Saving last known non auto mode for vertical and horizontal swing
     this->current_vertical_swing_ = (hon_protocol::VerticalSwingMode) packet.control.vertical_swing_mode;
     this->current_horizontal_swing_ = (hon_protocol::HorizontalSwingMode) packet.control.horizontal_swing_mode;
-    bool save_vertical = (this->current_vertical_swing_.value() != hon_protocol::VerticalSwingMode::AUTO) &&
+    auto now = std::chrono::steady_clock::now();
+    bool debounce_vertical = this->vertical_direction_set_time_.has_value() &&
+                             std::chrono::duration_cast<std::chrono::milliseconds>(
+                                 now - this->vertical_direction_set_time_.value())
+                                     .count() < AIRFLOW_SELECT_DEBOUNCE_MS;
+    bool debounce_horizontal = this->horizontal_direction_set_time_.has_value() &&
+                               std::chrono::duration_cast<std::chrono::milliseconds>(
+                                   now - this->horizontal_direction_set_time_.value())
+                                       .count() < AIRFLOW_SELECT_DEBOUNCE_MS;
+    bool save_vertical = !debounce_vertical &&
+                         (this->current_vertical_swing_.value() != hon_protocol::VerticalSwingMode::AUTO) &&
                          (this->current_vertical_swing_.value() != hon_protocol::VerticalSwingMode::AUTO_SPECIAL) &&
                          (this->current_vertical_swing_.value() != this->settings_.last_vertical_swing);
-    bool save_horizontal = (this->current_horizontal_swing_.value() != hon_protocol::HorizontalSwingMode::AUTO) &&
+    bool save_horizontal = !debounce_horizontal &&
+                           (this->current_horizontal_swing_.value() != hon_protocol::HorizontalSwingMode::AUTO) &&
                            (this->current_horizontal_swing_.value() != this->settings_.last_horizontal_swing);
     if (save_vertical || save_horizontal) {
       if (save_vertical) {

@@ -214,6 +214,8 @@ public:
   uint8_t big_data_counter_{0};
   esphome::optional<hon_protocol::VerticalSwingMode> current_vertical_swing_{};
   esphome::optional<hon_protocol::HorizontalSwingMode> current_horizontal_swing_{};
+  esphome::optional<std::chrono::steady_clock::time_point> vertical_direction_set_time_{};
+  esphome::optional<std::chrono::steady_clock::time_point> horizontal_direction_set_time_{};
   HonSettings settings_{};
   ESPPreferenceObject hon_rtc_;
   SwitchState quiet_mode_state_{SwitchState::OFF};

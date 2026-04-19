@@ -15,7 +15,7 @@ Minimal configuration will look like this:
       baud_rate: 9600
       tx_pin: 17
       rx_pin: 16
-
+    
     climate:
       - platform: haier
         protocol: hon
@@ -31,7 +31,7 @@ Maximum configuration witch will use all possible options will look like this:
       tx_pin: 17
       rx_pin: 16
       id: haier_uart
-
+    
     api:
       services:
         - service: turn_on
@@ -40,7 +40,7 @@ Maximum configuration witch will use all possible options will look like this:
         - service: turn_off
           then:
           - climate.haier.power_off: haier_ac
-
+    
     climate:
       - platform: haier
         id: haier_ac
@@ -51,7 +51,7 @@ Maximum configuration witch will use all possible options will look like this:
         visual:
           min_temperature: 16 °C
           max_temperature: 30 °C
-          temperature_step:
+          temperature_step: 
             target_temperature: 1
             current_temperature: 0.5
         supported_modes:
@@ -77,7 +77,7 @@ Maximum configuration witch will use all possible options will look like this:
                   domain: climate
                   name: Haier hOn Climate
                 data_template:
-                  message: "Alarm activated ({{ alarm_code }}): {{alarm_message}}"
+                  message: "Alarm activated ({{ alarm_code }}): {{alarm_message}}" 
                 variables:
                   alarm_message: !lambda "return message;"
                   alarm_code: !lambda "return code;"
@@ -98,11 +98,11 @@ Maximum configuration witch will use all possible options will look like this:
                   domain: climate
                   name: Haier hOn Climate
                 data_template:
-                  message: "Alarm deactivated ({{ alarm_code }}): {{alarm_message}}"
+                  message: "Alarm deactivated ({{ alarm_code }}): {{alarm_message}}" 
                 variables:
                   alarm_message: !lambda "return message;"
                   alarm_code: !lambda "return code;"
-
+    
     button:
       - platform: haier
         haier_id: haier_ac
@@ -110,7 +110,7 @@ Maximum configuration witch will use all possible options will look like this:
           name: Haier hOn Climate start self cleaning
         steri_cleaning:
           name: Haier hOn Climate start 56°C steri-cleaning
-
+    
     text_sensor:
       - platform: haier
         haier_id: haier_ac
@@ -118,7 +118,7 @@ Maximum configuration witch will use all possible options will look like this:
           name: Haier hOn Climate cleaning status
         protocol_version:
           name: Haier hOn Climate protocol version
-
+    
     switch:
       - platform: haier
         beeper:
@@ -129,7 +129,7 @@ Maximum configuration witch will use all possible options will look like this:
           name: Haier hOn Climate display
         quiet_mode:
           name: Haier hOn Climate quiet mode
-
+    
     select:
       - platform: template
         id: haier_ac_vertical_direction
@@ -145,6 +145,7 @@ Maximum configuration witch will use all possible options will look like this:
           - Down
           - Max Down
           - Health Down
+          - Auto
         lambda: >-
           switch (id(haier_ac).get_vertical_airflow().value_or(esphome::haier::hon_protocol::VerticalSwingMode::CENTER))
           {
@@ -163,6 +164,9 @@ Maximum configuration witch will use all possible options will look like this:
                   return std::string("Max Down");
               case esphome::haier::hon_protocol::VerticalSwingMode::HEALTH_DOWN:
                   return std::string("Health Down");
+              case esphome::haier::hon_protocol::VerticalSwingMode::AUTO:
+              case esphome::haier::hon_protocol::VerticalSwingMode::AUTO_SPECIAL:
+                  return std::string("Auto");
           }
         set_action:
           - climate.haier.set_vertical_airflow:
@@ -180,6 +184,8 @@ Maximum configuration witch will use all possible options will look like this:
                     return esphome::haier::hon_protocol::VerticalSwingMode::MAX_DOWN;
                 else if (x == "Health Down")
                     return esphome::haier::hon_protocol::VerticalSwingMode::HEALTH_DOWN;
+                else if (x == "Auto")
+                    return esphome::haier::hon_protocol::VerticalSwingMode::AUTO;
                 else
                     return esphome::haier::hon_protocol::VerticalSwingMode::CENTER;
       - platform: template
@@ -194,6 +200,7 @@ Maximum configuration witch will use all possible options will look like this:
           - Center
           - Right
           - Max Right
+          - Auto
         lambda: >-
           switch (id(haier_ac).get_horizontal_airflow().value_or(esphome::haier::hon_protocol::HorizontalSwingMode::CENTER))
           {
@@ -208,6 +215,8 @@ Maximum configuration witch will use all possible options will look like this:
                   return std::string("Right");
               case esphome::haier::hon_protocol::HorizontalSwingMode::MAX_RIGHT:
                   return std::string("Max Right");
+              case esphome::haier::hon_protocol::HorizontalSwingMode::AUTO:
+                  return std::string("Auto");
           }
         set_action:
           - climate.haier.set_horizontal_airflow:
@@ -221,9 +230,11 @@ Maximum configuration witch will use all possible options will look like this:
                     return esphome::haier::hon_protocol::HorizontalSwingMode::RIGHT;
                 else if (x == "Max Right")
                     return esphome::haier::hon_protocol::HorizontalSwingMode::MAX_RIGHT;
+                else if (x == "Auto")
+                    return esphome::haier::hon_protocol::HorizontalSwingMode::AUTO;
                 else
                     return esphome::haier::hon_protocol::HorizontalSwingMode::CENTER;
-
+    
     sensor:
       - platform: haier
         haier_id: haier_ac
@@ -249,7 +260,7 @@ Maximum configuration witch will use all possible options will look like this:
           name: Haier hOn Climate outdoor temperature
         power:
           name: Haier hOn Climate Power
-
+    
     binary_sensor:
       - platform: haier
         haier_id: haier_ac
