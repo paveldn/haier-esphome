@@ -38,7 +38,7 @@ enum class CleaningState : uint8_t {
 enum class HonControlMethod { MONITOR_ONLY = 0, SET_GROUP_PARAMETERS, SET_SINGLE_PARAMETER };
 
 struct HonSettings {
-  hon_protocol::VerticalSwingMode last_vertiacal_swing{hon_protocol::VerticalSwingMode::CENTER};
+  hon_protocol::VerticalSwingMode last_vertical_swing{hon_protocol::VerticalSwingMode::CENTER};
   hon_protocol::HorizontalSwingMode last_horizontal_swing{hon_protocol::HorizontalSwingMode::CENTER};
   bool beeper_state{true};
   bool quiet_mode_state{false};
