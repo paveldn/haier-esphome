@@ -100,10 +100,22 @@ bool HonClimate::get_quiet_mode_state() const {
 }
 
 esphome::optional<hon_protocol::VerticalSwingMode> HonClimate::get_vertical_airflow() const {
+  if (!this->current_vertical_swing_.has_value()) {
+    return this->current_vertical_swing_;
+  }
+  if ((this->current_vertical_swing_.value() == hon_protocol::VerticalSwingMode::AUTO) ||
+      (this->current_vertical_swing_.value() == hon_protocol::VerticalSwingMode::AUTO_SPECIAL)) {
+    return this->settings_.last_vertical_swing;
+  }
   return this->current_vertical_swing_;
 };
 
 void HonClimate::set_vertical_airflow(hon_protocol::VerticalSwingMode direction) {
+  if ((direction == hon_protocol::VerticalSwingMode::AUTO) ||
+      (direction == hon_protocol::VerticalSwingMode::AUTO_SPECIAL)) {
+    ESP_LOGW(TAG, "Vertical AUTO mode is not allowed for airflow position selector");
+    return;
+  }
   if (this->settings_.last_vertical_swing != direction) {
     this->settings_.last_vertical_swing = direction;
     this->hon_rtc_.save(&this->settings_);
@@ -116,10 +128,20 @@ void HonClimate::set_vertical_airflow(hon_protocol::VerticalSwingMode direction)
 }
 
 esphome::optional<hon_protocol::HorizontalSwingMode> HonClimate::get_horizontal_airflow() const {
+  if (!this->current_horizontal_swing_.has_value()) {
+    return this->current_horizontal_swing_;
+  }
+  if (this->current_horizontal_swing_.value() == hon_protocol::HorizontalSwingMode::AUTO) {
+    return this->settings_.last_horizontal_swing;
+  }
   return this->current_horizontal_swing_;
 }
 
 void HonClimate::set_horizontal_airflow(hon_protocol::HorizontalSwingMode direction) {
+  if (direction == hon_protocol::HorizontalSwingMode::AUTO) {
+    ESP_LOGW(TAG, "Horizontal AUTO mode is not allowed for airflow position selector");
+    return;
+  }
   if (this->settings_.last_horizontal_swing != direction) {
     this->settings_.last_horizontal_swing = direction;
     this->hon_rtc_.save(&this->settings_);
@@ -565,6 +587,19 @@ void HonClimate::initialization() {
     this->settings_ = recovered;
   } else {
     this->settings_ = {hon_protocol::VerticalSwingMode::CENTER, hon_protocol::HorizontalSwingMode::CENTER, true, false};
+  }
+  bool settings_fixed = false;
+  if ((this->settings_.last_vertical_swing == hon_protocol::VerticalSwingMode::AUTO) ||
+      (this->settings_.last_vertical_swing == hon_protocol::VerticalSwingMode::AUTO_SPECIAL)) {
+    this->settings_.last_vertical_swing = hon_protocol::VerticalSwingMode::CENTER;
+    settings_fixed = true;
+  }
+  if (this->settings_.last_horizontal_swing == hon_protocol::HorizontalSwingMode::AUTO) {
+    this->settings_.last_horizontal_swing = hon_protocol::HorizontalSwingMode::CENTER;
+    settings_fixed = true;
+  }
+  if (settings_fixed) {
+    this->hon_rtc_.save(&this->settings_);
   }
   this->current_vertical_swing_ = this->settings_.last_vertical_swing;
   this->current_horizontal_swing_ = this->settings_.last_horizontal_swing;
@@ -1152,14 +1187,18 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
     // Saving last known non auto mode for vertical and horizontal swing
     this->current_vertical_swing_ = (hon_protocol::VerticalSwingMode) packet.control.vertical_swing_mode;
     this->current_horizontal_swing_ = (hon_protocol::HorizontalSwingMode) packet.control.horizontal_swing_mode;
-    bool save_settings = ((this->current_vertical_swing_.value() != hon_protocol::VerticalSwingMode::AUTO) &&
-                          (this->current_vertical_swing_.value() != hon_protocol::VerticalSwingMode::AUTO_SPECIAL) &&
-                          (this->current_vertical_swing_.value() != this->settings_.last_vertical_swing)) ||
-                         ((this->current_horizontal_swing_.value() != hon_protocol::HorizontalSwingMode::AUTO) &&
-                          (this->current_horizontal_swing_.value() != this->settings_.last_horizontal_swing));
-    if (save_settings) {
-      this->settings_.last_vertical_swing = this->current_vertical_swing_.value();
-      this->settings_.last_horizontal_swing = this->current_horizontal_swing_.value();
+    bool save_vertical = (this->current_vertical_swing_.value() != hon_protocol::VerticalSwingMode::AUTO) &&
+                         (this->current_vertical_swing_.value() != hon_protocol::VerticalSwingMode::AUTO_SPECIAL) &&
+                         (this->current_vertical_swing_.value() != this->settings_.last_vertical_swing);
+    bool save_horizontal = (this->current_horizontal_swing_.value() != hon_protocol::HorizontalSwingMode::AUTO) &&
+                           (this->current_horizontal_swing_.value() != this->settings_.last_horizontal_swing);
+    if (save_vertical || save_horizontal) {
+      if (save_vertical) {
+        this->settings_.last_vertical_swing = this->current_vertical_swing_.value();
+      }
+      if (save_horizontal) {
+        this->settings_.last_horizontal_swing = this->current_horizontal_swing_.value();
+      }
       this->hon_rtc_.save(&this->settings_);
     }
 #ifdef USE_SELECT

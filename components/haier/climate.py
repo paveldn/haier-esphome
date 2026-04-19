@@ -74,6 +74,7 @@ AIRFLOW_VERTICAL_DIRECTION_OPTIONS = {
     "UP": AirflowVerticalDirection.UP,
     "CENTER": AirflowVerticalDirection.CENTER,
     "DOWN": AirflowVerticalDirection.DOWN,
+    "MAX_DOWN": AirflowVerticalDirection.MAX_DOWN,
     "HEALTH_DOWN": AirflowVerticalDirection.HEALTH_DOWN,
 }
 
