@@ -12,8 +12,7 @@
 using namespace esphome::climate;
 using namespace esphome::uart;
 
-namespace esphome {
-namespace haier {
+namespace esphome::haier {
 
 static bool vertical_axis_is_auto_(climate::ClimateSwingMode swing_mode) {
   return (swing_mode == climate::CLIMATE_SWING_VERTICAL) || (swing_mode == climate::CLIMATE_SWING_BOTH);
@@ -1581,5 +1580,4 @@ bool HonClimate::should_get_big_data_() {
   return false;
 }
 
-}  // namespace haier
-}  // namespace esphome
+}  // namespace esphome::haier
