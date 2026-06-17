@@ -69,6 +69,7 @@ Configuration variables:
 - **control_packet_size** (*Optional*, int): (supported only by hOn) Define the size of the control packet. Can help with some newer models of ACs that use bigger packets. The default value: ``10``.
 - **sensors_packet_size** (*Optional*, int): (supported only by hOn) Define the size of the sensor packet of the status message. Can help with some models of ACs that have bigger sensor packet. The default value: ``22``, minimum value: ``18``.
 - **control_method** (*Optional*, list): (supported only by hOn) Defines control method (should be supported by AC). Supported values: ``MONITOR_ONLY`` - no control, just monitor status, ``SET_GROUP_PARAMETERS`` - set all AC parameters with one command (default method), ``SET_SINGLE_PARAMETER`` - set each parameter individually (this method is supported by some new ceiling ACs like AD71S2SM3FA)
+- **hvac_action** (*Optional*, boolean): (supported only by hOn) If ``true`` - expose the current HVAC action.
 - **display** (*Optional*, boolean): Can be used to set the AC display off.
 - **beeper** (*Optional*, boolean): Can be used to disable beeping on commands from AC. Supported only by hOn protocol.
 - **supported_modes** (*Optional*, list): Can be used to disable some of AC modes. Possible values: ``'OFF'``, ``HEAT_COOL``, ``COOL``, ``HEAT``, ``DRY``, ``FAN_ONLY``.
