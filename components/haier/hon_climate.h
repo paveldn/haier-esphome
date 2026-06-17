@@ -142,6 +142,7 @@ class HonClimate : public HaierClimateBase {
   void set_extra_sensors_packet_bytes_size(size_t size) { this->extra_sensors_packet_bytes_ = size; };
   void set_status_message_header_size(size_t size) { this->status_message_header_size_ = size; };
   void set_control_method(HonControlMethod method) { this->control_method_ = method; };
+  void set_hvac_action(bool state);
   template<typename F> void add_alarm_start_callback(F &&callback) {
     this->alarm_start_callback_.add(std::forward<F>(callback));
   }
@@ -181,6 +182,7 @@ class HonClimate : public HaierClimateBase {
   // Helper functions
   haier_protocol::HandlerError process_status_message_(const uint8_t *packet, uint8_t size);
   void process_alarm_message_(const uint8_t *packet, uint8_t size, bool check_new);
+  bool update_hvac_action_(const hon_protocol::HaierPacketBigData *bd_packet);
   void fill_control_messages_queue_();
   void clear_control_messages_queue_();
 
@@ -212,6 +214,7 @@ class HonClimate : public HaierClimateBase {
   std::chrono::steady_clock::time_point last_alarm_request_;
   int big_data_sensors_{0};
   uint8_t big_data_counter_{0};
+  bool hvac_action_enabled_{false};
   esphome::optional<hon_protocol::VerticalSwingMode> current_vertical_swing_{};
   esphome::optional<hon_protocol::HorizontalSwingMode> current_horizontal_swing_{};
   esphome::optional<std::chrono::steady_clock::time_point> vertical_direction_set_time_{};

@@ -58,6 +58,13 @@ HonClimate::HonClimate()
 
 HonClimate::~HonClimate() {}
 
+void HonClimate::set_hvac_action(bool state) {
+  this->hvac_action_enabled_ = state;
+  if (state) {
+    this->traits_.add_feature_flags(climate::CLIMATE_SUPPORTS_ACTION);
+  }
+}
+
 void HonClimate::set_beeper_state(bool state) {
   if (state != this->settings_.beeper_state) {
     this->settings_.beeper_state = state;
@@ -970,6 +977,52 @@ void HonClimate::update_horizontal_airflow_select_state_() {
 }
 #endif  // USE_SELECT
 
+bool HonClimate::update_hvac_action_(const hon_protocol::HaierPacketBigData *bd_packet) {
+  if ((this->mode != CLIMATE_MODE_OFF) && (bd_packet == nullptr)) {
+    return false;
+  }
+
+  ClimateAction new_action = CLIMATE_ACTION_OFF;
+  if ((this->mode != CLIMATE_MODE_OFF) && (bd_packet->compressor_status < 2)) {
+    const bool compressor_on = bd_packet->compressor_status == 1;
+
+    switch (this->mode) {
+      case CLIMATE_MODE_COOL:
+        new_action = compressor_on ? CLIMATE_ACTION_COOLING : CLIMATE_ACTION_IDLE;
+        break;
+      case CLIMATE_MODE_DRY:
+        new_action = compressor_on ? CLIMATE_ACTION_DRYING : CLIMATE_ACTION_IDLE;
+        break;
+      case CLIMATE_MODE_HEAT:
+        new_action = (bd_packet->defrost_status == 1) ? CLIMATE_ACTION_DEFROSTING
+                                                      : (compressor_on ? CLIMATE_ACTION_HEATING : CLIMATE_ACTION_IDLE);
+        break;
+      case CLIMATE_MODE_FAN_ONLY:
+        new_action = CLIMATE_ACTION_FAN;
+        break;
+      case CLIMATE_MODE_HEAT_COOL:
+        if (bd_packet->defrost_status == 1) {
+          new_action = CLIMATE_ACTION_DEFROSTING;
+        } else if (!compressor_on) {
+          new_action = CLIMATE_ACTION_IDLE;
+        } else if (bd_packet->indoor_coil_temperature == 0xFF) {
+          new_action = CLIMATE_ACTION_OFF;
+        } else {
+          float indoor_coil_temperature = bd_packet->indoor_coil_temperature / 2.0f - 20.0f;
+          new_action =
+              (this->current_temperature > indoor_coil_temperature) ? CLIMATE_ACTION_COOLING : CLIMATE_ACTION_HEATING;
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  bool changed = this->action != new_action;
+  this->action = new_action;
+  return changed;
+}
+
 haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *packet_buffer, uint8_t size) {
   size_t expected_size =
       2 + this->status_message_header_size_ + this->real_control_packet_size_ + this->real_sensors_packet_size_;
@@ -978,10 +1031,10 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
     return haier_protocol::HandlerError::WRONG_MESSAGE_STRUCTURE;
   }
   uint16_t subtype = (((uint16_t) packet_buffer[0]) << 8) + packet_buffer[1];
+  const hon_protocol::HaierPacketBigData *bd_packet = nullptr;
   if ((subtype == 0x7D01) && (size >= expected_size + sizeof(hon_protocol::HaierPacketBigData))) {
     // Got BigData packet
-    const hon_protocol::HaierPacketBigData *bd_packet =
-        (const hon_protocol::HaierPacketBigData *) (&packet_buffer[expected_size]);
+    bd_packet = (const hon_protocol::HaierPacketBigData *) (&packet_buffer[expected_size]);
 #ifdef USE_SENSOR
     this->update_sub_sensor_(SubSensorType::INDOOR_COIL_TEMPERATURE, bd_packet->indoor_coil_temperature / 2.0 - 20);
     this->update_sub_sensor_(SubSensorType::OUTDOOR_COIL_TEMPERATURE, bd_packet->outdoor_coil_temperature - 64);
@@ -1160,6 +1213,9 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
       }
     }
     should_publish = should_publish || (old_mode != this->mode);
+  }
+  if (this->hvac_action_enabled_) {
+    should_publish = this->update_hvac_action_(bd_packet) || should_publish;
   }
   {
     // Quiet mode, should be after climate mode
@@ -1561,7 +1617,7 @@ void HonClimate::process_protocol_reset() {
 }
 
 bool HonClimate::should_get_big_data_() {
-  if (this->big_data_sensors_ > 0) {
+  if ((this->big_data_sensors_ > 0) || this->hvac_action_enabled_) {
     this->big_data_counter_ = (this->big_data_counter_ + 1) % 3;
     return this->big_data_counter_ == 1;
   }
