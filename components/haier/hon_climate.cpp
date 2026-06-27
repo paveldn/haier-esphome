@@ -1031,7 +1031,7 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
   {
     // Swing mode
     ClimateSwingMode old_swing_mode = this->swing_mode;
-    const auto &swing_modes = traits_.get_supported_swing_modes();
+    const ClimateSwingModeMask &swing_modes = this->traits_.get_supported_swing_modes();
     bool vertical_swing_supported = swing_modes.count(CLIMATE_SWING_VERTICAL);
     bool horizontal_swing_supported = swing_modes.count(CLIMATE_SWING_HORIZONTAL);
     if (horizontal_swing_supported &&

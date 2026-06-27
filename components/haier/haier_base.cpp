@@ -172,7 +172,11 @@ void HaierClimateBase::toggle_power() {
 }
 
 void HaierClimateBase::set_supported_swing_modes(climate::ClimateSwingModeMask modes) {
-  this->traits_.set_supported_swing_modes(modes);
+  climate::ClimateSwingModeMask swing_modes;
+  for (auto mode : modes) {
+    swing_modes.insert(mode);
+  }
+  this->traits_.set_supported_swing_modes(swing_modes);
   if (!modes.empty())
     this->traits_.add_supported_swing_mode(climate::CLIMATE_SWING_OFF);
 }
@@ -180,13 +184,21 @@ void HaierClimateBase::set_supported_swing_modes(climate::ClimateSwingModeMask m
 void HaierClimateBase::set_answer_timeout(uint32_t timeout) { this->haier_protocol_.set_answer_timeout(timeout); }
 
 void HaierClimateBase::set_supported_modes(climate::ClimateModeMask modes) {
-  this->traits_.set_supported_modes(modes);
+  climate::ClimateModeMask mode_mask;
+  for (auto mode : modes) {
+    mode_mask.insert(mode);
+  }
+  this->traits_.set_supported_modes(mode_mask);
   this->traits_.add_supported_mode(climate::CLIMATE_MODE_OFF);        // Always available
   this->traits_.add_supported_mode(climate::CLIMATE_MODE_HEAT_COOL);  // Always available
 }
 
 void HaierClimateBase::set_supported_presets(climate::ClimatePresetMask presets) {
-  this->traits_.set_supported_presets(presets);
+  climate::ClimatePresetMask preset_mask;
+  for (auto preset : presets) {
+    preset_mask.insert(preset);
+  }
+  this->traits_.set_supported_presets(preset_mask);
   if (!presets.empty())
     this->traits_.add_supported_preset(climate::CLIMATE_PRESET_NONE);
 }
