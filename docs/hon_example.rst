@@ -118,6 +118,9 @@ Maximum configuration witch will use all possible options will look like this:
           name: Haier hOn Climate cleaning status
         protocol_version:
           name: Haier hOn Climate protocol version
+        active_alarms_text:
+          name: "AC Active Alarms"
+          icon: "mdi:alarm-light"
     
     switch:
       - platform: haier
@@ -274,6 +277,9 @@ Maximum configuration witch will use all possible options will look like this:
           name: Haier hOn Climate Indoor Electric Heating Status
         indoor_fan_status:
           name: Haier hOn Climate Indoor Fan Status
+        alarm_active:
+          name: "AC Alarm Active"
+          device_class: problem
         outdoor_fan_status:
           name: Haier hOn Climate Outdoor Fan Status
 
