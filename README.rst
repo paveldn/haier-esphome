@@ -428,6 +428,8 @@ Additional sensors for Haier Climate device. **These sensors are supported only 
           name: Haier Indoor Electric Heating Status
         indoor_fan_status:
           name: Haier Indoor Fan Status
+        alarm_active:
+          name: Haier Alarm Active
         outdoor_fan_status:
           name: Haier Outdoor Fan Status
 
@@ -444,6 +446,8 @@ Configuration variables:
 - **indoor_electric_heating_status** (*Optional*): A binary sensor that indicates electrical heating system activity.
   All options from `Binary Sensor <https://esphome.io/components/binary_sensor/index.html#base-binary-sensor-configuration>`_.
 - **indoor_fan_status** (*Optional*): A binary sensor that indicates indoor fan activity.
+  All options from `Binary Sensor <https://esphome.io/components/binary_sensor/index.html#base-binary-sensor-configuration>`_.
+- **alarm_active** (*Optional*): A diagnostic binary sensor with the ``problem`` device class indicating whether any alarm is active.
   All options from `Binary Sensor <https://esphome.io/components/binary_sensor/index.html#base-binary-sensor-configuration>`_.
 - **outdoor_fan_status** (*Optional*): A binary sensor that indicates outdoor fan activity.
   All options from `Binary Sensor <https://esphome.io/components/binary_sensor/index.html#base-binary-sensor-configuration>`_.
@@ -467,6 +471,8 @@ Additional sensors for Haier Climate device. **These sensors are supported only 
           name: Haier cleaning status
         protocol_version:
           name: Haier protocol version
+        active_alarms_text:
+          name: Active alarms text
 
 Configuration variables:
 ------------------------
@@ -477,6 +483,8 @@ Configuration variables:
 - **cleaning_status** (*Optional*): A text sensor that indicates cleaning status. Possible values "No cleaning", "Self clean", "56°C Steri-Clean".
   All options from `Text Sensor <https://esphome.io/components/text_sensor/index.html#base-text-sensor-configuration>`_.
 - **protocol_version** (*Optional*): A text sensor that indicates Haier protocol version.
+  All options from `Text Sensor <https://esphome.io/components/text_sensor/index.html#base-text-sensor-configuration>`_.
+- **active_alarms_text** (*Optional*): A diagnostic text sensor that lists all currently active alarms.
   All options from `Text Sensor <https://esphome.io/components/text_sensor/index.html#base-text-sensor-configuration>`_.
 
 .. Generated from esphome-docs/button/haier.rst
