@@ -28,6 +28,8 @@ Additional sensors for Haier Climate device. **These sensors are supported only 
           name: Haier Indoor Electric Heating Status
         indoor_fan_status:
           name: Haier Indoor Fan Status
+        alarm_active:
+          name: Haier Alarm Active
         outdoor_fan_status:
           name: Haier Outdoor Fan Status
 
@@ -44,6 +46,8 @@ Configuration variables:
 - **indoor_electric_heating_status** (*Optional*): A binary sensor that indicates electrical heating system activity.
   All options from :ref:`Binary Sensor <config-binary_sensor>`.
 - **indoor_fan_status** (*Optional*): A binary sensor that indicates indoor fan activity.
+  All options from :ref:`Binary Sensor <config-binary_sensor>`.
+- **alarm_active** (*Optional*): A diagnostic binary sensor with the ``problem`` device class indicating whether any alarm is active.
   All options from :ref:`Binary Sensor <config-binary_sensor>`.
 - **outdoor_fan_status** (*Optional*): A binary sensor that indicates outdoor fan activity.
   All options from :ref:`Binary Sensor <config-binary_sensor>`.

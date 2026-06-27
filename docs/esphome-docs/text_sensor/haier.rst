@@ -19,6 +19,8 @@ Additional sensors for Haier Climate device. **These sensors are supported only 
           name: Haier cleaning status
         protocol_version:
           name: Haier protocol version
+        active_alarms_text:
+          name: Active alarms text
 
 Configuration variables:
 ------------------------
@@ -29,6 +31,8 @@ Configuration variables:
 - **cleaning_status** (*Optional*): A text sensor that indicates cleaning status. Possible values "No cleaning", "Self clean", "56°C Steri-Clean".
   All options from :ref:`Text Sensor <config-text_sensor>`.
 - **protocol_version** (*Optional*): A text sensor that indicates Haier protocol version.
+  All options from :ref:`Text Sensor <config-text_sensor>`.
+- **active_alarms_text** (*Optional*): A diagnostic text sensor that lists all currently active alarms.
   All options from :ref:`Text Sensor <config-text_sensor>`.
 
 See Also

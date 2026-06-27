@@ -93,7 +93,7 @@ class HonClimate : public HaierClimateBase {
     CLEANING_STATUS = 0,
     PROTOCOL_VERSION,
     APPLIANCE_NAME,
-    ACTIVE_ALARMS_TEXT,          // <-- ADDED
+    ACTIVE_ALARMS_TEXT,
     SUB_TEXT_SENSOR_TYPE_COUNT,
   };
   void set_sub_text_sensor(SubTextSensorType type, text_sensor::TextSensor *sens);
