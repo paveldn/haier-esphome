@@ -15,13 +15,13 @@ CONF_COMPRESSOR_STATUS = "compressor_status"
 CONF_INDOOR_FAN_STATUS = "indoor_fan_status"
 CONF_FOUR_WAY_VALVE_STATUS = "four_way_valve_status"
 CONF_INDOOR_ELECTRIC_HEATING_STATUS = "indoor_electric_heating_status"
-CONF_ALARM_ACTIVE = "alarm_active"  # Add this line
+CONF_ALARM_ACTIVE = "alarm_active"
 
 # Additional icons
 ICON_SNOWFLAKE_THERMOMETER = "mdi:snowflake-thermometer"
 ICON_HVAC = "mdi:hvac"
 ICON_VALVE = "mdi:valve"
-ICON_ALARM = "mdi:alarm-light"  # Add this line
+ICON_ALARM = "mdi:alarm-light"
 
 SENSOR_TYPES = {
     CONF_OUTDOOR_FAN_STATUS: binary_sensor.binary_sensor_schema(
