@@ -113,6 +113,7 @@ SUPPORTED_CLIMATE_PRESETS_SMARTAIR2_OPTIONS = {
 SUPPORTED_CLIMATE_PRESETS_HON_OPTIONS = {
     "AWAY": ClimatePreset.CLIMATE_PRESET_AWAY,
     "BOOST": ClimatePreset.CLIMATE_PRESET_BOOST,
+    "ECO": ClimatePreset.CLIMATE_PRESET_ECO,
     "SLEEP": ClimatePreset.CLIMATE_PRESET_SLEEP,
 }
 
@@ -235,7 +236,7 @@ CONFIG_SCHEMA = cv.All(
                     cv.Optional(CONF_HVAC_ACTION, default=False): cv.boolean,
                     cv.Optional(
                         CONF_SUPPORTED_PRESETS,
-                        default=["BOOST", "SLEEP"],  # No AWAY by default
+                        default=["BOOST", "ECO", "SLEEP"],  # No AWAY by default
                     ): cv.ensure_list(
                         cv.enum(SUPPORTED_CLIMATE_PRESETS_HON_OPTIONS, upper=True)
                     ),
