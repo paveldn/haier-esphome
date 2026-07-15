@@ -68,6 +68,7 @@ Maximum configuration witch will use all possible options will look like this:
           - BOTH
         supported_presets:
           - BOOST
+          - ECO
           - SLEEP
         on_alarm_start:
           then:
