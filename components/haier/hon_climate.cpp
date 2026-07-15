@@ -614,6 +614,14 @@ void HonClimate::initialization() {
   this->current_vertical_swing_ = this->settings_.last_vertical_swing;
   this->current_horizontal_swing_ = this->settings_.last_horizontal_swing;
   this->quiet_mode_state_ = this->settings_.quiet_mode_state ? SwitchState::ON : SwitchState::OFF;
+#ifdef USE_SWITCH
+  if (this->beeper_switch_ != nullptr) {
+    this->beeper_switch_->publish_state(this->get_beeper_state());
+  }
+  if (this->quiet_mode_switch_ != nullptr) {
+    this->quiet_mode_switch_->publish_state(this->settings_.quiet_mode_state);
+  }
+#endif
 }
 
 haier_protocol::HaierMessage HonClimate::get_control_message() {
