@@ -937,9 +937,14 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
     should_publish = should_publish || (!old_fan_mode.has_value()) ||
                      (old_fan_mode.value_or(CLIMATE_FAN_ON) != this->fan_mode.value_or(CLIMATE_FAN_ON));
   }
+  // A cleaning cycle powers the AC on by itself and the AC lights the display while it runs
+  bool cleaning_active = (packet.control.steri_clean == 1) || (packet.control.self_cleaning_status == 1);
   // Display status
   // should be before "Climate mode" because it is changing this->mode
-  if (packet.control.ac_power != 0) {
+  // Skipped while cleaning: the AC lights the display on its own and forcing it back off sends a
+  // control packet that clears the cleaning bits. The AC then leaves the cycle, this handler sees
+  // NO_CLEANING and powers the AC off - the whole cycle dies about a second after it started.
+  if ((packet.control.ac_power != 0) && !cleaning_active) {
     // if AC is off display status always ON so process it only when AC is on
     bool disp_status = packet.control.display_status != 0;
     if (disp_status != this->get_display_state()) {
@@ -1301,6 +1306,16 @@ void HonClimate::clear_control_messages_queue_() {
 
 bool HonClimate::prepare_pending_action() {
   auto &action_request = this->action_request_.value();  // NOLINT(bugprone-unchecked-optional-access)
+  if ((action_request.action == ActionRequest::START_SELF_CLEAN) ||
+      (action_request.action == ActionRequest::START_STERI_CLEAN)) {
+    // Drop anything control-shaped that is still pending: a control packet arriving right after the
+    // cleaning command overwrites the cleaning bits and the AC drops out of the cycle. Nothing is
+    // lost by dropping it - a cleaning cycle overrides mode, setpoint and louver positions anyway.
+    this->force_send_control_ = false;
+    this->clear_control_messages_queue_();
+    if (this->current_hvac_settings_.valid)
+      this->current_hvac_settings_.reset();
+  }
   switch (action_request.action) {
     case ActionRequest::START_SELF_CLEAN:
       if (this->control_method_ == HonControlMethod::SET_GROUP_PARAMETERS) {
