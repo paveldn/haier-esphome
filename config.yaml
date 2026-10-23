@@ -1,0 +1,28 @@
+substitutions:
+  model: AS25S2SN1FA-NRC
+  board: ESP32-S0WD
+  device_name: Haier AC
+  device_id: haier_climate
+  send_wifi: "false"
+
+esphome:
+  name: haier
+  name_add_mac_suffix: true
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+logger:
+  level: DEBUG
+
+api:
+  port: 6053
+
+ota:
+  - platform: esphome
+
+packages:
+  local_haier: !include configs/external_components/local_haier.yaml
+  board_config: !include configs/boards/${board}.yaml
+  model_config: !include configs/models/${model}.yaml

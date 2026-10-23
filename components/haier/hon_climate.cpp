@@ -834,7 +834,7 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
 #ifdef USE_SENSOR
     this->update_sub_sensor_(SubSensorType::INDOOR_COIL_TEMPERATURE, bd_packet->indoor_coil_temperature / 2.0 - 20);
     this->update_sub_sensor_(SubSensorType::OUTDOOR_COIL_TEMPERATURE, bd_packet->outdoor_coil_temperature - 64);
-    this->update_sub_sensor_(SubSensorType::OUTDOOR_DEFROST_TEMPERATURE, bd_packet->outdoor_coil_temperature - 64);
+    this->update_sub_sensor_(SubSensorType::OUTDOOR_DEFROST_TEMPERATURE, bd_packet->outdoor_defrost_temperature - 64);
     this->update_sub_sensor_(SubSensorType::OUTDOOR_IN_AIR_TEMPERATURE, bd_packet->outdoor_in_air_temperature - 64);
     this->update_sub_sensor_(SubSensorType::OUTDOOR_OUT_AIR_TEMPERATURE, bd_packet->outdoor_out_air_temperature - 64);
     this->update_sub_sensor_(SubSensorType::POWER, encode_uint16(bd_packet->power[0], bd_packet->power[1]));
@@ -843,7 +843,8 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
                              encode_uint16(bd_packet->compressor_current[0], bd_packet->compressor_current[1]) / 10.0);
     this->update_sub_sensor_(
         SubSensorType::EXPANSION_VALVE_OPEN_DEGREE,
-        encode_uint16(bd_packet->expansion_valve_open_degree[0], bd_packet->expansion_valve_open_degree[1]) / 4095.0);
+        encode_uint16(bd_packet->expansion_valve_open_degree[0], bd_packet->expansion_valve_open_degree[1]) / 4095.0 *
+            100.0);
 #endif  // USE_SENSOR
 #ifdef USE_BINARY_SENSOR
     this->update_sub_binary_sensor_(SubBinarySensorType::OUTDOOR_FAN_STATUS, bd_packet->outdoor_fan_status);

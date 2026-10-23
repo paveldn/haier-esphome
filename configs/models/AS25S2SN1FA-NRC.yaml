@@ -1,0 +1,31 @@
+# AS25S2SN1FA-NRC. Kept fields are ones the module e++ parser decodes.
+packages:
+  hon_climate: !include ../climate/haier_hon.yaml
+  turn_on_service: !include ../api/service.turn_on.yaml
+  turn_off_service: !include ../api/service.turn_off.yaml
+  self_cleaning_button: !include ../button/self_cleaning.yaml
+  cleaning_status_text_sensor: !include ../text_sensor/cleaning_status.yaml
+  display_switch: !include ../switch/display.yaml
+  beeper_switch: !include ../switch/beeper.yaml
+  quiet_mode_switch: !include ../switch/quiet_mode.yaml
+  restart_switch: !include ../switch/restart.yaml
+  airflow_vertical_select: !include ../select/airflow_vertical.yaml
+  airflow_horizontal_select: !include ../select/airflow_horizontal.yaml
+
+  # Diagnostic sensors
+  outdoor_temperature_sensor: !include ../sensor/outdoor_temperature.yaml
+  indoor_coil_temperature_sensor: !include ../sensor/indoor_coil_temperature.yaml
+  outdoor_defrost_temperature_sensor: !include ../sensor/outdoor_defrost_temperature.yaml
+  outdoor_out_air_temperature_sensor: !include ../sensor/outdoor_out_air_temperature.yaml
+  compressor_frequency_sensor: !include ../sensor/compressor_frequency.yaml
+  expansion_valve_open_degree_sensor: !include ../sensor/expansion_valve_open_degree.yaml
+
+  # Diagnostic binary sensors
+  defrost_status_binary_sensor: !include ../binary_sensor/defrost_status.yaml
+  compressor_status_binary_sensor: !include ../binary_sensor/compressor_status.yaml
+  indoor_fan_status_binary_sensor: !include ../binary_sensor/indoor_fan_status.yaml
+  indoor_electric_heating_status_binary_sensor: !include ../binary_sensor/indoor_electric_heating_status.yaml
+
+  # Diagnostic text sensors
+  appliance_name_text_sensor: !include ../text_sensor/appliance_name.yaml
+  protocol_version_text_sensor: !include ../text_sensor/protocol_version.yaml

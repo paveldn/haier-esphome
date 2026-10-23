@@ -251,6 +251,19 @@ const std::string HON_ALARM_MESSAGES[] = {
     "VOC sensor failure",
     "CO2 sensor failure",
     "Firewall failure",
+    "Compressor discharge temperature too high",
+    "Ambient temperature too high",
+    "MCU reset",
+    "Module current detection circuit failure",
+    "Liquid pipe A temperature sensor failure",
+    "Liquid pipe B temperature sensor failure",
+    "Liquid pipe C temperature sensor failure",
+    "Liquid pipe D temperature sensor failure",
+    "Liquid pipe E temperature sensor failure",
+    "Air pipe A temperature sensor failure",
+    "Air pipe B temperature sensor failure",
+    "Air pipe C temperature sensor failure",
+    "Air pipe D temperature sensor failure",
 };
 
 constexpr size_t HON_ALARM_COUNT = sizeof(HON_ALARM_MESSAGES) / sizeof(HON_ALARM_MESSAGES[0]);
