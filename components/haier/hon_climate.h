@@ -201,6 +201,7 @@ class HonClimate final : public HaierClimateBase {
   void publish_alarm_entities_();
   bool update_hvac_action_(const hon_protocol::HaierPacketBigData *bd_packet);
   void fill_control_messages_queue_();
+  void set_quiet_mode_state_from_preset_(bool state);
   void clear_control_messages_queue_();
 
   static constexpr size_t HARDWARE_INFO_STR_SIZE = 9;
