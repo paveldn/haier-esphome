@@ -2,5 +2,7 @@
   type: LAN8720
   mdc_pin: GPIO23
   mdio_pin: GPIO18
-  clk_mode: GPIO0_IN
+  clk:
+    mode: CLK_EXT_IN
+    pin: GPIO0
   phy_addr: 0

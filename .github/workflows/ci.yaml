@@ -41,9 +41,9 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
-    - name: Install esphome
-      run: pip3 install -U esphome
+        python-version: '3.12'
+    - name: Install ESPHome dev
+      run: python -m pip install --upgrade "git+https://github.com/esphome/esphome.git@dev"
     - name: Version esphome
       run: esphome version
     - name: Install libsodium

@@ -12,8 +12,8 @@ bk72xx:
 
 uart:
   baud_rate: 9600
-  tx_pin: 10
-  rx_pin: 11
+  tx_pin: 11
+  rx_pin: 10
   id: ${uart_id}
 
 logger:
