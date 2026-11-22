@@ -771,7 +771,8 @@ haier_protocol::HaierMessage HonClimate::get_control_message() {
           break;
       }
     }
-    if (climate_control.preset.has_value()) {
+    if (climate_control.preset.has_value() &&
+        this->traits_.get_supported_presets().count(CLIMATE_PRESET_ECO) != 0) {
       this->set_quiet_mode_state_from_preset_(climate_control.preset.value() == CLIMATE_PRESET_ECO);
     }
   }
@@ -1047,8 +1048,8 @@ bool HonClimate::update_hvac_action_(const hon_protocol::HaierPacketBigData *bd_
           new_action = CLIMATE_ACTION_DEFROSTING;
         } else if (!compressor_on) {
           new_action = CLIMATE_ACTION_IDLE;
-        } else if (bd_packet->indoor_coil_temperature == 0xFF) {
-          new_action = CLIMATE_ACTION_OFF;
+        } else if (bd_packet->indoor_coil_temperature == 0xFF || std::isnan(this->current_temperature)) {
+          return false;
         } else {
           float indoor_coil_temperature = bd_packet->indoor_coil_temperature / 2.0f - 20.0f;
           new_action =
@@ -1133,7 +1134,8 @@ haier_protocol::HandlerError HonClimate::process_status_message_(const uint8_t *
       this->preset = CLIMATE_PRESET_SLEEP;
     } else if (packet.control.ten_degree != 0) {
       this->preset = CLIMATE_PRESET_AWAY;
-    } else if (packet.control.quiet_mode != 0) {
+    } else if (packet.control.quiet_mode != 0 &&
+               this->traits_.get_supported_presets().count(CLIMATE_PRESET_ECO) != 0) {
       this->preset = CLIMATE_PRESET_ECO;
     } else {
       this->preset = CLIMATE_PRESET_NONE;
@@ -1484,7 +1486,8 @@ void HonClimate::fill_control_messages_queue_() {
           break;
       }
     }
-    if (climate_control.preset.has_value()) {
+    if (climate_control.preset.has_value() &&
+        this->traits_.get_supported_presets().count(CLIMATE_PRESET_ECO) != 0) {
       this->set_quiet_mode_state_from_preset_(climate_control.preset.value() == CLIMATE_PRESET_ECO);
     }
     {
@@ -1683,6 +1686,9 @@ bool HonClimate::prepare_pending_action() {
 }
 
 void HonClimate::process_protocol_reset() {
+  if (this->hvac_action_enabled_) {
+    this->action = CLIMATE_ACTION_OFF;
+  }
   HaierClimateBase::process_protocol_reset();
 #ifdef USE_SENSOR
   for (auto &sub_sensor : this->sub_sensors_) {
@@ -1690,8 +1696,17 @@ void HonClimate::process_protocol_reset() {
       sub_sensor->publish_state(NAN);
   }
 #endif  // USE_SENSOR
+  this->active_alarm_count_ = NAN;
+  memset(this->active_alarms_, 0, sizeof(this->active_alarms_));
+#ifdef USE_BINARY_SENSOR
+  auto *alarm_active = this->sub_binary_sensors_[(size_t) SubBinarySensorType::ALARM_ACTIVE];
+  if (alarm_active != nullptr && alarm_active->has_state())
+    alarm_active->invalidate_state();
+#endif  // USE_BINARY_SENSOR
 #ifdef USE_TEXT_SENSOR
-  this->update_sub_text_sensor_(SubTextSensorType::ACTIVE_ALARMS_TEXT, "No alarm");
+  auto *active_alarms_text = this->sub_text_sensors_[(size_t) SubTextSensorType::ACTIVE_ALARMS_TEXT];
+  if (active_alarms_text != nullptr && active_alarms_text->has_state())
+    active_alarms_text->publish_state("");
 #endif  // USE_TEXT_SENSOR
   this->got_valid_outdoor_temp_ = false;
   this->hvac_hardware_info_.reset();
