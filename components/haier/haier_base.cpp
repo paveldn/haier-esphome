@@ -315,6 +315,8 @@ void HaierClimateBase::process_protocol_reset() {
   this->fan_mode.reset();
   this->preset.reset();
   this->publish_state();
+  // CRC support is negotiated during initialization, start it again the same way as after boot
+  this->use_crc_ = false;
   this->set_phase(ProtocolPhases::SENDING_INIT_1);
 }
 
